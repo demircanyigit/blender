@@ -7,7 +7,7 @@ See 'release/text/readme.html' for the end user read-me.
 About this fork
 ===============
 
-An unofficial fork based on Blender 5.1.0 that adds six geometry nodes and more ways to show color
+An unofficial fork based on Blender 5.1.0 that adds six new **Geometry Nodes** and more ways to show color
 attributes in Solid shading. It isn't made or supported by the Blender Foundation, so please don't report
 its bugs to the Blender project.
 
@@ -16,6 +16,12 @@ its bugs to the Blender project.
 
 Files that use these additions won't work properly in official Blender. See
 [what to know before using it](doc/fork/README.md).
+
+## New Geometry Nodes
+
+These are real nodes for Blender's Geometry Nodes editor, not add-ons or node groups. Add them with **Add ▸ Mesh ▸ Operations**, or **Add ▸ Curve ▸ Operations** for Sweep.
+
+![The six new nodes side by side in the Geometry Nodes editor](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-1/all_nodes.png)
 
 ### Isotropic Remesh
 
@@ -58,14 +64,14 @@ Adds points along edges without changing the shape or the number of faces, by le
 
 ![A cube before and after Resample Mesh, with its points shown in orange](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-1/resample_mesh.png)
 
-### Color attributes in Solid shading
+## Color attributes in Solid shading
 
 Each material can combine its viewport color with a color attribute, so you can check vertex color variation
 without leaving Solid mode.
 
 ![Suzanne with the None, Multiply, Two Colors and Color Ramp options](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-1/solid_colors.png)
 
-### More
+## More
 
 - [All node inputs and limits](doc/fork/NODES.md)
 - [Material options](doc/fork/VIEWPORT_COLORS.md)
