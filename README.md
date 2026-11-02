@@ -20,8 +20,9 @@ Files that use these additions won't work properly in official Blender. See
 ### Isotropic Remesh
 
 Rebuilds a mesh out of even triangles, with one edge length or shorter edges where the surface curves.
+Hard Edges keeps the edges you choose, like the eye and mouth rims here.
 
-![Suzanne before and after Isotropic Remesh](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-1/isotropic_remesh.png)
+![Suzanne as the original, remeshed, and remeshed with Hard Edges](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-1/isotropic_remesh.png)
 
 ### Decimate Mesh
 
@@ -33,7 +34,7 @@ Reduces triangles where it changes the surface the least, down to a ratio or a f
 
 Cuts a closed mesh into solid pieces around the points you give it.
 
-![A sphere cut into colored pieces by Voronoi Fracture](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-1/voronoi_fracture.png)
+![A sphere, the same sphere cut into pieces, and the pieces moved apart showing orange inside faces](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-1/voronoi_fracture.png)
 
 ### Bevel
 
