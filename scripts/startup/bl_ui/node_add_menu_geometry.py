@@ -124,6 +124,7 @@ class NODE_MT_gn_curve_operations_base(node_add_menu.NodeMenu):
         self.node_operator(layout, "GeometryNodeResampleCurve")
         self.node_operator(layout, "GeometryNodeReverseCurve")
         self.node_operator(layout, "GeometryNodeSubdivideCurve")
+        self.node_operator(layout, "GeometryNodeSweep")
         self.node_operator(layout, "GeometryNodeTrimCurve")
 
         self.draw_assets_for_catalog(layout, self.menu_path)
