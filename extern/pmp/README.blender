@@ -1,0 +1,44 @@
+Project: Polygon Mesh Processing Library (PMP)
+URL: https://github.com/pmp-library/pmp-library
+License: MIT with employer disclaimer (see LICENSE.txt)
+Upstream version: 3.0.0
+
+Only the surface mesh data structure and the algorithms that remeshing and decimation depend on
+are included.
+Visualization, file I/O and other algorithms are not vendored, except io/io_flags.h, which
+surface_mesh.h includes.
+
+Local modifications to src/pmp/algorithms/decimation.cpp (tagged "BLENDER MODIFICATION"):
+  * Corners of features are never removed. These are vertices where other than two feature edges
+    meet, or where the feature bends by 30 degrees or more.
+  * The remaining vertex of a collapse moves to the position with the lowest quadric error, as in
+    Garland and Heckbert, "Surface Simplification Using Quadric Error Metrics" (1997). Upstream
+    only keeps original vertices, which makes convex surfaces shrink. Vertices on boundaries and
+    features and unselected vertices stay in place.
+
+Local modifications to src/pmp/algorithms/remeshing.{h,cpp} (tagged "BLENDER MODIFICATION"):
+  * Added an optional progress/cancellation callback to uniform_remeshing() and
+    adaptive_remeshing(). Returning false stops before the next iteration.
+  * Feature vertices that bend by 30 degrees or more are locked as corners. Upstream only locks
+    vertices without exactly two feature edges, so kinks along a crease were rounded away.
+  * Adaptive remeshing first splits input edges longer than the maximum edge length, so large flat
+    faces have vertices of their own. Otherwise they inherit the small target lengths of their
+    curved borders.
+  * Adaptive target lengths are limited so that they grow by at most half the distance travelled,
+    which keeps the triangle size changing gradually.
+  * Projection, tangential smoothing, normals and valences run on all CPU cores, using Blender's
+    thread pool. Split, collapse and flip find their candidate edges in parallel and only apply
+    the changes on one thread. The results do not depend on the number of threads.
+  * Collapses run the expensive topological test last, and edge length tests avoid square roots.
+  * Collapse does at most 3 passes per iteration instead of 10.
+  * Uniform remeshing no longer projects new vertices while splitting, because all vertices are
+    projected right afterwards.
+
+Local modifications for speed (tagged "BLENDER MODIFICATION"):
+  * src/pmp/algorithms/normals.cpp no longer looks up vertex positions by property name.
+  * src/pmp/algorithms/decimation.cpp only looks up texture coordinates by name if they exist.
+  * src/pmp/algorithms/decimation.cpp tests collapses of a vertex in order of priority and stops
+    at the first legal one. This selects the same collapse as testing all of them.
+
+The wrapper that converts to and from Blender's Mesh lives in
+source/blender/geometry/intern/isotropic_remesh.cc.

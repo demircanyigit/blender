@@ -14,6 +14,20 @@
 
 namespace blender::nodes::node_geo_isotropic_remesh_cc {
 
+static EnumPropertyItem mode_items[] = {
+    {int(geometry::IsotropicRemeshMode::Uniform),
+     "UNIFORM",
+     0,
+     N_("Uniform"),
+     N_("Give all edges the same length")},
+    {int(geometry::IsotropicRemeshMode::Adaptive),
+     "ADAPTIVE",
+     0,
+     N_("Adaptive"),
+     N_("Use shorter edges where the surface is more curved")},
+    {0, nullptr, 0, nullptr, nullptr},
+};
+
 static void node_declare(NodeDeclarationBuilder &b)
 {
   b.use_custom_socket_order();
@@ -25,13 +39,38 @@ static void node_declare(NodeDeclarationBuilder &b)
       .description("Mesh to remesh into uniform triangles");
   b.add_output<decl::Geometry>("Mesh").propagate_all().align_with_previous();
 
+  b.add_input<decl::Menu>("Mode")
+      .static_items(mode_items)
+      .optional_label()
+      .description("How to choose the length of the edges");
   b.add_input<decl::Float>("Target Edge Length")
       .default_value(0.1f)
       .min(0.0f)
       .subtype(PROP_DISTANCE)
+      .usage_by_menu("Mode", int(geometry::IsotropicRemeshMode::Uniform))
       .description(
           "Desired length of the triangle edges in the result. "
           "A value of zero uses the average edge length of the input mesh");
+  b.add_input<decl::Float>("Min Edge Length")
+      .default_value(0.02f)
+      .min(0.00001f)
+      .subtype(PROP_DISTANCE)
+      .usage_by_menu("Mode", int(geometry::IsotropicRemeshMode::Adaptive))
+      .description("Length of the edges in the most curved areas");
+  b.add_input<decl::Float>("Max Edge Length")
+      .default_value(0.2f)
+      .min(0.00001f)
+      .subtype(PROP_DISTANCE)
+      .usage_by_menu("Mode", int(geometry::IsotropicRemeshMode::Adaptive))
+      .description("Length of the edges in flat areas");
+  b.add_input<decl::Float>("Tolerance")
+      .default_value(0.002f)
+      .min(0.0000001f)
+      .subtype(PROP_DISTANCE)
+      .usage_by_menu("Mode", int(geometry::IsotropicRemeshMode::Adaptive))
+      .description(
+          "Allowed distance between the edges and the curved surface. "
+          "Smaller values use more triangles on curved areas");
   b.add_input<decl::Int>("Iterations")
       .default_value(10)
       .min(0)
@@ -51,6 +90,13 @@ static void node_declare(NodeDeclarationBuilder &b)
       .description(
           "Edges where the angle between adjacent face normals is larger than this are treated "
           "as sharp features when \"Preserve Sharp Edges\" is enabled");
+  b.add_input<decl::Bool>("Hard Edges")
+      .default_value(false)
+      .hide_value()
+      .field_on_all()
+      .description(
+          "Edges to keep regardless of their angle, for example marked sharp edges from the "
+          "\"sharp_edge\" attribute or material boundaries");
 }
 
 static void node_geo_exec(GeoNodeExecParams params)
@@ -58,9 +104,15 @@ static void node_geo_exec(GeoNodeExecParams params)
   GeometrySet geometry_set = params.extract_input<GeometrySet>("Mesh");
   const AttributeFilter &attribute_filter = params.get_attribute_filter("Mesh");
 
+  const Field<bool> hard_edges_field = params.extract_input<Field<bool>>("Hard Edges");
+
   geometry::IsotropicRemeshParams remesh_params;
+  remesh_params.mode = params.extract_input<geometry::IsotropicRemeshMode>("Mode");
   remesh_params.target_edge_length = std::max(params.extract_input<float>("Target Edge Length"),
                                               0.0f);
+  remesh_params.min_edge_length = params.extract_input<float>("Min Edge Length");
+  remesh_params.max_edge_length = params.extract_input<float>("Max Edge Length");
+  remesh_params.adaptive_tolerance = params.extract_input<float>("Tolerance");
   remesh_params.iterations = std::max(params.extract_input<int>("Iterations"), 0);
   remesh_params.preserve_boundary = params.extract_input<bool>("Preserve Boundary");
   remesh_params.preserve_sharp_edges = params.extract_input<bool>("Preserve Sharp Edges");
@@ -77,7 +129,23 @@ static void node_geo_exec(GeoNodeExecParams params)
       return;
     }
 
-    Mesh *result = geometry::isotropic_remesh(*src_mesh, remesh_params, attribute_filter);
+    const bke::MeshFieldContext field_context(*src_mesh, AttrDomain::Edge);
+    fn::FieldEvaluator evaluator(field_context, src_mesh->edges_num);
+    evaluator.add(hard_edges_field);
+    evaluator.evaluate();
+
+    geometry::IsotropicRemeshParams mesh_params = remesh_params;
+    mesh_params.hard_edges = evaluator.get_evaluated<bool>(0);
+
+    int detached_tris = 0;
+    Mesh *result = geometry::isotropic_remesh(
+        *src_mesh, mesh_params, attribute_filter, nullptr, &detached_tris);
+    if (detached_tris > 0) {
+      params.error_message_add(
+          NodeWarningType::Warning,
+          fmt::format(fmt::runtime(TIP_("{} non-manifold triangles were detached, leaving seams")),
+                      detached_tris));
+    }
     if (result == nullptr) {
       params.error_message_add(NodeWarningType::Warning,
                                TIP_("Remeshing produced no geometry; the input was kept"));

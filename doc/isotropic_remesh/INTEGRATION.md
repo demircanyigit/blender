@@ -1,5 +1,9 @@
 # Isotropic Remesh — Blender Geometry Node Integration
 
+> **Update:** the node now uses the [Polygon Mesh Processing Library](https://github.com/pmp-library/pmp-library)
+> 3.0.0, vendored in `extern/pmp`, instead of `extern/isotropicremesher`. See `extern/pmp/README.blender`
+> for its license and local changes. Sections below that describe the old library are out of date.
+
 This document describes the integration of
 [huxingyi/isotropicremesher](https://github.com/huxingyi/isotropicremesher) (MIT) as a native
 **Isotropic Remesh** Geometry Node in a custom Blender build.
@@ -86,7 +90,12 @@ Location: **Add ▸ Mesh ▸ Operations ▸ Isotropic Remesh** (`GeometryNodeIso
 |--------|------|---------|---------|
 | **Mesh** (in) | Geometry (Mesh) | — | Mesh to remesh. Non-triangle faces are triangulated internally. |
 | **Mesh** (out) | Geometry (Mesh) | — | New uniform-triangle mesh. |
-| **Target Edge Length** | Float (distance) | 0.1 | Desired edge length. **0 = use the input's average edge length.** |
+| **Mode** | Menu | Uniform | **Uniform**: one edge length. **Adaptive**: shorter edges on more curved areas. |
+| **Target Edge Length** | Float (distance) | 0.1 | Uniform only. Desired edge length. **0 = use the input's average edge length.** |
+| **Min Edge Length** | Float (distance) | 0.02 | Adaptive only. Edge length in the most curved areas. |
+| **Max Edge Length** | Float (distance) | 0.2 | Adaptive only. Edge length in flat areas. |
+| **Tolerance** | Float (distance) | 0.002 | Adaptive only. Allowed distance between edges and the curved surface. |
+| **Hard Edges** | Bool field (edge) | False | Edges to keep regardless of angle, for example Named Attribute `sharp_edge`. |
 | **Iterations** | Int | 10 | Number of split/collapse/flip/relax/project passes. |
 | **Preserve Boundary** | Bool | On | Pin open boundary edges so holes/outlines keep their shape. |
 | **Preserve Sharp Edges** | Bool | Off | Pin edges whose adjacent faces bend more than *Sharp Angle*. |

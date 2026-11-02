@@ -5,12 +5,14 @@
 #include <algorithm>
 #include <array>
 #include <cfloat>
+#include <exception>
 #include <limits>
 #include <vector>
 
 #include "BLI_array.hh"
 #include "BLI_index_mask.hh"
 #include "BLI_kdopbvh.hh"
+#include "BLI_math_base.h"
 #include "BLI_math_geom.h"
 #include "BLI_math_vector.hh"
 #include "BLI_math_vector_types.hh"
@@ -29,96 +31,132 @@
 
 #include "GEO_isotropic_remesh.hh"
 
-/* Vendored MIT isotropic remesher (extern/isotropicremesher). */
-#include "isotropichalfedgemesh.h"
-#include "isotropicremesher.h"
-#include "vector3.h"
+#include "pmp_mesh_conversion.hh"
+
+/* Vendored Polygon Mesh Processing Library (extern/pmp). */
+#include "pmp/algorithms/features.h"
+#include "pmp/algorithms/remeshing.h"
+#include "pmp/exceptions.h"
+#include "pmp/surface_mesh.h"
 
 namespace blender::geometry {
 
 /* -------------------------------------------------------------------------- */
-/** \name Input conversion (Blender #Mesh -> remesher triangle soup)
+/** \name Input conversion (Blender #Mesh -> #pmp::SurfaceMesh)
  * \{ */
 
-/* Compacted triangle soup fed to the remesher. Only vertices that are actually referenced by a
- * triangle are kept, so loose vertices never leak into the result and indices stay dense. */
-struct RemeshInput {
-  std::vector<Vector3> vertices;
-  std::vector<std::vector<size_t>> triangles;
-};
-
-static RemeshInput mesh_to_remesh_input(const Mesh &mesh)
+int build_surface_mesh(const Mesh &mesh,
+                       const VArray<bool> &hard_edges,
+                       const VArray<bool> &vert_selection,
+                       pmp::SurfaceMesh &surface)
 {
   const Span<float3> positions = mesh.vert_positions();
   const Span<int> corner_verts = mesh.corner_verts();
   const Span<int3> corner_tris = mesh.corner_tris();
 
-  RemeshInput input;
-  input.vertices.reserve(positions.size());
-  input.triangles.reserve(corner_tris.size());
+  const auto to_point = [&](const int vert) {
+    const float3 &p = positions[vert];
+    return pmp::Point(p.x, p.y, p.z);
+  };
 
-  Array<int> vert_map(positions.size(), -1);
+  int detached_tris = 0;
+  Array<pmp::Vertex> vert_map(positions.size());
   for (const int3 &tri : corner_tris) {
-    std::array<size_t, 3> remapped;
-    for (const int i : IndexRange(3)) {
-      const int vert = corner_verts[tri[i]];
-      if (vert_map[vert] == -1) {
-        vert_map[vert] = int(input.vertices.size());
-        const float3 &p = positions[vert];
-        input.vertices.push_back(Vector3(double(p.x), double(p.y), double(p.z)));
-      }
-      remapped[i] = size_t(vert_map[vert]);
-    }
-    /* Skip topologically degenerate triangles: the half-edge builder assumes every directed edge
-     * of a face is unique, and a repeated vertex would create a zero-length edge. */
-    if (remapped[0] == remapped[1] || remapped[1] == remapped[2] || remapped[0] == remapped[2]) {
+    const int3 verts(corner_verts[tri[0]], corner_verts[tri[1]], corner_verts[tri[2]]);
+    /* Skip topologically degenerate triangles, which have a repeated vertex. */
+    if (verts[0] == verts[1] || verts[1] == verts[2] || verts[0] == verts[2]) {
       continue;
     }
-    input.triangles.push_back({remapped[0], remapped[1], remapped[2]});
+    for (const int i : IndexRange(3)) {
+      if (!vert_map[verts[i]].is_valid()) {
+        vert_map[verts[i]] = surface.add_vertex(to_point(verts[i]));
+      }
+    }
+    try {
+      surface.add_triangle(vert_map[verts[0]], vert_map[verts[1]], vert_map[verts[2]]);
+    }
+    catch (const pmp::TopologyException &) {
+      detached_tris++;
+      surface.add_triangle(surface.add_vertex(to_point(verts[0])),
+                           surface.add_vertex(to_point(verts[1])),
+                           surface.add_vertex(to_point(verts[2])));
+    }
   }
-  return input;
+
+  if (hard_edges) {
+    auto vert_is_feature = surface.vertex_property<bool>("v:feature", false);
+    auto edge_is_feature = surface.edge_property<bool>("e:feature", false);
+    const Span<int2> edges = mesh.edges();
+    for (const int edge : edges.index_range()) {
+      if (!hard_edges[edge]) {
+        continue;
+      }
+      const pmp::Vertex v0 = vert_map[edges[edge][0]];
+      const pmp::Vertex v1 = vert_map[edges[edge][1]];
+      if (!v0.is_valid() || !v1.is_valid()) {
+        continue;
+      }
+      const pmp::Edge surface_edge = surface.find_edge(v0, v1);
+      if (surface_edge.is_valid()) {
+        edge_is_feature[surface_edge] = true;
+        vert_is_feature[v0] = true;
+        vert_is_feature[v1] = true;
+      }
+    }
+  }
+
+  if (vert_selection) {
+    auto vert_is_selected = surface.vertex_property<bool>("v:selected", false);
+    for (const int vert : positions.index_range()) {
+      if (vert_map[vert].is_valid()) {
+        vert_is_selected[vert_map[vert]] = vert_selection[vert];
+      }
+    }
+  }
+  return detached_tris;
+}
+
+static float mean_edge_length(const pmp::SurfaceMesh &surface)
+{
+  double sum = 0.0;
+  for (const pmp::Edge edge : surface.edges()) {
+    sum += pmp::distance(surface.position(surface.vertex(edge, 0)),
+                         surface.position(surface.vertex(edge, 1)));
+  }
+  return surface.n_edges() > 0 ? float(sum / surface.n_edges()) : 0.0f;
 }
 
 /** \} */
 
 /* -------------------------------------------------------------------------- */
-/** \name Output conversion (remesher half-edge mesh -> Blender #Mesh)
+/** \name Output conversion (#pmp::SurfaceMesh -> Blender #Mesh)
  * \{ */
 
-/* Walk the remeshed half-edge mesh once, assigning a dense output index to every referenced
- * vertex and collecting triangle corner indices. The winding matches the upstream test harness
- * (previous, current, next start-vertex) so face normals stay consistent. */
-static Mesh *halfedge_mesh_to_mesh(IsotropicHalfedgeMesh &halfedge_mesh, const Mesh &src_mesh)
+Mesh *surface_mesh_to_mesh(pmp::SurfaceMesh &surface, const Mesh &src_mesh)
 {
-  using Vertex = IsotropicHalfedgeMesh::Vertex;
-  using Face = IsotropicHalfedgeMesh::Face;
-
-  for (Vertex *vertex = halfedge_mesh.moveToNextVertex(nullptr); vertex != nullptr;
-       vertex = halfedge_mesh.moveToNextVertex(vertex))
-  {
-    vertex->outputIndex = std::numeric_limits<size_t>::max();
-  }
+  surface.garbage_collection();
 
   Vector<float3> positions;
   Vector<std::array<int, 3>> tris;
 
-  auto output_index = [&](Vertex *vertex) -> int {
-    if (vertex->outputIndex == std::numeric_limits<size_t>::max()) {
-      vertex->outputIndex = size_t(positions.size());
-      positions.append(float3(float(vertex->position[0]),
-                              float(vertex->position[1]),
-                              float(vertex->position[2])));
+  /* Only vertices used by a face are kept, so loose vertices never leak into the result. */
+  Array<int> vert_map(surface.vertices_size(), -1);
+  const auto output_index = [&](const pmp::Vertex vertex) -> int {
+    if (vert_map[vertex.idx()] == -1) {
+      vert_map[vertex.idx()] = positions.size();
+      const pmp::Point &p = surface.position(vertex);
+      positions.append(float3(p[0], p[1], p[2]));
     }
-    return int(vertex->outputIndex);
+    return vert_map[vertex.idx()];
   };
 
-  for (Face *face = halfedge_mesh.moveToNextFace(nullptr); face != nullptr;
-       face = halfedge_mesh.moveToNextFace(face))
-  {
-    Vertex *v0 = face->halfedge->previousHalfedge->startVertex;
-    Vertex *v1 = face->halfedge->startVertex;
-    Vertex *v2 = face->halfedge->nextHalfedge->startVertex;
-    tris.append({output_index(v0), output_index(v1), output_index(v2)});
+  for (const pmp::Face face : surface.faces()) {
+    std::array<int, 3> tri;
+    int corner = 0;
+    for (const pmp::Vertex vertex : surface.vertices(face)) {
+      tri[corner++] = output_index(vertex);
+    }
+    tris.append(tri);
   }
 
   if (tris.is_empty() || positions.is_empty()) {
@@ -178,9 +216,9 @@ static bool topology_attribute(const StringRef name)
  * vertex the nearest point on the original surface gives a source triangle and barycentric
  * weights; face attributes use the nearest source face at each output face centroid. Edge-domain
  * attributes have no meaningful mapping after a full retopology and are intentionally dropped. */
-static void transfer_attributes(const Mesh &src_mesh,
-                                Mesh &dst_mesh,
-                                const bke::AttributeFilter &attribute_filter)
+void transfer_attributes_from_surface(const Mesh &src_mesh,
+                                      Mesh &dst_mesh,
+                                      const bke::AttributeFilter &attribute_filter)
 {
   const Span<float3> src_positions = src_mesh.vert_positions();
   const Span<int> src_corner_verts = src_mesh.corner_verts();
@@ -333,46 +371,68 @@ static void transfer_attributes(const Mesh &src_mesh,
 Mesh *isotropic_remesh(const Mesh &mesh,
                        const IsotropicRemeshParams &params,
                        const bke::AttributeFilter &attribute_filter,
-                       const std::function<bool(float progress)> &progress_fn)
+                       const std::function<bool(float progress)> &progress_fn,
+                       int *r_detached_tris)
 {
-  RemeshInput input = mesh_to_remesh_input(mesh);
-  if (input.triangles.empty() || input.vertices.empty()) {
+  pmp::SurfaceMesh surface;
+  const int detached_tris = build_surface_mesh(mesh, params.hard_edges, {}, surface);
+  if (r_detached_tris != nullptr) {
+    *r_detached_tris = detached_tris;
+  }
+  if (surface.n_faces() == 0) {
     return nullptr;
   }
 
-  IsotropicRemesher remesher(&input.vertices, &input.triangles);
-  remesher.setPreserveBoundaries(params.preserve_boundary);
   if (params.preserve_sharp_edges) {
-    remesher.setSharpEdgeThresholdRadians(std::max(double(params.sharp_angle), 1.0e-4));
+    pmp::detect_features(surface, RAD2DEGF(std::max(params.sharp_angle, 1.0e-4f)));
   }
-  if (params.target_edge_length > 0.0f) {
-    remesher.setTargetEdgeLength(double(params.target_edge_length));
+  if (params.preserve_boundary) {
+    pmp::detect_boundary(surface);
   }
 
-  const size_t iterations = size_t(std::max(params.iterations, 0));
+  const unsigned int iterations = uint(std::max(params.iterations, 0));
 
-  std::function<bool(size_t, size_t)> iteration_callback;
+  pmp::RemeshingProgress iteration_callback;
   if (progress_fn) {
-    iteration_callback = [&](const size_t current, const size_t total) -> bool {
-      const float progress = total > 0 ? float(current) / float(total) : 1.0f;
-      return progress_fn(progress);
+    iteration_callback = [&](const uint current, const uint total) -> bool {
+      return progress_fn(total > 0 ? float(current) / float(total) : 1.0f);
     };
   }
 
-  remesher.remesh(iterations, iteration_callback);
-
-  IsotropicHalfedgeMesh *halfedge_mesh = remesher.remeshedHalfedgeMesh();
-  if (halfedge_mesh == nullptr) {
+  try {
+    if (params.mode == IsotropicRemeshMode::Adaptive) {
+      /* Zero lengths would never stop splitting, so keep the range positive and ordered. */
+      const float max_length = std::max(params.max_edge_length, 1.0e-5f);
+      const float min_length = std::clamp(params.min_edge_length, 1.0e-5f, max_length);
+      pmp::adaptive_remeshing(surface,
+                              min_length,
+                              max_length,
+                              std::max(params.adaptive_tolerance, 1.0e-7f),
+                              iterations,
+                              true,
+                              iteration_callback);
+    }
+    else {
+      const float target_length = params.target_edge_length > 0.0f ? params.target_edge_length :
+                                                                     mean_edge_length(surface);
+      /* The remesher settles about 10% below the length it is given. Compensate, so that edges
+       * average the requested length. */
+      const float length_scale = 1.1f;
+      pmp::uniform_remeshing(
+          surface, target_length * length_scale, iterations, true, iteration_callback);
+    }
+  }
+  catch (const std::exception &) {
     return nullptr;
   }
 
-  Mesh *result = halfedge_mesh_to_mesh(*halfedge_mesh, mesh);
+  Mesh *result = surface_mesh_to_mesh(surface, mesh);
   if (result == nullptr) {
     return nullptr;
   }
 
   if (params.transfer_attributes) {
-    transfer_attributes(mesh, *result, attribute_filter);
+    transfer_attributes_from_surface(mesh, *result, attribute_filter);
   }
 
   return result;

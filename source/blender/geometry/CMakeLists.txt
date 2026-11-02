@@ -6,7 +6,6 @@ set(INC
   PUBLIC .
   ../makesrna
   ../../../intern/eigen
-  ../../../extern/isotropicremesher/src
 )
 
 set(INC_SYS
@@ -26,6 +25,7 @@ set(SRC
   intern/join_geometries.cc
   intern/merge_curves.cc
   intern/merge_layers.cc
+  intern/pmp_mesh_conversion.hh
   intern/mesh_boolean.cc
   intern/mesh_boolean_manifold.cc
   intern/mesh_copy_selection.cc
@@ -118,7 +118,7 @@ set(LIB
   PRIVATE bf::intern::atomic
   PRIVATE bf::intern::guardedalloc
   PRIVATE bf::extern::curve_fit_nd
-  PRIVATE bf::extern::isotropicremesher
+  PRIVATE bf::extern::pmp
   PRIVATE bf::dependencies::optional::manifold
   PRIVATE bf::dependencies::optional::gmp
 )
