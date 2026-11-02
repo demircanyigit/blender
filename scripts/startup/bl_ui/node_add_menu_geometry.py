@@ -525,6 +525,7 @@ class NODE_MT_gn_mesh_operations_base(node_add_menu.NodeMenu):
     def draw(self, context):
         del context
         layout = self.layout
+        self.node_operator(layout, "GeometryNodeDecimateMesh")
         self.node_operator(layout, "GeometryNodeDualMesh")
         self.node_operator(layout, "GeometryNodeEdgePathsToCurves")
         self.node_operator(layout, "GeometryNodeEdgePathsToSelection")

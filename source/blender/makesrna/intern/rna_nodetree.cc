@@ -10120,6 +10120,7 @@ static void rna_def_nodes(BlenderRNA *brna)
   define("GeometryNode", "GeometryNodeCurvesToGreasePencil");
   define("GeometryNode", "GeometryNodeCurveToMesh");
   define("GeometryNode", "GeometryNodeCurveToPoints");
+  define("GeometryNode", "GeometryNodeDecimateMesh");
   define("GeometryNode", "GeometryNodeDeformCurvesOnSurface");
   define("GeometryNode", "GeometryNodeDeleteGeometry");
   define("GeometryNode", "GeometryNodeDistributePointsInGrid");
