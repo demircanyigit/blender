@@ -546,6 +546,7 @@ class NODE_MT_gn_mesh_operations_base(node_add_menu.NodeMenu):
         self.node_operator(layout, "GeometryNodeTriangulate")
         self.node_operator(layout, "GeometryNodeVoronoiFracture")
         self.node_operator(layout, "GeometryNodeBevelMesh")
+        self.node_operator(layout, "GeometryNodeResampleMesh")
 
         self.draw_assets_for_catalog(layout, self.menu_path)
 
