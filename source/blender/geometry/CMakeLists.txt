@@ -26,6 +26,7 @@ set(SRC
   intern/merge_curves.cc
   intern/merge_layers.cc
   intern/mesh_decimate.cc
+  intern/mesh_voronoi_fracture.cc
   intern/pmp_mesh_conversion.hh
   intern/mesh_boolean.cc
   intern/mesh_boolean_manifold.cc
@@ -74,6 +75,7 @@ set(SRC
   GEO_merge_curves.hh
   GEO_merge_layers.hh
   GEO_mesh_decimate.hh
+  GEO_mesh_voronoi_fracture.hh
   GEO_mesh_boolean.hh
   GEO_mesh_copy_selection.hh
   GEO_mesh_merge_by_distance.hh

@@ -5,9 +5,11 @@
 #ifdef WITH_MANIFOLD
 #  include <algorithm>
 #  include <iostream>
+#  include <limits>
 
 #  include "BLI_array.hh"
 #  include "BLI_array_utils.hh"
+#  include "BLI_bounds_types.hh"
 #  include "BLI_map.hh"
 #  include "BLI_math_geom.h"
 #  include "BLI_math_matrix.h"
@@ -1524,13 +1526,19 @@ static MeshGL mesh_trim_manifold(Manifold &manifold0,
  * Blender Mesh.
  * If \a r_intersecting_edges is not null, fill it with the edge indices
  * of edges that separate two different meshes of the input.
+ * If \a r_out_face_ids is not null, fill it with the input face of each output face.
+ * If \a r_out_vert_values is not null, fill it with the values from \a vert_values, which has an
+ * item for each vertex of \a mgl, for each output vertex.
  */
 static Mesh *meshgl_to_mesh(MeshGL &mgl,
                             const Mesh *joined_mesh,
                             Span<const Mesh *> meshes,
                             const Span<Array<short>> material_remaps,
                             const MeshOffsets &mesh_offsets,
-                            Vector<int> *r_intersecting_edges)
+                            Vector<int> *r_intersecting_edges,
+                            Array<int> *r_out_face_ids = nullptr,
+                            const Span<int> vert_values = {},
+                            Array<int> *r_out_vert_values = nullptr)
 {
   constexpr int dbg_level = 0;
   if (dbg_level > 0) {
@@ -1550,6 +1558,27 @@ static Mesh *meshgl_to_mesh(MeshGL &mgl,
   MeshAssembly ma = assemble_mesh_from_meshgl(mgl, mesh_offsets);
   const int verts_num = ma.output_verts_num;
   const int faces_num = ma.new_faces.size();
+
+  if (r_out_face_ids != nullptr) {
+    r_out_face_ids->reinitialize(faces_num);
+    for (const int face : IndexRange(faces_num)) {
+      (*r_out_face_ids)[face] = ma.new_faces[face].face_id;
+    }
+  }
+  if (r_out_vert_values != nullptr) {
+    if (ma.old_to_new_vert_map.is_empty()) {
+      *r_out_vert_values = Array<int>(vert_values);
+    }
+    else {
+      r_out_vert_values->reinitialize(verts_num);
+      for (const int old_vert : vert_values.index_range()) {
+        const int new_vert = ma.old_to_new_vert_map[old_vert];
+        if (new_vert >= 0) {
+          (*r_out_vert_values)[new_vert] = vert_values[old_vert];
+        }
+      }
+    }
+  }
 
   /* Make a new Mesh, now that we know the number of vertices and faces. Corners will be counted
    * using the mesh's face offsets, and we will use Blender's parallelized function to calculate
@@ -1815,6 +1844,293 @@ Mesh *mesh_boolean_manifold(Span<const Mesh *> meshes,
   catch (...) {
     std::cout << "mesh_boolean_manifold: unknown exception\n";
   }
+  *r_error = BooleanError::UnknownError;
+  return nullptr;
+}
+
+/**
+ * Make a mesh with the given number of unconnected faces. Output faces have to refer to a face of
+ * the input, so the faces of the cuts refer to these, one for each side of a cell.
+ */
+static Mesh *mesh_for_fracture_cuts(const int faces_num)
+{
+  Mesh *mesh = BKE_mesh_new_nomain(faces_num * 3, 0, faces_num, faces_num * 3);
+  MutableSpan<int> face_offsets = mesh->face_offsets_for_write();
+  MutableSpan<int> corner_verts = mesh->corner_verts_for_write();
+  MutableSpan<float3> positions = mesh->vert_positions_for_write();
+  positions.fill(float3(0.0f));
+  for (const int i : IndexRange(faces_num)) {
+    face_offsets[i] = i * 3;
+    corner_verts.slice(i * 3, 3).copy_from({i * 3, i * 3 + 1, i * 3 + 2});
+    positions[i * 3 + 1].x = 1.0f;
+    positions[i * 3 + 2].y = 1.0f;
+  }
+  bke::mesh_calc_edges(*mesh, false, false);
+  return mesh;
+}
+
+struct FractureContext {
+  Span<FractureCell> cells;
+  bool separate_islands;
+  /* The faces of the cuts start at this index in the joined mesh. */
+  int cut_face_start;
+  /* The cuts of each cell, with faces already referring to the joined mesh. */
+  MutableSpan<Vector<MeshGL>> pieces;
+};
+
+static Manifold box_manifold(const double3 &min, const double3 &max)
+{
+  const double3 size = max - min;
+  return Manifold::Cube(manifold::vec3(size.x, size.y, size.z))
+      .Translate(manifold::vec3(min.x, min.y, min.z));
+}
+
+/**
+ * Faces of the mesh keep their IDs. Everything else comes from a cut, and so has to be a part of
+ * the side of the cell with the same direction, which can be told apart in the result.
+ */
+static void assign_cut_face_ids(MeshGL &mgl, const FractureCell &cell, const int cut_face_start)
+{
+  for (const int run : IndexRange(mgl.runOriginalID.size())) {
+    if (mgl.runOriginalID[run] == 0) {
+      continue;
+    }
+    for (const int tri : IndexRange::from_begin_end(mgl.runIndex[run] / 3, mgl.runIndex[run + 1] / 3))
+    {
+      const auto position = [&](const int corner) {
+        return double3(float3(&mgl.vertProperties[size_t(mgl.triVerts[tri * 3 + corner]) * 3]));
+      };
+      const double3 p0 = position(0);
+      const double3 normal = math::cross(position(1) - p0, position(2) - p0);
+      int best = 0;
+      double best_value = -std::numeric_limits<double>::max();
+      for (const int side : cell.normals.index_range()) {
+        const double value = math::dot(normal, cell.normals[side]);
+        if (value > best_value) {
+          best_value = value;
+          best = side;
+        }
+      }
+      mgl.faceID[tri] = uint32_t(cut_face_start + best);
+    }
+  }
+}
+
+static void fracture_leaf(const Manifold &mesh, const int cell_index, const FractureContext &context)
+{
+  const FractureCell &cell = context.cells[cell_index];
+  std::vector<manifold::vec3> hull_points;
+  hull_points.reserve(cell.points.size());
+  for (const double3 &point : cell.points) {
+    hull_points.emplace_back(point.x, point.y, point.z);
+  }
+  const Manifold hull = Manifold::Hull(hull_points);
+  if (hull.IsEmpty()) {
+    return;
+  }
+  const Manifold piece = mesh ^ hull;
+  if (piece.IsEmpty()) {
+    return;
+  }
+  Vector<MeshGL> &result = context.pieces[cell_index];
+  if (context.separate_islands) {
+    for (const Manifold &island : piece.Decompose()) {
+      result.append(island.GetMeshGL());
+    }
+  }
+  else {
+    result.append(piece.GetMeshGL());
+  }
+  for (MeshGL &mgl : result) {
+    assign_cut_face_ids(mgl, cell, context.cut_face_start);
+  }
+}
+
+/**
+ * A boolean takes time for all of the mesh, even if a cell only touches a small part of it. So keep
+ * dividing the cells in two groups, each with a part of the mesh that is cut to the box around the
+ * group, which means that the last booleans only have to deal with a small part of the mesh. These
+ * boxes are bigger than the cells inside of them, so their faces are not in the result.
+ */
+static void fracture_recursive(const Manifold &mesh,
+                               MutableSpan<int> cell_indices,
+                               const Span<std::pair<double3, double3>> cell_bounds,
+                               const double margin,
+                               const FractureContext &context)
+{
+  if (cell_indices.size() == 1) {
+    fracture_leaf(mesh, cell_indices[0], context);
+    return;
+  }
+
+  double3 min(std::numeric_limits<double>::max());
+  double3 max(std::numeric_limits<double>::lowest());
+  for (const int cell : cell_indices) {
+    min = math::min(min, cell_bounds[cell].first);
+    max = math::max(max, cell_bounds[cell].second);
+  }
+  const double3 size = max - min;
+  const int axis = size.x > size.y ? (size.x > size.z ? 0 : 2) : (size.y > size.z ? 1 : 2);
+  const int middle = cell_indices.size() / 2;
+  std::nth_element(cell_indices.begin(),
+                   cell_indices.begin() + middle,
+                   cell_indices.end(),
+                   [&](const int a, const int b) {
+                     return cell_bounds[a].first[axis] + cell_bounds[a].second[axis] <
+                            cell_bounds[b].first[axis] + cell_bounds[b].second[axis];
+                   });
+
+  const auto process_group = [&](MutableSpan<int> group) {
+    double3 group_min(std::numeric_limits<double>::max());
+    double3 group_max(std::numeric_limits<double>::lowest());
+    for (const int cell : group) {
+      group_min = math::min(group_min, cell_bounds[cell].first);
+      group_max = math::max(group_max, cell_bounds[cell].second);
+    }
+    const Manifold cropped = mesh ^ box_manifold(group_min - double3(margin),
+                                                 group_max + double3(margin));
+    if (!cropped.IsEmpty()) {
+      fracture_recursive(cropped, group, cell_bounds, margin, context);
+    }
+  };
+  threading::parallel_invoke(
+      cell_indices.size() > 4,
+      [&]() { process_group(cell_indices.take_front(middle)); },
+      [&]() { process_group(cell_indices.drop_front(middle)); });
+}
+
+Mesh *mesh_fracture_manifold(const Mesh &mesh,
+                             const Span<FractureCell> cells,
+                             const bool separate_islands,
+                             Array<int> &r_vert_pieces,
+                             Vector<int> &r_piece_cells,
+                             Array<bool> &r_interior_faces,
+                             BooleanError *r_error)
+{
+  *r_error = BooleanError::NoError;
+  Mesh *cuts_mesh = nullptr;
+  const auto free_cuts_mesh = [&]() {
+    if (cuts_mesh != nullptr) {
+      BKE_id_free(nullptr, cuts_mesh);
+      cuts_mesh = nullptr;
+    }
+  };
+  try {
+    int sides_num = 1;
+    for (const FractureCell &cell : cells) {
+      sides_num = std::max(sides_num, int(cell.normals.size()));
+    }
+    cuts_mesh = mesh_for_fracture_cuts(sides_num);
+
+    const Array<const Mesh *> meshes{&mesh, cuts_mesh};
+    const Array<float4x4> transforms(2, float4x4::identity());
+    const bke::GeometrySet joined_meshes_set = join_meshes_with_transforms(meshes, transforms);
+    const Mesh *joined_mesh = joined_meshes_set.get_mesh();
+    const MeshOffsets mesh_offsets(meshes);
+
+    Manifold source;
+    get_manifold(source, meshes, 0, mesh_offsets);
+    if (source.Status() != Manifold::Error::NoError) {
+      *r_error = source.Status() == Manifold::Error::NotManifold ? BooleanError::NonManifold :
+                                                                    BooleanError::UnknownError;
+      free_cuts_mesh();
+      return nullptr;
+    }
+
+    Array<Vector<MeshGL>> pieces(cells.size());
+    if (!cells.is_empty()) {
+      Array<std::pair<double3, double3>> cell_bounds(cells.size());
+      for (const int i : cells.index_range()) {
+        double3 min(std::numeric_limits<double>::max());
+        double3 max(std::numeric_limits<double>::lowest());
+        for (const double3 &point : cells[i].points) {
+          min = math::min(min, point);
+          max = math::max(max, point);
+        }
+        cell_bounds[i] = {min, max};
+      }
+      const Bounds<float3> bounds = *mesh.bounds_min_max();
+      const double margin = math::length(double3(bounds.max) - double3(bounds.min)) * 1e-3;
+
+      Array<int> cell_indices(cells.size());
+      array_utils::fill_index_range<int>(cell_indices);
+      const FractureContext context{cells, separate_islands, mesh.faces_num, pieces};
+      fracture_recursive(source, cell_indices, cell_bounds, margin, context);
+    }
+
+    /* All pieces go in one MeshGL, as creating a mesh takes time for all faces of the input. */
+    MeshGL joined_pieces;
+    joined_pieces.numProp = 3;
+    r_piece_cells.clear();
+    Vector<int> vert_pieces;
+    for (const int cell : cells.index_range()) {
+      for (const MeshGL &mgl : pieces[cell]) {
+        if (mgl.NumTri() == 0) {
+          continue;
+        }
+        const int piece_index = r_piece_cells.append_and_get_index(cells[cell].point_index);
+        const uint32_t vert_start = uint32_t(joined_pieces.NumVert());
+        joined_pieces.vertProperties.insert(joined_pieces.vertProperties.end(),
+                                            mgl.vertProperties.begin(),
+                                            mgl.vertProperties.end());
+        for (const uint32_t vert : mgl.triVerts) {
+          joined_pieces.triVerts.push_back(vert + vert_start);
+        }
+        joined_pieces.faceID.insert(
+            joined_pieces.faceID.end(), mgl.faceID.begin(), mgl.faceID.end());
+        vert_pieces.append_n_times(piece_index, int64_t(mgl.NumVert()));
+      }
+    }
+
+    Array<int> out_face_ids;
+    Mesh *result = meshgl_to_mesh(joined_pieces,
+                                  joined_mesh,
+                                  meshes,
+                                  {},
+                                  mesh_offsets,
+                                  nullptr,
+                                  &out_face_ids,
+                                  vert_pieces,
+                                  &r_vert_pieces);
+
+    /* Cuts have to be flat and use the first material, instead of one that is added for them. */
+    r_interior_faces.reinitialize(result->faces_num);
+    for (const int i : r_interior_faces.index_range()) {
+      r_interior_faces[i] = out_face_ids[i] >= mesh.faces_num;
+    }
+    MEM_SAFE_DELETE(result->mat);
+    result->mat = MEM_new_array_uninitialized<Material *>(size_t(mesh.totcol), __func__);
+    result->totcol = mesh.totcol;
+    MutableSpan(result->mat, result->totcol).copy_from({mesh.mat, mesh.totcol});
+    bke::MutableAttributeAccessor attributes = result->attributes_for_write();
+    if (result->faces_num > 0) {
+      bke::SpanAttributeWriter<bool> sharp_faces = attributes.lookup_or_add_for_write_span<bool>(
+          "sharp_face", bke::AttrDomain::Face);
+      bke::SpanAttributeWriter<int> materials = attributes.lookup_for_write_span<int>(
+          "material_index");
+      for (const int i : r_interior_faces.index_range()) {
+        if (r_interior_faces[i]) {
+          sharp_faces.span[i] = true;
+          if (materials) {
+            materials.span[i] = 0;
+          }
+        }
+      }
+      sharp_faces.finish();
+      if (materials) {
+        materials.finish();
+      }
+    }
+    free_cuts_mesh();
+    return result;
+  }
+  catch (const std::exception &e) {
+    std::cout << "mesh_fracture_manifold: exception: " << e.what() << "\n";
+  }
+  catch (...) {
+    std::cout << "mesh_fracture_manifold: unknown exception\n";
+  }
+  free_cuts_mesh();
   *r_error = BooleanError::UnknownError;
   return nullptr;
 }
