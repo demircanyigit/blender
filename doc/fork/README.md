@@ -1,6 +1,6 @@
 # About this fork
 
-An unofficial fork based on the Blender `v5.1.0` tag. It adds six geometry nodes and more color
+An unofficial fork based on the Blender `v5.1.0` tag. It adds thirteen geometry nodes and more color
 attribute options for the Solid shading mode. It isn't made or supported by the Blender Foundation.
 
 - [NODES.md](NODES.md): what each node does, its inputs and its limits
@@ -30,6 +30,8 @@ curves and on Suzanne with color attributes:
 - Bevel gives the same result as the Bevel modifier across its settings.
 - Sweep gives the same result as Curve to Mesh where the two overlap.
 - Bevel with a random Amount ran through 1,280 combinations of settings without crashing.
+- Clip and Dice keep closed meshes closed and keep their volume, including a torus and random grids.
+- Displace gives the same result as the Displace modifier without a texture.
 
 This is not the same as long use on production scenes, so expect rough edges. Those scripts aren't
 in this repository yet.

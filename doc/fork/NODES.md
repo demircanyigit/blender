@@ -7,6 +7,13 @@
 | [Voronoi Fracture](#voronoi-fracture) | Mesh ▸ Operations | Cuts a closed mesh into solid pieces |
 | [Bevel](#bevel) | Mesh ▸ Operations | Bevels edges or vertices, like the modifier |
 | [Resample Mesh](#resample-mesh) | Mesh ▸ Operations | Adds points along edges |
+| [Clip](#clip) | Mesh ▸ Operations | Cuts a mesh with a plane and removes one side |
+| [Dice](#dice) | Mesh ▸ Operations | Cuts a mesh into a grid of pieces along its bounding box |
+| [Dissolve](#dissolve) | Mesh ▸ Operations | Removes points, edges or faces without leaving holes |
+| [Smooth](#smooth) | Mesh ▸ Operations | Smooths the surface |
+| [Relax](#relax) | Mesh ▸ Operations | Evens out the points along the surface |
+| [QuadriFlow Remesh](#quadriflow-remesh) | Mesh ▸ Operations | Rebuilds a mesh out of quads |
+| [Displace](#displace) | Mesh ▸ Operations | Moves points by a height or vector |
 | [Sweep](#sweep) | Curve ▸ Operations | Sweeps a shape along curves |
 
 Inputs marked **field** can take a different value per element, for example from Random Value.
@@ -131,6 +138,184 @@ Limits:
 - Edges are treated as straight, so curved surfaces don't get smoother.
 - Faces become n-gons with extra points on their edges. Add Triangulate if you need triangles.
 - One evaluation adds at most 100 million points. Past that the node shows a warning.
+
+## Clip
+
+Cuts a mesh with a plane and removes one side. Attributes are interpolated onto the cut. Fill faces
+copy the attributes of the faces next to them and are shaded flat.
+
+| Input | Default | Meaning |
+|---|---|---|
+| Mesh | | Mesh to cut |
+| Keep | Above | **Above**: the side Direction points to. **Below**: the other side. **Both**: keep everything and only add the cut |
+| Space | Object | **Object**: the plane moves with the object. **World**: the plane stays in place |
+| Origin | 0, 0, 0 | A point on the plane |
+| Direction | 0, 0, 1 | The direction the plane faces |
+| Distance | 0 | Moves the plane from Origin along Direction |
+| Fill Cut | On | Closes the holes left by the cut. Not used with Both |
+
+| Output | Meaning |
+|---|---|
+| Mesh | The cut mesh |
+| Cut Edges | **Field.** The edges along the cut, for example to bevel them |
+| Interior | **Field.** The faces that fill the cut |
+
+Limits:
+
+- Only closed loops can be filled, so cutting an open mesh may leave parts of the cut open.
+- Self-intersecting meshes can get overlapping fill faces.
+- World space uses the object's transform, which doesn't include the transforms of instances. Add
+  Realize Instances in front if the mesh is instanced.
+
+## Dice
+
+Cuts a mesh into a grid of pieces along the X, Y and Z axes of its bounding box. It also works on
+open meshes, which become open pieces.
+
+| Input | Default | Meaning |
+|---|---|---|
+| Mesh | | Mesh to cut |
+| Mode | Count | **Count**: number of cells on each axis. **Size**: size of the cells |
+| Space | Object | **Object**: bounding box and axes of the object, so the cuts rotate with it. **World**: bounding box and axes of the world |
+| Count X, Y, Z | 2 | Count only. Number of cells on each axis |
+| Size | 0.5 | Size only. Cell size on each axis, starting from the low corner of the box. The last cell is smaller if the box doesn't divide evenly. Zero doesn't cut along that axis |
+| Cut Gap | 0 | Distance between neighboring pieces |
+| Fill Cuts | On | Closes the holes left by the cuts, so closed meshes make solid pieces |
+| Separate Islands | Off | Makes a separate piece of every disconnected part of a cell |
+
+| Output | Meaning |
+|---|---|
+| Mesh | The pieces |
+| Piece Index | **Field.** Number of the piece, for splitting the mesh with Split to Instances |
+| Cell Index | **Field.** Position in the grid: X + Y × Count X + Z × Count X × Count Y |
+| Interior | **Field.** The faces that fill the cuts |
+
+Limits:
+
+- Cells without any of the mesh are skipped, so Piece Index has no gaps but Cell Index can.
+- An axis along which the mesh has no size isn't cut.
+- Each mesh uses its own bounding box. Add Realize Instances in front to dice instances together.
+- A single evaluation is limited to one million cells. Past that the node shows a warning and leaves
+  the mesh as it is.
+- Pieces at the edge of a curved shape can be very small.
+
+## Dissolve
+
+Removes parts of a mesh and merges the faces around them, without leaving holes. Uses the same code
+as Dissolve in Edit Mode.
+
+| Input | Default | Meaning |
+|---|---|---|
+| Mesh | | Mesh to remove parts from |
+| Mode | Edges | **Vertices**, **Edges**, **Faces**, or **Limited** for edges and points where the surface stays nearly flat |
+| Selection | All | **Field.** Points in Vertices mode, faces in Faces mode, otherwise edges |
+| Remove Inline Points | On | Edges and Faces. Also removes points left between only two edges |
+| Face Split | Off | Vertices and Edges. Splits off face corners to keep the surrounding shape |
+| Tear Boundary | Off | Vertices only. Splits off corners on open boundaries instead of merging faces |
+| Angle | 5° | Limited only. Only dissolves where the surface bends less than this |
+| All Boundaries | Off | Limited only. Also dissolves points on open boundaries, whatever their angle |
+
+Keep panel, Limited only: Materials, Seams, Sharp Edges and UVs each stop faces from merging across
+that kind of border.
+
+| Output | Meaning |
+|---|---|
+| Mesh | The mesh with parts removed |
+| Merged Faces | **Field.** The faces made by merging. Always off in Vertices mode |
+
+Limits:
+
+- In Limited mode a point is only dissolved if all of its edges are selected.
+- Merged faces can be n-gons that aren't flat, which can shade unevenly. Add Triangulate if needed.
+- In Edges mode, Merged Faces can include a face where merging wasn't possible.
+
+## Smooth
+
+Smooths a surface by moving points toward their neighbors. The number of points and all attributes
+stay the same.
+
+| Input | Default | Meaning |
+|---|---|---|
+| Mesh | | Mesh to smooth |
+| Method | Average | **Average**: strong, but the mesh shrinks with more iterations. **Keep Volume**: mostly keeps the size, but only removes small bumps |
+| Selection | All | **Field.** Points that may move |
+| Factor | 0.5 | **Field.** Strength for each point |
+| Iterations | 5 | Number of passes |
+| Preserve Boundary | On | Keeps points on open boundaries in place |
+| Hard Edges | Off | **Field.** Edges whose points stay in place |
+
+## Relax
+
+Evens out the distances between points by sliding them along the surface, so the shape stays the same.
+The number of points and all attributes stay the same.
+
+| Input | Default | Meaning |
+|---|---|---|
+| Mesh | | Mesh to relax |
+| Selection | All | **Field.** Points that may move |
+| Factor | 0.5 | **Field.** How far each point moves in one iteration |
+| Iterations | 10 | Number of passes |
+| Keep on Surface | On | Moves points back onto the original surface after every iteration |
+| Preserve Boundary | On | Keeps points on open boundaries in place |
+| Hard Edges | Off | **Field.** Edges whose points stay in place |
+
+Limits:
+
+- Attribute values stay on their points, so textures can shift when UVs are kept.
+- It doesn't change the connections between points, so a mesh with very different numbers of edges
+  per point, like the poles of a UV sphere, won't get even. Isotropic Remesh does that.
+
+## QuadriFlow Remesh
+
+Rebuilds a mesh out of quads that follow the flow of its surface, using the same code as the
+QuadriFlow option of the Remesh operator.
+
+| Input | Default | Meaning |
+|---|---|---|
+| Mesh | | Mesh to rebuild |
+| Target | Face Count | **Face Count**, **Ratio** of the input's faces, or **Edge Length** |
+| Face Count | 1000 | Face Count only. Desired number of quads |
+| Ratio | 1 | Ratio only. Desired number of quads as a fraction of the input's faces |
+| Edge Length | 0.1 | Edge Length only. Desired length of the edges. Zero leaves the mesh as it is |
+| Seed | 0 | Changes the layout of the quads |
+| Preserve Sharp | Off | Tries to follow the sharp features of the surface |
+| Preserve Boundary | Off | Tries to follow the open boundaries of the mesh |
+
+Limits:
+
+- The mesh must be manifold, with faces pointing the same way and no loose or zero-length edges.
+  Otherwise the node shows an error and leaves the mesh as it is. Fix it first, for example with
+  Isotropic Remesh, or by turning it into a volume and back.
+- The number of quads is only close to the target, and the node asks for at least 6.
+- Details smaller than the quads get crumpled or lost, so use a high enough target for small features
+  like eyes. A very coarse input also gives rougher results, so subdivide it first.
+- It's slow, and it runs again every time something before it changes. Bake it or use a low target
+  while working.
+- Attributes are copied from the nearest part of the input, not blended, so they look blocky if the
+  input is much coarser than the result.
+- There's no way to cancel it while it runs.
+
+## Displace
+
+Moves the points of a mesh by a height or a vector. With no texture it gives the same result as the
+Displace modifier. To use a texture, connect it to Height or Vector.
+
+| Input | Default | Meaning |
+|---|---|---|
+| Mesh | | Mesh to displace |
+| Mode | Normal | **Normal**: along each point's normal. **Direction**: along a direction. **Vector**: by a vector |
+| Selection | All | **Field.** Points to move |
+| Height | 1 | **Field.** Normal and Direction only. Height of each point |
+| Direction | 0, 0, 1 | **Field.** Direction only. Its length doesn't matter |
+| Vector | 1, 1, 1 | **Field.** Vector only. Movement of each point, before Midlevel and Strength |
+| Midlevel | 0.5 | The value that doesn't move a point. In Vector mode it's subtracted from every axis |
+| Strength | 1 | **Field.** Multiplier of the movement |
+
+Limits:
+
+- The mesh needs enough points to show detail. Subdivide it or use Isotropic Remesh first.
+- Normal mode always uses smooth point normals, so flat shaded faces don't come apart.
+- Direction and Vector are relative to the object, not the world.
 
 ## Sweep
 
