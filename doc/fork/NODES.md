@@ -119,7 +119,7 @@ interpolated onto the new points. Points shared by edges stay welded.
 | Selection | All | **Field.** Edges to resample |
 | Mode | Length | **Length** or **Count** |
 | Length | 0.1 | **Field.** Length mode. Distance between points |
-| Count | 2 | **Field.** Count mode. Number of points to end up with |
+| Count | 2 | **Field.** Count mode. Number of segments on each edge |
 
 | Output | Meaning |
 |---|---|
