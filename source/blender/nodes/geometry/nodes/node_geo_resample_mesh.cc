@@ -4,6 +4,8 @@
 
 #include "DNA_mesh_types.h"
 
+#include "BLI_math_vector.hh"
+
 #include "BKE_attribute.hh"
 #include "BKE_mesh.hh"
 
@@ -13,6 +15,8 @@
 #include "bmesh.hh"
 
 #include "NOD_rna_define.hh"
+
+#include "UI_resources.hh"
 
 #include "node_geometry_util.hh"
 

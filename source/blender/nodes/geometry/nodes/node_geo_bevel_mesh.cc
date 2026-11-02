@@ -16,6 +16,8 @@
 
 #include "NOD_rna_define.hh"
 
+#include "UI_resources.hh"
+
 #include "node_geometry_util.hh"
 
 namespace blender::nodes::node_geo_bevel_mesh_cc {
