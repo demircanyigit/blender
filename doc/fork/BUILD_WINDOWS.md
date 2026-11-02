@@ -19,20 +19,25 @@ Windows 10 x64.
 
 Run these in an **x64 Native Tools Command Prompt for VS 2022**.
 
-Get the source:
+Get the source. This fork doesn't store Blender's large files (brushes, images and so on), so the clone
+has to skip them. `--depth 1` also leaves out Blender's long history:
 
 ```bat
-git clone --branch blender-5.1-custom https://github.com/demircanyigit/blender.git
+set GIT_LFS_SKIP_SMUDGE=1
+git clone --depth 1 --branch blender-5.1-custom https://github.com/demircanyigit/blender.git
+set GIT_LFS_SKIP_SMUDGE=
 cd blender
 ```
 
-Get the precompiled libraries for Windows. They're on Blender's server and large:
+Get the large files and the precompiled Windows libraries. Blender's script downloads them from
+projects.blender.org:
 
 ```bat
-python build_files\utils\make_update.py --no-blender
+python build_files\utils\make_update.py
 ```
 
-This step hasn't been tried from a fresh clone of this fork. If it fails, see Blender's instructions.
+The large files from this step were tested on a fresh clone of this fork, about 1.2 GB. The libraries
+part wasn't, because it's a much larger download. If it fails, see Blender's instructions.
 
 Configure and build, with the build folder next to the source folder:
 

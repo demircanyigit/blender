@@ -7,7 +7,8 @@ attribute options for the Solid shading mode. It isn't made or supported by the 
 - [VIEWPORT_COLORS.md](VIEWPORT_COLORS.md): the material options
 - [BUILD_WINDOWS.md](BUILD_WINDOWS.md): how to build it
 
-There are no ready-made builds, so you need to compile it yourself.
+Windows builds are on the [Releases page](https://github.com/demircanyigit/blender/releases). For
+other systems you need to compile it yourself, and only Windows has been tried.
 
 ## Using files in official Blender
 
@@ -35,8 +36,6 @@ in this repository yet.
 
 `source/blender/geometry/tests/GEO_isotropic_remesh_test.cc` comes from the first version of the
 Isotropic Remesh node. It hasn't been built or run since the node moved to the PMP library.
-
-Only Windows x64 has been built from this branch.
 
 ## Licenses
 
