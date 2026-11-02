@@ -18,3 +18,15 @@
 /* UBOs (Storage buffers in Workbench Next). */
 #define WB_MATERIAL_SLOT 0
 #define WB_WORLD_SLOT 1
+/* Storage buffer. */
+#define WB_COLOR_RAMP_SLOT 3
+
+/* Number of colors stored for every color ramp of the materials. */
+#define WB_COLOR_RAMP_SIZE 256
+
+/* Keep in sync with #Material::viewport_color_blend and #Material::viewport_color_channel. */
+#define WB_COLOR_BLEND_MIX 1
+#define WB_COLOR_BLEND_MULTIPLY 2
+#define WB_COLOR_BLEND_TWO_COLORS 3
+#define WB_COLOR_BLEND_RAMP 4
+#define WB_COLOR_CHANNEL_BRIGHTNESS 0

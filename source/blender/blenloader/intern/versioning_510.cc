@@ -8,10 +8,14 @@
 
 #define DNA_DEPRECATED_ALLOW
 
+/* Define macros in `DNA_genfile.h`. */
+#define DNA_GENFILE_VERSIONING_MACROS
+
 #include "DNA_ID.h"
 
 #include "DNA_brush_enums.h"
 #include "DNA_brush_types.h"
+#include "DNA_genfile.h"
 #include "DNA_light_types.h"
 #include "DNA_material_types.h"
 #include "DNA_mesh_types.h"
@@ -20,6 +24,8 @@
 #include "DNA_sequence_types.h"
 #include "DNA_windowmanager_types.h"
 #include "DNA_workspace_types.h"
+
+#undef DNA_GENFILE_VERSIONING_MACROS
 
 #include "BLI_listbase.h"
 #include "BLI_math_vector.h"
@@ -681,7 +687,7 @@ void do_versions_after_linking_510(FileData *fd, Main *bmain)
    */
 }
 
-void blo_do_versions_510(FileData * /*fd*/, Library * /*lib*/, Main *bmain)
+void blo_do_versions_510(FileData *fd, Library * /*lib*/, Main *bmain)
 {
   if (!MAIN_VERSION_FILE_ATLEAST(bmain, 501, 1)) {
     FOREACH_NODETREE_BEGIN (bmain, node_tree, id) {
@@ -917,6 +923,18 @@ void blo_do_versions_510(FileData * /*fd*/, Library * /*lib*/, Main *bmain)
           scene.toolsettings->snap_mode_tools = SCE_SNAP_TO_GEOM;
         }
       }
+    }
+  }
+
+  /* Files from official builds don't have this, whatever their version is. */
+  if (!DNA_struct_member_exists(fd->filesdna, "Material", "float", "viewport_color_factor")) {
+    for (Material &material : bmain->materials) {
+      material.viewport_color_factor = 1.0f;
+    }
+  }
+  if (!DNA_struct_member_exists(fd->filesdna, "Material", "char", "viewport_color_channel")) {
+    for (Material &material : bmain->materials) {
+      copy_v3_fl(material.viewport_color_b, 1.0f);
     }
   }
 

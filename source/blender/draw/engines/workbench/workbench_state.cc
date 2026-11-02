@@ -4,11 +4,13 @@
 
 #include "workbench_private.hh"
 
+#include "DNA_material_types.h"
 #include "DNA_userdef_types.h"
 
 #include "BKE_camera.h"
 #include "BKE_customdata.hh"
 #include "BKE_editmesh.hh"
+#include "BKE_material.hh"
 #include "BKE_mesh.hh"
 #include "BKE_mesh_types.hh"
 #include "BKE_paint.hh"
@@ -380,6 +382,19 @@ ObjectState::ObjectState(const DRWContext *draw_ctx,
                              ELEM(color_type,
                                   V3D_SHADING_TEXTURE_COLOR,
                                   V3D_SHADING_MATERIAL_COLOR);
+
+  if (use_per_material_batches && color_type == V3D_SHADING_MATERIAL_COLOR &&
+      ob->type == OB_MESH)
+  {
+    const int material_count = BKE_object_material_used_with_fallback_eval(*ob);
+    for (const int slot : IndexRange(material_count)) {
+      const blender::Material *material = BKE_object_material_get_eval(ob, slot + 1);
+      if (material && material->viewport_color_blend != MA_VIEWPORT_COLOR_BLEND_NONE) {
+        use_color_attribute_blend = has_color();
+        break;
+      }
+    }
+  }
 }
 
 }  // namespace blender::workbench

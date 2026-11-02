@@ -110,6 +110,14 @@ struct Material {
   float3 base_color = float3(0);
   /* Packed data into a int. Decoded in the shader. */
   uint packed_data = 0;
+  /* How the base color combines with the color attribute, decoded in the shader. */
+  float3 color_b = float3(0);
+  float color_factor = 0.0f;
+  float color_blend = MA_VIEWPORT_COLOR_BLEND_NONE;
+  float color_channel = MA_VIEWPORT_COLOR_CHANNEL_BRIGHTNESS;
+  /* Index in #SceneResources::color_ramp_buf, in units of #WB_COLOR_RAMP_SIZE. */
+  float color_ramp_row = 0.0f;
+  float _pad = 0.0f;
 
   Material() = default;
   Material(float3 color) : base_color(color), packed_data(Material::pack_data(0.0f, 0.4f, 1.0f)) {}
@@ -124,6 +132,7 @@ struct Material {
 
   bool is_transparent();
 };
+BLI_STATIC_ASSERT_ALIGN(Material, 16)
 
 inline bool Material::is_transparent()
 {
@@ -206,6 +215,8 @@ struct ObjectState {
   bool show_missing_texture = false;
   bool draw_shadow = false;
   bool use_per_material_batches = false;
+  /* A material blends the color attribute of the mesh with its color. */
+  bool use_color_attribute_blend = false;
   bool sculpt_pbvh = false;
 
   ObjectState(const DRWContext *draw_ctx,
@@ -252,6 +263,7 @@ struct SceneResources {
   Framebuffer clear_in_front_fb = {"Clear In Front"};
 
   StorageVectorBuffer<Material> material_buf = {"material_buf"};
+  StorageVectorBuffer<float4> color_ramp_buf = {"color_ramp_buf"};
   UniformBuffer<WorldData> world_buf = {};
   UniformArrayBuffer<float4, 6> clip_planes_buf;
 

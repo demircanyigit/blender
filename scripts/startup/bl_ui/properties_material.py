@@ -371,6 +371,19 @@ class MATERIAL_PT_viewport(MaterialButtonsPanel, Panel):
         col.prop(mat, "metallic")
         col.prop(mat, "roughness")
 
+        col = layout.column()
+        col.prop(mat, "viewport_color_blend")
+        blend = mat.viewport_color_blend
+        sub = col.column()
+        sub.active = blend != 'NONE'
+        sub.prop(mat, "viewport_color_factor", slider=True)
+        if blend in {'TWO_COLORS', 'RAMP'}:
+            col.prop(mat, "viewport_color_channel")
+        if blend == 'TWO_COLORS':
+            col.prop(mat, "viewport_color_b")
+        elif blend == 'RAMP' and mat.viewport_color_ramp:
+            layout.template_color_ramp(mat, "viewport_color_ramp", expand=True)
+
 
 class MATERIAL_PT_lineart(MaterialButtonsPanel, Panel):
     bl_label = "Line Art"

@@ -30,6 +30,7 @@ void MeshPass::init_pass(SceneResources &resources, DRWState state, int clip_pla
   bind_texture(WB_TILE_ARRAY_SLOT, resources.dummy_tile_array_tx);
   bind_texture(WB_TILE_DATA_SLOT, resources.dummy_tile_data_tx);
   bind_ssbo(WB_MATERIAL_SLOT, &resources.material_buf);
+  bind_ssbo(WB_COLOR_RAMP_SLOT, &resources.color_ramp_buf);
   bind_ubo(WB_WORLD_SLOT, resources.world_buf);
   bind_ubo(DRW_CLIPPING_UBO_SLOT, resources.clip_planes_buf);
 }

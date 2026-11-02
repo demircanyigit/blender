@@ -257,6 +257,10 @@ static std::optional<std::string> rna_ColorRamp_path(const PointerRNA *ptr)
                                                 static_cast<ColorBand *>(ptr->data));
       }
 
+      case ID_MA: {
+        return "viewport_color_ramp";
+      }
+
       default:
         /* everything else just uses 'color_ramp' */
         return "color_ramp";
@@ -324,6 +328,13 @@ static std::optional<std::string> rna_ColorRampElement_path(const PointerRNA *pt
         BLI_freelistN(&listbase);
         break;
       }
+      case ID_MA: {
+        ramp_ptr = RNA_id_pointer_create(id);
+        if (RNA_path_resolve(&ramp_ptr, "viewport_color_ramp", &ramp_ptr, &prop)) {
+          COLRAMP_GETPATH;
+        }
+        break;
+      }
 
       default: /* everything else should have a "color_ramp" property */
       {
@@ -352,7 +363,7 @@ static void rna_ColorRamp_update(Main *bmain, Scene * /*scene*/, PointerRNA *ptr
       case ID_MA: {
         Material *ma = id_cast<Material *>(ptr->owner_id);
 
-        DEG_id_tag_update(&ma->id, 0);
+        DEG_id_tag_update(&ma->id, ID_RECALC_SHADING);
         WM_main_add_notifier(NC_MATERIAL | ND_SHADING_DRAW, ma);
         break;
       }

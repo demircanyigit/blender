@@ -106,6 +106,9 @@ struct VertOut {
   [[flat]] int object_id;
   [[flat]] float roughness;
   [[flat]] float metallic;
+  [[flat]] int color_ramp_row;
+  [[smooth]] float color_ramp_value;
+  [[flat]] float color_ramp_factor;
 };
 
 struct MeshIn {
@@ -143,11 +146,14 @@ struct Mesh {
   v_out.object_id = int(drw_resource_id() & 0xFFFFu) + 1;
 
   materials.material_data_get(int(drw_custom_id()),
-                              v_in.ac.rgb,
+                              v_in.ac,
                               v_out.color,
                               v_out.alpha,
                               v_out.roughness,
-                              v_out.metallic);
+                              v_out.metallic,
+                              v_out.color_ramp_row,
+                              v_out.color_ramp_value,
+                              v_out.color_ramp_factor);
 }
 
 struct Curves {
@@ -202,11 +208,14 @@ struct Curves {
   v_out.normal = normalize(drw_normal_world_to_view(nor));
 
   materials.material_data_get(int(drw_custom_id()),
-                              curves::get_customdata_vec3(ws_pt.curve_id, curves.ac),
+                              float4(curves::get_customdata_vec3(ws_pt.curve_id, curves.ac), 1.0f),
                               v_out.color,
                               v_out.alpha,
                               v_out.roughness,
-                              v_out.metallic);
+                              v_out.metallic,
+                              v_out.color_ramp_row,
+                              v_out.color_ramp_value,
+                              v_out.color_ramp_factor);
 
   /* Hairs have lots of layer and can rapidly become the most prominent surface.
    * So we lower their alpha artificially. */
@@ -252,11 +261,14 @@ struct PointCloud {
   v_out.uv = float2(0.0f);
 
   materials.material_data_get(int(drw_custom_id()),
-                              float3(1.0f),
+                              float4(1.0f),
                               v_out.color,
                               v_out.alpha,
                               v_out.roughness,
-                              v_out.metallic);
+                              v_out.metallic,
+                              v_out.color_ramp_row,
+                              v_out.color_ramp_value,
+                              v_out.color_ramp_factor);
 
   v_out.object_id = int(drw_resource_id() & 0xFFFFu) + 1;
 }
@@ -282,13 +294,21 @@ struct OpaqueOut {
 };
 
 [[fragment]] void frag_opaque([[resource_table]] Resources &srt,
+                              [[resource_table]] color::ColorRamps &ramps,
                               [[in]] const VertOut &v_out,
                               [[out]] OpaqueOut &frag_out)
 {
   frag_out.object_id = uint(v_out.object_id);
   frag_out.normal = normal_encode(gl_FrontFacing, v_out.normal);
 
-  frag_out.material = float4(v_out.color, float_pair_encode(v_out.roughness, v_out.metallic));
+  float3 base_color = v_out.color;
+  if (v_out.color_ramp_row >= 0) {
+    base_color = mix(base_color,
+                     ramps.ramp_color(v_out.color_ramp_row, v_out.color_ramp_value),
+                     v_out.color_ramp_factor);
+  }
+
+  frag_out.material = float4(base_color, float_pair_encode(v_out.roughness, v_out.metallic));
 
   if (srt.use_texture) [[static_branch]] {
     frag_out.material.rgb = color::image_color(srt.texture, v_out.uv);
@@ -307,6 +327,7 @@ struct TransparentOut {
 };
 
 [[fragment]] void frag_transparent([[resource_table]] Resources &srt,
+                                   [[resource_table]] color::ColorRamps &ramps,
                                    [[resource_table]] World &world,
                                    [[frag_coord]] const float4 frag_co,
                                    [[in]] const VertOut &v_out,
@@ -319,6 +340,11 @@ struct TransparentOut {
   float3 N = normalize(v_out.normal);
 
   float3 color = v_out.color;
+  if (v_out.color_ramp_row >= 0) {
+    color = mix(color,
+                ramps.ramp_color(v_out.color_ramp_row, v_out.color_ramp_value),
+                v_out.color_ramp_factor);
+  }
 
   if (srt.use_texture) [[static_branch]] {
     color = color::image_color(srt.texture, v_out.uv);

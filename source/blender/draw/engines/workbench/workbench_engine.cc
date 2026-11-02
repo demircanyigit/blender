@@ -5,8 +5,12 @@
 #include "BLI_rect.h"
 #include "BLI_string.h"
 
+#include "BLI_map.hh"
+
+#include "DNA_colorband_types.h"
 #include "DNA_fluid_types.h"
 
+#include "BKE_colorband.hh"
 #include "BKE_editmesh.hh"
 #include "BKE_material.hh"
 #include "BKE_modifier.hh"
@@ -67,6 +71,9 @@ class Instance : public DrawEngine {
    * They never get actually used. */
   Vector<GPUMaterial *> dummy_gpu_materials_ = {1, nullptr, {}};
 
+  /* Where each color ramp is in #SceneResources::color_ramp_buf during sync. */
+  Map<const ColorBand *, int> color_ramp_rows_;
+
   /* Used to detect any scene data update. */
   uint64_t depsgraph_last_update_ = 0;
 
@@ -112,6 +119,8 @@ class Instance : public DrawEngine {
   void begin_sync() final
   {
     resources_.material_buf.clear_and_trim();
+    resources_.color_ramp_buf.clear_and_trim();
+    color_ramp_rows_.clear();
 
     opaque_ps_.sync(scene_state_, resources_);
     transparent_ps_.sync(scene_state_, resources_);
@@ -129,6 +138,7 @@ class Instance : public DrawEngine {
   void end_sync() final
   {
     resources_.material_buf.push_update();
+    resources_.color_ramp_buf.push_update();
   }
 
   Material get_material(ObjectRef ob_ref, eV3DShadingColorType color_type, int slot = 0)
@@ -152,6 +162,37 @@ class Instance : public DrawEngine {
       default:
         return Material(*BKE_material_default_empty());
     }
+  }
+
+  int color_ramp_row_get(const ColorBand &ramp)
+  {
+    return color_ramp_rows_.lookup_or_add_cb(&ramp, [&]() {
+      const int row = resources_.color_ramp_buf.size() / WB_COLOR_RAMP_SIZE;
+      for (const int i : IndexRange(WB_COLOR_RAMP_SIZE)) {
+        float4 color(0.0f);
+        BKE_colorband_evaluate(&ramp, float(i) / float(WB_COLOR_RAMP_SIZE - 1), color);
+        resources_.color_ramp_buf.append(color);
+      }
+      return row;
+    });
+  }
+
+  void color_attribute_blend_set(Material &material, ObjectRef ob_ref, const int slot)
+  {
+    const blender::Material *mat = BKE_object_material_get_eval(ob_ref.object, slot + 1);
+    if (mat == nullptr) {
+      return;
+    }
+    if (mat->viewport_color_blend == MA_VIEWPORT_COLOR_BLEND_RAMP) {
+      if (mat->viewport_color_ramp == nullptr) {
+        return;
+      }
+      material.color_ramp_row = float(this->color_ramp_row_get(*mat->viewport_color_ramp));
+    }
+    material.color_blend = float(mat->viewport_color_blend);
+    material.color_factor = mat->viewport_color_factor;
+    material.color_channel = float(mat->viewport_color_channel);
+    material.color_b = float3(mat->viewport_color_b);
   }
 
   void object_sync(ObjectRef &ob_ref, Manager &manager) final
@@ -290,6 +331,9 @@ class Instance : public DrawEngine {
       if (object_state.color_type == V3D_SHADING_TEXTURE_COLOR) {
         batches = DRW_cache_mesh_surface_texpaint_get(ob_ref.object);
       }
+      else if (object_state.use_color_attribute_blend) {
+        batches = DRW_cache_mesh_surface_material_colors_get(ob_ref.object);
+      }
       else {
         batches = DRW_cache_object_surface_material_get(
             ob_ref.object, this->get_dummy_gpu_materials(material_count));
@@ -304,6 +348,9 @@ class Instance : public DrawEngine {
           int material_slot = i;
           Material mat = this->get_material(ob_ref, object_state.color_type, material_slot);
           has_transparent_material = has_transparent_material || mat.is_transparent();
+          if (object_state.use_color_attribute_blend) {
+            this->color_attribute_blend_set(mat, ob_ref, material_slot);
+          }
 
           MaterialTexture texture;
           if (object_state.color_type == V3D_SHADING_TEXTURE_COLOR) {
@@ -348,7 +395,9 @@ class Instance : public DrawEngine {
   void sculpt_sync(ObjectRef &ob_ref, ResourceHandleRange handle, const ObjectState &object_state)
   {
     SculptBatchFeature features = SCULPT_BATCH_DEFAULT;
-    if (object_state.color_type == V3D_SHADING_VERTEX_COLOR) {
+    if (object_state.color_type == V3D_SHADING_VERTEX_COLOR ||
+        object_state.use_color_attribute_blend)
+    {
       features = SCULPT_BATCH_VERTEX_COLOR;
     }
     else if (object_state.color_type == V3D_SHADING_TEXTURE_COLOR) {
@@ -360,6 +409,9 @@ class Instance : public DrawEngine {
         Material mat = this->get_material(ob_ref, object_state.color_type, batch.material_slot);
         if (scene_state_.show_paint_bvh_debug) {
           mat.base_color = batch.debug_color();
+        }
+        else if (object_state.use_color_attribute_blend) {
+          this->color_attribute_blend_set(mat, ob_ref, batch.material_slot);
         }
 
         MaterialTexture texture;

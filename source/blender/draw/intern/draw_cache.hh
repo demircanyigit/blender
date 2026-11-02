@@ -71,6 +71,8 @@ Span<gpu::Batch *> DRW_cache_mesh_surface_shaded_get(Object *ob,
  */
 Span<gpu::Batch *> DRW_cache_mesh_surface_texpaint_get(Object *ob);
 gpu::Batch *DRW_cache_mesh_surface_texpaint_single_get(Object *ob);
+/** Per material surface batches that include the active color attribute. */
+Span<gpu::Batch *> DRW_cache_mesh_surface_material_colors_get(Object *ob);
 gpu::Batch *DRW_cache_mesh_surface_vertpaint_get(Object *ob);
 gpu::Batch *DRW_cache_mesh_surface_sculptcolors_get(Object *ob);
 gpu::Batch *DRW_cache_mesh_surface_weights_get(Object *ob);

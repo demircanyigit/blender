@@ -20,6 +20,7 @@
 #define DNA_DEPRECATED_ALLOW
 
 #include "DNA_ID.h"
+#include "DNA_colorband_types.h"
 #include "DNA_curve_types.h"
 #include "DNA_curves_types.h"
 #include "DNA_gpencil_legacy_types.h"
@@ -139,6 +140,11 @@ static void material_copy_data(Main *bmain,
         MEM_dupalloc(material_src->gp_style));
   }
 
+  if (material_src->viewport_color_ramp != nullptr) {
+    material_dst->viewport_color_ramp = static_cast<ColorBand *>(
+        MEM_dupalloc(material_src->viewport_color_ramp));
+  }
+
   BLI_listbase_clear(&material_dst->gpumaterial);
 
   /* TODO: Duplicate Engine Settings and set runtime to nullptr. */
@@ -161,6 +167,8 @@ static void material_free_data(ID *id)
   MEM_SAFE_DELETE(material->texpaintslot);
 
   MEM_SAFE_DELETE(material->gp_style);
+
+  MEM_SAFE_DELETE(material->viewport_color_ramp);
 
   BKE_previewimg_id_free(&material->id);
 
@@ -191,11 +199,18 @@ static void material_foreach_working_space_color(ID *id,
   fn.single(&material->r);
   fn.single(&material->specr);
   fn.single(material->line_col);
+  fn.single(material->viewport_color_b);
 
   if (material->gp_style) {
     fn.single(material->gp_style->stroke_rgba);
     fn.single(material->gp_style->fill_rgba);
     fn.single(material->gp_style->mix_rgba);
+  }
+
+  if (ColorBand *ramp = material->viewport_color_ramp) {
+    for (const int i : IndexRange(ramp->tot)) {
+      fn.single(&ramp->data[i].r);
+    }
   }
 }
 
@@ -228,6 +243,10 @@ static void material_blend_write(BlendWriter *writer, ID *id, const void *id_add
   if (ma->gp_style) {
     writer->write_struct(ma->gp_style);
   }
+
+  if (ma->viewport_color_ramp) {
+    writer->write_struct(ma->viewport_color_ramp);
+  }
 }
 
 static void material_blend_read_data(BlendDataReader *reader, ID *id)
@@ -242,6 +261,8 @@ static void material_blend_read_data(BlendDataReader *reader, ID *id)
   BLI_listbase_clear(&ma->gpumaterial);
 
   BLO_read_struct(reader, MaterialGPencilStyle, &ma->gp_style);
+
+  BLO_read_struct(reader, ColorBand, &ma->viewport_color_ramp);
 }
 
 IDTypeInfo IDType_ID_MA = {

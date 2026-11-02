@@ -239,6 +239,24 @@ enum {
   GP_MATERIAL_FOLLOW_FIXED = 2,
 };
 
+/** #Material::viewport_color_blend */
+enum {
+  MA_VIEWPORT_COLOR_BLEND_NONE = 0,
+  MA_VIEWPORT_COLOR_BLEND_MIX = 1,
+  MA_VIEWPORT_COLOR_BLEND_MULTIPLY = 2,
+  MA_VIEWPORT_COLOR_BLEND_TWO_COLORS = 3,
+  MA_VIEWPORT_COLOR_BLEND_RAMP = 4,
+};
+
+/** #Material::viewport_color_channel */
+enum {
+  MA_VIEWPORT_COLOR_CHANNEL_BRIGHTNESS = 0,
+  MA_VIEWPORT_COLOR_CHANNEL_RED = 1,
+  MA_VIEWPORT_COLOR_CHANNEL_GREEN = 2,
+  MA_VIEWPORT_COLOR_CHANNEL_BLUE = 3,
+  MA_VIEWPORT_COLOR_CHANNEL_ALPHA = 4,
+};
+
 struct TexPaintSlot {
   DNA_DEFINE_CXX_METHODS(TexPaintSlot)
 
@@ -347,7 +365,8 @@ struct Material {
   short flag = 0;
   /** Rendering modes for EEVEE. */
   char surface_render_method = 0;
-  char _pad1[1] = {};
+  /** How the Solid shading mode combines the active color attribute with the viewport color. */
+  char viewport_color_blend = MA_VIEWPORT_COLOR_BLEND_NONE;
 
   /* Colors from Blender Internal that we are still using. */
   float r = 0.8, g = 0.8, b = 0.8, a = 1.0f;
@@ -406,7 +425,15 @@ struct Material {
   /* Displacement. */
   float inflate_bounds = 0;
 
-  char _pad3[4] = {};
+  /** Strength of #viewport_color_blend. */
+  float viewport_color_factor = 1.0f;
+  /** Second color of #MA_VIEWPORT_COLOR_BLEND_TWO_COLORS. */
+  float viewport_color_b[3] = {1.0f, 1.0f, 1.0f};
+  /** Part of the color attribute used by the two colors and ramp blend modes. */
+  char viewport_color_channel = MA_VIEWPORT_COLOR_CHANNEL_BRIGHTNESS;
+  char _pad3[3] = {};
+  /** Only allocated once #MA_VIEWPORT_COLOR_BLEND_RAMP has been used. */
+  struct ColorBand *viewport_color_ramp = nullptr;
 
   /**
    * Cached slots for texture painting, must be refreshed via

@@ -153,6 +153,15 @@ static void rna_Material_draw_update(Main * /*bmain*/, Scene * /*scene*/, Pointe
   WM_main_add_notifier(NC_MATERIAL | ND_SHADING_DRAW, ma);
 }
 
+static void rna_Material_viewport_color_blend_set(PointerRNA *ptr, int value)
+{
+  Material *ma = id_cast<Material *>(ptr->owner_id);
+  ma->viewport_color_blend = value;
+  if (value == MA_VIEWPORT_COLOR_BLEND_RAMP && ma->viewport_color_ramp == nullptr) {
+    ma->viewport_color_ramp = BKE_colorband_add(false);
+  }
+}
+
 static void rna_Material_texpaint_begin(CollectionPropertyIterator *iter, PointerRNA *ptr)
 {
   Material *ma = static_cast<Material *>(ptr->data);
@@ -509,6 +518,84 @@ static void rna_def_material_display(StructRNA *srna)
   RNA_def_property_override_flag(prop, PROPOVERRIDE_OVERRIDABLE_LIBRARY);
   RNA_def_property_ui_text(prop, "Metallic", "Amount of mirror reflection for raytrace");
   RNA_def_property_update(prop, 0, "rna_Material_update");
+
+  static const EnumPropertyItem prop_viewport_color_blend_items[] = {
+      {MA_VIEWPORT_COLOR_BLEND_NONE, "NONE", 0, "None", "Only use the viewport color"},
+      {MA_VIEWPORT_COLOR_BLEND_MIX,
+       "MIX",
+       0,
+       "Mix",
+       "Interpolate from the viewport color to the color attribute"},
+      {MA_VIEWPORT_COLOR_BLEND_MULTIPLY,
+       "MULTIPLY",
+       0,
+       "Multiply",
+       "Multiply the viewport color by the color attribute"},
+      {MA_VIEWPORT_COLOR_BLEND_TWO_COLORS,
+       "TWO_COLORS",
+       0,
+       "Two Colors",
+       "Use the color attribute to interpolate between the viewport color and a second color"},
+      {MA_VIEWPORT_COLOR_BLEND_RAMP,
+       "RAMP",
+       0,
+       "Color Ramp",
+       "Use the color attribute to look up a color in a ramp"},
+      {0, nullptr, 0, nullptr, nullptr},
+  };
+
+  static const EnumPropertyItem prop_viewport_color_channel_items[] = {
+      {MA_VIEWPORT_COLOR_CHANNEL_BRIGHTNESS,
+       "BRIGHTNESS",
+       0,
+       "Brightness",
+       "Use the brightness of the color"},
+      {MA_VIEWPORT_COLOR_CHANNEL_RED, "RED", 0, "Red", "Use the red channel"},
+      {MA_VIEWPORT_COLOR_CHANNEL_GREEN, "GREEN", 0, "Green", "Use the green channel"},
+      {MA_VIEWPORT_COLOR_CHANNEL_BLUE, "BLUE", 0, "Blue", "Use the blue channel"},
+      {MA_VIEWPORT_COLOR_CHANNEL_ALPHA, "ALPHA", 0, "Alpha", "Use the alpha channel"},
+      {0, nullptr, 0, nullptr, nullptr},
+  };
+
+  prop = RNA_def_property(srna, "viewport_color_channel", PROP_ENUM, PROP_NONE);
+  RNA_def_property_enum_items(prop, prop_viewport_color_channel_items);
+  RNA_def_property_override_flag(prop, PROPOVERRIDE_OVERRIDABLE_LIBRARY);
+  RNA_def_property_ui_text(
+      prop, "Channel", "Part of the color attribute that picks the color");
+  RNA_def_property_update(prop, 0, "rna_Material_draw_update");
+
+  prop = RNA_def_property(srna, "viewport_color_b", PROP_FLOAT, PROP_COLOR);
+  RNA_def_property_array(prop, 3);
+  RNA_def_property_range(prop, 0.0f, FLT_MAX);
+  RNA_def_property_ui_range(prop, 0.0f, 1.0f, 1, RNA_TRANSLATION_PREC_DEFAULT);
+  RNA_def_property_override_flag(prop, PROPOVERRIDE_OVERRIDABLE_LIBRARY);
+  RNA_def_property_ui_text(
+      prop, "Second Color", "Color used where the color attribute value is 1");
+  RNA_def_property_update(prop, 0, "rna_Material_draw_update");
+
+  prop = RNA_def_property(srna, "viewport_color_ramp", PROP_POINTER, PROP_NONE);
+  RNA_def_property_struct_type(prop, "ColorRamp");
+  RNA_def_property_override_flag(prop, PROPOVERRIDE_OVERRIDABLE_LIBRARY);
+  RNA_def_property_ui_text(
+      prop, "Viewport Color Ramp", "Ramp used by the Solid shading mode");
+  RNA_def_property_update(prop, 0, "rna_Material_draw_update");
+
+  prop = RNA_def_property(srna, "viewport_color_blend", PROP_ENUM, PROP_NONE);
+  RNA_def_property_enum_items(prop, prop_viewport_color_blend_items);
+  RNA_def_property_enum_funcs(prop, nullptr, "rna_Material_viewport_color_blend_set", nullptr);
+  RNA_def_property_override_flag(prop, PROPOVERRIDE_OVERRIDABLE_LIBRARY);
+  RNA_def_property_ui_text(
+      prop,
+      "Color Attribute",
+      "How the Solid shading mode combines the active color attribute with the viewport color");
+  RNA_def_property_update(prop, 0, "rna_Material_draw_update");
+
+  prop = RNA_def_property(srna, "viewport_color_factor", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_range(prop, 0.0f, 1.0f);
+  RNA_def_property_override_flag(prop, PROPOVERRIDE_OVERRIDABLE_LIBRARY);
+  RNA_def_property_ui_text(
+      prop, "Factor", "Strength of the color attribute in the Solid shading mode");
+  RNA_def_property_update(prop, 0, "rna_Material_draw_update");
 
   /* Freestyle line color */
   prop = RNA_def_property(srna, "line_color", PROP_FLOAT, PROP_COLOR);

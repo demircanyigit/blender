@@ -767,6 +767,19 @@ gpu::Batch *DRW_mesh_batch_cache_get_surface_texpaint_single(Object &object, Mes
   return cache.batch.surface;
 }
 
+Span<gpu::Batch *> DRW_mesh_batch_cache_get_surface_material_colors(Object &object, Mesh &mesh)
+{
+  MeshBatchCache &cache = *mesh_batch_cache_get(mesh);
+
+  VectorSet<std::string> attrs_needed{};
+  request_active_and_default_color_attributes(object, mesh, attrs_needed);
+
+  drw_attributes_merge(&cache.attr_needed, &attrs_needed);
+
+  mesh_batch_cache_request_surface_batches(mesh, cache);
+  return cache.surface_per_mat;
+}
+
 gpu::Batch *DRW_mesh_batch_cache_get_surface_vertpaint(Object &object, Mesh &mesh)
 {
   MeshBatchCache &cache = *mesh_batch_cache_get(mesh);
