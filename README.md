@@ -4,6 +4,24 @@ linking to external resources instead of including content in-line.
 See 'release/text/readme.html' for the end user read-me.
 -->
 
+About this fork
+===============
+
+This is an unofficial, personal fork based on Blender 5.1.0. It isn't made or supported by the Blender
+Foundation, so please don't report its bugs to the Blender project.
+
+It adds:
+
+- Geometry nodes: **Isotropic Remesh**, **Decimate Mesh**, **Voronoi Fracture**, **Bevel**, **Sweep** and
+  **Resample Mesh**. See [doc/fork/NODES.md](doc/fork/NODES.md).
+- Color attribute options on materials for the Solid shading mode. See
+  [doc/fork/VIEWPORT_COLORS.md](doc/fork/VIEWPORT_COLORS.md).
+
+[Build it on Windows](doc/fork/BUILD_WINDOWS.md) or read
+[what to know before using it](doc/fork/README.md), including how its files behave in official Blender.
+
+The rest of this page is Blender's own read-me.
+
 Blender
 =======
 

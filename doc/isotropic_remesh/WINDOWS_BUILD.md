@@ -1,5 +1,8 @@
 # Building the Isotropic-Remesh Blender on Windows
 
+> **Note:** this is for the first version of the node, on Blender 5.0.1. For the current branch see
+> [doc/fork/BUILD_WINDOWS.md](../fork/BUILD_WINDOWS.md).
+
 A complete, standalone guide to producing a Windows build of the custom Blender that contains the
 **Isotropic Remesh** geometry node. Everything in the feature branch is platform-independent, so no
 source edits are needed on Windows — you only need to build it natively.

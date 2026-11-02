@@ -1,5 +1,8 @@
 # Work Summary — Isotropic Remesh Geometry Node for Blender
 
+> **Note:** this describes the first version of the node, on Blender 5.0.1 with the old library.
+> For the current state see [doc/fork/README.md](../fork/README.md).
+
 **Goal:** integrate `huxingyi/isotropicremesher` (MIT) into Blender as a native Geometry Nodes node
 and produce a custom build.
 
