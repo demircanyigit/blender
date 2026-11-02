@@ -194,6 +194,18 @@ static void add_own_transform_dependencies(const bNodeTree &tree,
     needs_own_transform |= storage.transform_space == GEO_NODE_TRANSFORM_SPACE_RELATIVE;
   }
 
+  for (const StringRefNull idname : {"GeometryNodeClipMesh", "GeometryNodeDiceMesh"}) {
+    for (const bNode *node : tree.nodes_by_type(idname)) {
+      if (node->is_muted()) {
+        continue;
+      }
+      const bNodeSocket &space = *node->input_by_identifier("Space");
+      /* The value of 1 is the World item of the Space menu. */
+      needs_own_transform |= space.is_directly_linked() ||
+                             space.default_value_typed<bNodeSocketValueMenu>()->value == 1;
+    }
+  }
+
   deps.needs_own_transform |= needs_own_transform;
 }
 

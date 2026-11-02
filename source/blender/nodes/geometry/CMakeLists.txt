@@ -34,6 +34,13 @@ set(SRC
   nodes/node_geo_attribute_statistic.cc
   nodes/node_geo_bake.cc
   nodes/node_geo_bevel_mesh.cc
+  nodes/node_geo_clip_mesh.cc
+  nodes/node_geo_dice_mesh.cc
+  nodes/node_geo_displace_mesh.cc
+  nodes/node_geo_dissolve_mesh.cc
+  nodes/node_geo_quadriflow_remesh.cc
+  nodes/node_geo_relax_mesh.cc
+  nodes/node_geo_smooth_mesh.cc
   nodes/node_geo_blur_attribute.cc
   nodes/node_geo_bone_info.cc
   nodes/node_geo_boolean.cc
@@ -370,6 +377,10 @@ endif()
 
 if(WITH_IMAGE_OPENEXR)
   add_definitions(-DWITH_IMAGE_OPENEXR)
+endif()
+
+if(WITH_QUADRIFLOW)
+  add_definitions(-DWITH_QUADRIFLOW)
 endif()
 
 if(WITH_OPENSUBDIV)

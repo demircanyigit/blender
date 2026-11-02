@@ -10336,6 +10336,13 @@ static void rna_def_nodes(BlenderRNA *brna)
   define("GeometryNode", "GeometryNodeBevelMesh");
   define("GeometryNode", "GeometryNodeResampleMesh");
   define("GeometryNode", "GeometryNodeSweep");
+  define("GeometryNode", "GeometryNodeClipMesh");
+  define("GeometryNode", "GeometryNodeDiceMesh");
+  define("GeometryNode", "GeometryNodeDissolveMesh");
+  define("GeometryNode", "GeometryNodeSmoothMesh");
+  define("GeometryNode", "GeometryNodeRelaxMesh");
+  define("GeometryNode", "GeometryNodeQuadriFlowRemesh");
+  define("GeometryNode", "GeometryNodeDisplaceMesh");
   define("GeometryNode", "GeometryNodeVolumeToMesh");
   define("GeometryNode", "GeometryNodeWarning");
 

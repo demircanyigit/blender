@@ -547,6 +547,13 @@ class NODE_MT_gn_mesh_operations_base(node_add_menu.NodeMenu):
         self.node_operator(layout, "GeometryNodeVoronoiFracture")
         self.node_operator(layout, "GeometryNodeBevelMesh")
         self.node_operator(layout, "GeometryNodeResampleMesh")
+        self.node_operator(layout, "GeometryNodeClipMesh")
+        self.node_operator(layout, "GeometryNodeDiceMesh")
+        self.node_operator(layout, "GeometryNodeDissolveMesh")
+        self.node_operator(layout, "GeometryNodeSmoothMesh")
+        self.node_operator(layout, "GeometryNodeRelaxMesh")
+        self.node_operator(layout, "GeometryNodeQuadriFlowRemesh")
+        self.node_operator(layout, "GeometryNodeDisplaceMesh")
 
         self.draw_assets_for_catalog(layout, self.menu_path)
 
