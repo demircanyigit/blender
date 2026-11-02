@@ -205,7 +205,7 @@ Without a texture it gives the same result as the modifier.
 - **Good to know:** the mesh needs enough points to show detail, so subdivide it first if needed. Direction and
   Vector are relative to the object.
 
-![A sphere displaced along its normals, a plane displaced along a direction, and a cube moved onto a sphere with vectors](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/displace.png)
+![A sphere displaced along its normals and a plane displaced along a direction](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/displace.png)
 
 ## Color attributes in Solid shading
 
