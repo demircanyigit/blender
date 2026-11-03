@@ -541,6 +541,17 @@ void draw_roundbox_4fv_ex(const rctf *rect,
                           const float outline[4],
                           float outline_width,
                           float rad);
+/**
+ * Filled box with the classic emboss: a light top edge and a dark bottom edge, `bevel` as in the
+ * theme's widget colors (0-100). With `col_end` the fill is a gradient from `col` at the top, or
+ * at the left when `horizontal`.
+ */
+void draw_roundbox_4fv_bevel(const rctf *rect,
+                             float rad,
+                             const float col[4],
+                             const float col_end[4],
+                             int bevel,
+                             bool horizontal = false);
 
 #if 0 /* unused */
 int draw_roundbox_corner_get();

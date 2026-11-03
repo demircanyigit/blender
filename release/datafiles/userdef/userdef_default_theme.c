@@ -216,6 +216,7 @@ const bTheme U_theme_default = {
       .text = RGBA(0x999999ff),
       .text_sel = RGBA(0xffffffff),
       .roundness = 0.2f,
+      .bevel = 20,
       .bevel_init = 1,
     },
     .wcol_menu_item = {
@@ -239,6 +240,7 @@ const bTheme U_theme_default = {
       .text = RGBA(0xd9d9d9ff),
       .text_sel = RGBA(0xffffffff),
       .roundness = 0.2f,
+      .bevel = 20,
       .bevel_init = 1,
     },
     .wcol_box = {

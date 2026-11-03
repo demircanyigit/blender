@@ -20,6 +20,7 @@
 #include "DNA_screen_types.h"
 #include "DNA_space_types.h"
 #include "DNA_text_types.h"
+#include "DNA_theme_types.h"
 #include "DNA_world_types.h"
 
 #include "BLI_array.hh"
@@ -2990,8 +2991,21 @@ static void node_draw_basis(const bContext &C,
 
     const ColorTheme4f color_header = node_header_color_get(ntree, node, color_id);
 
+    /* Embossed like regular buttons, with twice their shading as a gradient from left to right,
+     * over a header's width it would barely show otherwise. */
+    const uiWidgetColors &wcol = ui::theme::theme_get()->tui.wcol_regular;
+    float color_left[4] = {color_header.r, color_header.g, color_header.b, color_header.a};
+    float color_right[4] = {color_header.r, color_header.g, color_header.b, color_header.a};
+    if (wcol.shaded) {
+      for (int i = 0; i < 3; i++) {
+        color_left[i] = std::clamp(color_left[i] + 2.0f * wcol.shadetop / 255.0f, 0.0f, 1.0f);
+        color_right[i] = std::clamp(color_right[i] + 2.0f * wcol.shadedown / 255.0f, 0.0f, 1.0f);
+      }
+    }
+
     ui::draw_roundbox_corner_set(ui::CNR_TOP_LEFT | ui::CNR_TOP_RIGHT);
-    ui::draw_roundbox_4fv(&rect, true, corner_radius, color_header);
+    ui::draw_roundbox_4fv_bevel(
+        &rect, corner_radius, color_left, color_right, wcol.bevel, true);
   }
 
   /* Show/hide icons. */
@@ -3229,7 +3243,8 @@ static void node_draw_basis(const bContext &C,
     }
 
     ui::draw_roundbox_corner_set(ui::CNR_BOTTOM_LEFT | ui::CNR_BOTTOM_RIGHT);
-    ui::draw_roundbox_4fv(&rect, true, corner_radius, color);
+    ui::draw_roundbox_4fv_bevel(
+        &rect, corner_radius, color, nullptr, ui::theme::theme_get()->tui.wcol_box.bevel);
 
     if (is_node_panels_supported(node)) {
       node_draw_panels_background(node);

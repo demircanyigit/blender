@@ -163,9 +163,21 @@ void draw_roundbox_4fv(const rctf *rect, bool filled, float rad, const float col
   draw_roundbox_4fv_ex(rect, (filled) ? col : nullptr, nullptr, 1.0f, col, U.pixelsize, rad);
 }
 
-void draw_roundbox_4fv_bevel(const rctf *rect, float rad, const float col[4], int bevel)
+void draw_roundbox_4fv_bevel(const rctf *rect,
+                             float rad,
+                             const float col[4],
+                             const float col_end[4],
+                             int bevel,
+                             bool horizontal)
 {
-  roundbox_draw(rect, col, nullptr, 1.0f, col, U.pixelsize, rad, float(bevel) / 100.0f);
+  const float bevel_fac = float(bevel) / 100.0f;
+  if (col_end && horizontal) {
+    /* The shader mixes from the second color at the left to the first at the right. */
+    roundbox_draw(rect, col_end, col, 0.0f, col, U.pixelsize, rad, bevel_fac);
+  }
+  else {
+    roundbox_draw(rect, col, col_end, 1.0f, col, U.pixelsize, rad, bevel_fac);
+  }
 }
 
 void draw_rounded_corners_inverted(const rcti &rect, const float rad, const float4 color)
