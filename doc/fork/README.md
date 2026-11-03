@@ -1,10 +1,12 @@
 # About this fork
 
-An unofficial fork based on the Blender `v5.1.0` tag. It adds thirteen geometry nodes and more color
-attribute options for the Solid shading mode. It isn't made or supported by the Blender Foundation.
+An unofficial fork based on the Blender `v5.1.0` tag. It adds thirteen geometry nodes, more color
+attribute options for the Solid shading mode, and the classic 2.79 look with colored icons and
+embossed widgets. It isn't made or supported by the Blender Foundation.
 
 - [NODES.md](NODES.md): what each node does, its inputs and its limits
 - [VIEWPORT_COLORS.md](VIEWPORT_COLORS.md): the material options
+- [CLASSIC_UI.md](CLASSIC_UI.md): the node icons and the emboss
 - [BUILD_WINDOWS.md](BUILD_WINDOWS.md): how to build it
 
 Windows builds are on the [Releases page](https://github.com/demircanyigit/blender/releases). For
