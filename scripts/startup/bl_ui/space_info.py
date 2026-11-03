@@ -72,7 +72,7 @@ class INFO_MT_area(Menu):
         layout = self.layout
 
         if context.space_data.type == 'VIEW_3D':
-            layout.operator("screen.region_quadview")
+            layout.operator("screen.region_quadview", icon='OP_TOGGLE_QUAD_VIEW')
             layout.separator()
 
         layout.operator("screen.area_split", icon='SPLIT_HORIZONTAL', text="Horizontal Split").direction = 'HORIZONTAL'
@@ -81,9 +81,9 @@ class INFO_MT_area(Menu):
         layout.separator()
 
         if context.screen.show_fullscreen:
-            layout.operator("screen.screen_full_area", text="Restore Areas")
+            layout.operator("screen.screen_full_area", text="Restore Areas", icon='OP_TOGGLE_MAXIMIZE')
         else:
-            layout.operator("screen.screen_full_area", text="Maximize Area")
+            layout.operator("screen.screen_full_area", text="Maximize Area", icon='OP_TOGGLE_MAXIMIZE')
         layout.operator("screen.screen_full_area", text="Focus Mode").use_hide_panels = True
         layout.operator("screen.area_dupli")
 

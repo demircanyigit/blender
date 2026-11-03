@@ -314,17 +314,17 @@ void OBJECT_OT_vertex_parent_set(wmOperatorType *ot)
 const EnumPropertyItem prop_clear_parent_types[] = {
     {CLEAR_PARENT_ALL,
      "CLEAR",
-     0,
+     ICON_OP_PARENT_CLEAR,
      "Clear Parent",
      "Completely clear the parenting relationship, including involved modifiers if any"},
     {CLEAR_PARENT_KEEP_TRANSFORM,
      "CLEAR_KEEP_TRANSFORM",
-     0,
+     ICON_OP_PARENT_CLEAR_KEEP,
      "Clear and Keep Transformation",
      "As 'Clear Parent', but keep the current visual transformations of the object"},
     {CLEAR_PARENT_INVERSE,
      "CLEAR_INVERSE",
-     0,
+     ICON_OP_PARENT_CLEAR_INVERSE,
      "Clear Parent Inverse",
      "Reset the transform corrections applied to the parenting relationship, does not remove "
      "parenting itself"},
@@ -485,7 +485,7 @@ void parent_set(Object *ob, Object *par, const int type, const char *substr)
 }
 
 const EnumPropertyItem prop_make_parent_types[] = {
-    {PAR_OBJECT, "OBJECT", 0, "Object", ""},
+    {PAR_OBJECT, "OBJECT", ICON_OP_PARENT_SET, "Object", ""},
     {PAR_ARMATURE, "ARMATURE", 0, "Armature Deform", ""},
     {PAR_ARMATURE_NAME, "ARMATURE_NAME", 0, "   With Empty Groups", ""},
     {PAR_ARMATURE_AUTO, "ARMATURE_AUTO", 0, "   With Automatic Weights", ""},
@@ -496,8 +496,8 @@ const EnumPropertyItem prop_make_parent_types[] = {
     {PAR_FOLLOW, "FOLLOW", 0, "Follow Path", ""},
     {PAR_PATH_CONST, "PATH_CONST", 0, "Path Constraint", ""},
     {PAR_LATTICE, "LATTICE", 0, "Lattice Deform", ""},
-    {PAR_VERTEX, "VERTEX", 0, "Vertex", ""},
-    {PAR_VERTEX_TRI, "VERTEX_TRI", 0, "Vertex (Triangle)", ""},
+    {PAR_VERTEX, "VERTEX", ICON_OP_VERTEX_PARENT, "Vertex", ""},
+    {PAR_VERTEX_TRI, "VERTEX_TRI", ICON_OP_PARENT_VERTEX_TRI, "Vertex (Triangle)", ""},
     {0, nullptr, 0, nullptr, nullptr},
 };
 
@@ -964,25 +964,25 @@ static wmOperatorStatus parent_set_invoke_menu(bContext *C, wmOperatorType *ot)
   ui::Layout &layout = *popup_menu_layout(pup);
 
   PointerRNA opptr = layout.op(
-      ot, IFACE_("Object"), ICON_NONE, wm::OpCallContext::ExecDefault, UI_ITEM_NONE);
+      ot, IFACE_("Object"), ICON_OP_PARENT_SET, wm::OpCallContext::ExecDefault, UI_ITEM_NONE);
   RNA_enum_set(&opptr, "type", PAR_OBJECT);
   RNA_boolean_set(&opptr, "keep_transform", false);
 
   opptr = layout.op(ot,
                     IFACE_("Object (Keep Transform)"),
-                    ICON_NONE,
+                    ICON_OP_PARENT_KEEP,
                     wm::OpCallContext::ExecDefault,
                     UI_ITEM_NONE);
   RNA_enum_set(&opptr, "type", PAR_OBJECT);
   RNA_boolean_set(&opptr, "keep_transform", true);
 
   PointerRNA op_ptr = layout.op(
-      "OBJECT_OT_parent_no_inverse_set", IFACE_("Object (Without Inverse)"), ICON_NONE);
+      "OBJECT_OT_parent_no_inverse_set", IFACE_("Object (Without Inverse)"), ICON_OP_PARENT_NO_INVERSE);
   RNA_boolean_set(&op_ptr, "keep_transform", false);
 
   op_ptr = layout.op("OBJECT_OT_parent_no_inverse_set",
                      IFACE_("Object (Keep Transform Without Inverse)"),
-                     ICON_NONE);
+                     ICON_OP_PARENT_NO_INVERSE);
   RNA_boolean_set(&op_ptr, "keep_transform", true);
 
   struct {
@@ -1208,10 +1208,10 @@ enum {
 };
 
 static const EnumPropertyItem prop_clear_track_types[] = {
-    {CLEAR_TRACK, "CLEAR", 0, "Clear Track", ""},
+    {CLEAR_TRACK, "CLEAR", ICON_OP_TRACK_CLEAR, "Clear Track", ""},
     {CLEAR_TRACK_KEEP_TRANSFORM,
      "CLEAR_KEEP_TRANSFORM",
-     0,
+     ICON_OP_TRACK_CLEAR,
      "Clear and Keep Transformation (Clear Track)",
      ""},
     {0, nullptr, 0, nullptr, nullptr},
@@ -1290,9 +1290,9 @@ enum {
 };
 
 static const EnumPropertyItem prop_make_track_types[] = {
-    {CREATE_TRACK_DAMPTRACK, "DAMPTRACK", 0, "Damped Track Constraint", ""},
-    {CREATE_TRACK_TRACKTO, "TRACKTO", 0, "Track to Constraint", ""},
-    {CREATE_TRACK_LOCKTRACK, "LOCKTRACK", 0, "Lock Track Constraint", ""},
+    {CREATE_TRACK_DAMPTRACK, "DAMPTRACK", ICON_OP_TRACK_DAMPED, "Damped Track Constraint", ""},
+    {CREATE_TRACK_TRACKTO, "TRACKTO", ICON_OP_TRACK_TO, "Track to Constraint", ""},
+    {CREATE_TRACK_LOCKTRACK, "LOCKTRACK", ICON_OP_TRACK_LOCK, "Lock Track Constraint", ""},
     {0, nullptr, 0, nullptr, nullptr},
 };
 
@@ -1716,22 +1716,22 @@ void OBJECT_OT_make_links_scene(wmOperatorType *ot)
 void OBJECT_OT_make_links_data(wmOperatorType *ot)
 {
   static const EnumPropertyItem make_links_items[] = {
-      {MAKE_LINKS_OBDATA, "OBDATA", 0, "Link Object Data", "Replace assigned Object Data"},
-      {MAKE_LINKS_MATERIALS, "MATERIAL", 0, "Link Materials", "Replace assigned Materials"},
+      {MAKE_LINKS_OBDATA, "OBDATA", ICON_OP_LINK_OBDATA, "Link Object Data", "Replace assigned Object Data"},
+      {MAKE_LINKS_MATERIALS, "MATERIAL", ICON_OP_LINK_MATERIALS, "Link Materials", "Replace assigned Materials"},
       {MAKE_LINKS_ANIMDATA,
        "ANIMATION",
-       0,
+       ICON_OP_LINK_ANIMATION,
        "Link Animation Data",
        "Replace assigned Animation Data"},
       {MAKE_LINKS_GROUP, "GROUPS", 0, "Link Collections", "Replace assigned Collections"},
       {MAKE_LINKS_DUPLICOLLECTION,
        "DUPLICOLLECTION",
-       0,
+       ICON_OP_LINK_INSTANCE_COLLECTION,
        "Link Instance Collection",
        "Replace assigned Collection Instance"},
-      {MAKE_LINKS_FONTS, "FONTS", 0, "Link Fonts to Text", "Replace Text object Fonts"},
+      {MAKE_LINKS_FONTS, "FONTS", ICON_OP_LINK_FONTS, "Link Fonts to Text", "Replace Text object Fonts"},
       RNA_ENUM_ITEM_SEPR,
-      {MAKE_LINKS_MODIFIERS, "MODIFIERS", 0, "Copy Modifiers", "Replace Modifiers"},
+      {MAKE_LINKS_MODIFIERS, "MODIFIERS", ICON_OP_COPY_MODIFIERS, "Copy Modifiers", "Replace Modifiers"},
       {MAKE_LINKS_SHADERFX,
        "EFFECTS",
        0,

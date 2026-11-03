@@ -1189,6 +1189,11 @@ void draw_but_VECTORSCOPE(ARegion *region,
                           Button *but,
                           const uiWidgetColors *wcol,
                           const rcti *recti);
+/**
+ * Filled box with the classic emboss: a light top edge and a dark bottom edge, `bevel` as in the
+ * theme's widget colors (0-100).
+ */
+void draw_roundbox_4fv_bevel(const rctf *rect, float rad, const float col[4], int bevel);
 void draw_but_COLORBAND(Button *but, const uiWidgetColors *wcol, const rcti *rect);
 void draw_but_UNITVEC(Button *but, const uiWidgetColors *wcol, const rcti *rect, float radius);
 void draw_but_CURVE(ARegion *region, Button *but, const uiWidgetColors *wcol, const rcti *rect);
@@ -1302,7 +1307,9 @@ struct WidgetBaseParameters {
    * Initialize value to 1.0f if you don't want discard. */
   float alpha_discard;
   float tria_type;
-  float _pad[3];
+  /** Highlight and shadow strength inside the edges, negative for a sunken look. */
+  float bevel;
+  float _pad[2];
 };
 
 enum {

@@ -50,7 +50,8 @@ int ED_region_generic_tools_region_snap_size(const ARegion *region, int size, in
     const float snap_units[] = {
         column + margin,
         (2.0f * column) + margin,
-        (2.7f * column) + margin,
+        /* Wide enough for tool names (see #ToolSelectPanelHelper). */
+        (4.7f * column) + margin,
     };
     int best_diff = std::numeric_limits<int>::max();
     int best_size = size;

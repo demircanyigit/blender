@@ -25,7 +25,7 @@ __all__ = (
 # Support reloading icons.
 if "_icon_cache" in locals():
     release = bpy.app.icons.release
-    for icon_value in set(_icon_cache.values()):
+    for icon_value in set(_icon_cache.values()) - _icon_classic_values:
         if icon_value != 0:
             release(icon_value)
     del release
@@ -33,6 +33,65 @@ if "_icon_cache" in locals():
 
 # (icon_name -> icon_value) map
 _icon_cache = {}
+# Built-in icon values in `_icon_cache`, these are not released.
+_icon_classic_values = set()
+
+# Tool icons with a classic (colored) version in the `icons_classic` data-files folder.
+_icon_classic_tools = {
+    "ops.generic.cursor": 'TOOL_CURSOR',
+    "ops.generic.select": 'TOOL_SELECT',
+    "ops.generic.select_box": 'TOOL_SELECT_BOX',
+    "ops.generic.select_circle": 'TOOL_SELECT_CIRCLE',
+    "ops.generic.select_lasso": 'TOOL_SELECT_LASSO',
+    "ops.gpencil.draw": 'TOOL_ANNOTATE',
+    "ops.gpencil.draw.eraser": 'TOOL_ANNOTATE_ERASER',
+    "ops.gpencil.draw.line": 'TOOL_ANNOTATE_LINE',
+    "ops.gpencil.draw.poly": 'TOOL_ANNOTATE_POLYGON',
+    "ops.mesh.bevel": 'OP_BEVEL',
+    "ops.mesh.bisect": 'OP_BISECT',
+    "ops.mesh.dupli_extrude_cursor": 'TOOL_EXTRUDE_TO_CURSOR',
+    "ops.mesh.extrude_faces_move": 'OP_EXTRUDE_INDIVIDUAL',
+    "ops.mesh.extrude_manifold": 'TOOL_EXTRUDE_MANIFOLD',
+    "ops.mesh.extrude_region_move": 'OP_EXTRUDE_REGION',
+    "ops.mesh.extrude_region_shrink_fatten": 'OP_EXTRUDE_NORMALS',
+    "ops.mesh.inset": 'OP_INSET',
+    "ops.mesh.knife_tool": 'OP_KNIFE',
+    "ops.mesh.loopcut_slide": 'OP_LOOPCUT',
+    "ops.mesh.offset_edge_loops_slide": 'OP_OFFSET_EDGE_LOOPS',
+    "ops.mesh.polybuild_hover": 'TOOL_POLY_BUILD',
+    "ops.mesh.primitive_cone_add_gizmo": 'TOOL_ADD_CONE',
+    "ops.mesh.primitive_cube_add_gizmo": 'TOOL_ADD_CUBE',
+    "ops.mesh.primitive_cylinder_add_gizmo": 'TOOL_ADD_CYLINDER',
+    "ops.mesh.primitive_sphere_add_gizmo": 'TOOL_ADD_SPHERE',
+    "ops.mesh.rip": 'TOOL_RIP',
+    "ops.mesh.rip_edge": 'TOOL_RIP_EDGE',
+    "ops.mesh.spin": 'TOOL_SPIN',
+    "ops.mesh.vertices_smooth": 'OP_SMOOTH_VERTICES',
+    "ops.transform.edge_slide": 'OP_EDGE_SLIDE',
+    "ops.transform.push_pull": 'OP_PUSH_PULL',
+    "ops.transform.resize": 'TOOL_SCALE',
+    "ops.transform.resize.cage": 'TOOL_SCALE_CAGE',
+    "ops.transform.rotate": 'TOOL_ROTATE',
+    "ops.transform.shear": 'OP_SHEAR',
+    "ops.transform.shrink_fatten": 'OP_SHRINK_FATTEN',
+    "ops.transform.tosphere": 'TOOL_TO_SPHERE',
+    "ops.transform.transform": 'TOOL_TRANSFORM',
+    "ops.transform.translate": 'TOOL_MOVE',
+    "ops.transform.vert_slide": 'OP_VERT_SLIDE',
+    "ops.transform.vertex_random": 'OP_RANDOMIZE',
+    "ops.view3d.ruler": 'TOOL_MEASURE',
+}
+
+
+def _icon_classic_value(icon_name):
+    import os
+    icon = _icon_classic_tools.get(icon_name)
+    if icon is None:
+        return None
+    dirname = bpy.utils.system_resource('DATAFILES', path="icons_classic")
+    if not dirname or not os.path.exists(os.path.join(dirname, icon.lower() + ".dat")):
+        return None
+    return bpy.types.UILayout.bl_rna.functions["label"].parameters["icon"].enum_items[icon].value
 
 
 def _keymap_fn_from_seq(keymap_data):
@@ -243,6 +302,9 @@ class ToolSelectPanelHelper:
         if icon_name is not None:
             assert type(icon_name) is str
             icon_value = _icon_cache.get(icon_name)
+            if icon_value is None and (icon_value := _icon_classic_value(icon_name)) is not None:
+                _icon_classic_values.add(icon_value)
+                _icon_cache[icon_name] = icon_value
             if icon_value is None:
                 dirname = bpy.utils.system_resource('DATAFILES', path="icons")
                 filepath = os.path.join(dirname, icon_name + ".dat")
@@ -598,7 +660,8 @@ class ToolSelectPanelHelper:
 
     @staticmethod
     def _layout_generator_multi_columns(layout, column_count, scale_y):
-        scale_x = scale_y * 1.1
+        # Fits the toolbar's column width (`UI_TOOLBAR_COLUMN`).
+        scale_x = scale_y * 1.05
         column_last = column_count - 1
 
         col = layout.column(align=True)
@@ -655,7 +718,7 @@ class ToolSelectPanelHelper:
         else:
             show_text = False
             # 2 column layout, disabled
-            if width_scale > 80.0:
+            if width_scale > 70.0:
                 column_count = 2
             else:
                 column_count = 1
@@ -672,7 +735,7 @@ class ToolSelectPanelHelper:
         return ui_gen, show_text
 
     @classmethod
-    def draw_cls(cls, layout, context, detect_layout=True, scale_y=1.75):
+    def draw_cls(cls, layout, context, detect_layout=True, scale_y=1.5):
         # Use a classmethod so it can be called outside of a panel context.
 
         # XXX, this UI isn't very nice.

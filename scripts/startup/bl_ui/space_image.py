@@ -307,18 +307,18 @@ class IMAGE_MT_uvs_transform(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("transform.translate")
-        layout.operator("transform.rotate")
-        layout.operator("transform.resize")
+        layout.operator("transform.translate", icon='TOOL_MOVE')
+        layout.operator("transform.rotate", icon='TOOL_ROTATE')
+        layout.operator("transform.resize", icon='TOOL_SCALE')
 
         layout.separator()
 
-        layout.operator("transform.shear")
+        layout.operator("transform.shear", icon='OP_SHEAR')
 
         layout.separator()
 
-        layout.operator("transform.vert_slide")
-        layout.operator("transform.edge_slide")
+        layout.operator("transform.vert_slide", icon='OP_VERT_SLIDE')
+        layout.operator("transform.edge_slide", icon='OP_EDGE_SLIDE')
 
         layout.separator()
 
@@ -403,23 +403,23 @@ class IMAGE_MT_uvs_unwrap(Menu):
 
         # It would be nice to do: `layout.operator_enum("uv.unwrap", "method")`
         # However the menu items don't have an "Unwrap" prefix, so inline the operators.
-        layout.operator("uv.unwrap", text="Unwrap Angle Based").method = 'ANGLE_BASED'
-        layout.operator("uv.unwrap", text="Unwrap Conformal").method = 'CONFORMAL'
-        layout.operator("uv.unwrap", text="Unwrap Minimum Stretch").method = 'MINIMUM_STRETCH'
+        layout.operator("uv.unwrap", text="Unwrap Angle Based", icon='OP_UV_UNWRAP').method = 'ANGLE_BASED'
+        layout.operator("uv.unwrap", text="Unwrap Conformal", icon='OP_UV_UNWRAP').method = 'CONFORMAL'
+        layout.operator("uv.unwrap", text="Unwrap Minimum Stretch", icon='OP_UV_UNWRAP').method = 'MINIMUM_STRETCH'
 
         layout.separator()
 
         layout.operator_context = 'INVOKE_DEFAULT'
-        layout.operator("uv.smart_project", text="Smart UV Project...")
-        layout.operator("uv.lightmap_pack", text="Lightmap Pack...")
-        layout.operator("uv.follow_active_quads", text="Follow Active Quads...")
+        layout.operator("uv.smart_project", text="Smart UV Project...", icon='OP_SMART_UV')
+        layout.operator("uv.lightmap_pack", text="Lightmap Pack...", icon='OP_LIGHTMAP_PACK')
+        layout.operator("uv.follow_active_quads", text="Follow Active Quads...", icon='OP_FOLLOW_QUADS')
 
         layout.separator()
 
         layout.operator_context = 'EXEC_REGION_WIN'
-        layout.operator("uv.cube_project")
-        layout.operator("uv.cylinder_project")
-        layout.operator("uv.sphere_project")
+        layout.operator("uv.cube_project", icon='OP_CUBE_PROJECT')
+        layout.operator("uv.cylinder_project", icon='OP_CYLINDER_PROJECT')
+        layout.operator("uv.sphere_project", icon='OP_SPHERE_PROJECT')
 
 
 class IMAGE_MT_uvs(Menu):
@@ -497,7 +497,7 @@ class IMAGE_MT_uvs(Menu):
 
         layout.separator()
 
-        layout.operator("uv.reset")
+        layout.operator("uv.reset", icon='OP_UV_RESET')
 
         layout.separator()
 
@@ -565,8 +565,8 @@ class IMAGE_MT_uvs_context_menu(Menu):
                 # is_island_mode = ts.use_uv_select_island
 
             # Add
-            layout.operator("uv.unwrap")
-            layout.operator("uv.follow_active_quads")
+            layout.operator("uv.unwrap", icon='OP_UV_UNWRAP')
+            layout.operator("uv.follow_active_quads", icon='OP_FOLLOW_QUADS')
 
             layout.separator()
 
@@ -591,10 +591,10 @@ class IMAGE_MT_uvs_context_menu(Menu):
                 layout.operator_context = 'INVOKE_DEFAULT'
 
                 if is_vert_mode:
-                    layout.operator("transform.vert_slide")
+                    layout.operator("transform.vert_slide", icon='OP_VERT_SLIDE')
 
                 if is_edge_mode:
-                    layout.operator("transform.edge_slide")
+                    layout.operator("transform.edge_slide", icon='OP_EDGE_SLIDE')
 
                 layout.operator_context = 'EXEC_REGION_WIN'
                 layout.separator()

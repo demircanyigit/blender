@@ -1013,6 +1013,65 @@ if(WITH_BLENDER)
         "case blender::ICON_${svg_name_upper}: return datatoc_${svg}_svg\;\n"
       )
     endforeach()
+
+    # Geometry node versions of modeling icons. The classic icon set recolors them,
+    # without it they draw like the icon they are based on.
+    set(SVG_ALIASES
+      geo_automerge_off:automerge_off
+      geo_bisect:mod_boolean
+      geo_curve_bezcurve:curve_bezcurve
+      geo_curve_ncircle:curve_ncircle
+      geo_duplicate:duplicate
+      geo_extrude:mod_solidify
+      geo_knife:mod_wireframe
+      geo_material:material
+      geo_mesh_circle:mesh_circle
+      geo_mesh_cone:mesh_cone
+      geo_mesh_cube:mesh_cube
+      geo_mesh_cylinder:mesh_cylinder
+      geo_mesh_grid:mesh_grid
+      geo_mesh_icosphere:mesh_icosphere
+      geo_mesh_uvsphere:mesh_uvsphere
+      geo_mod_bevel:mod_bevel
+      geo_mod_boolean:mod_boolean
+      geo_mod_decim:mod_decim
+      geo_mod_displace:mod_displace
+      geo_mod_edgesplit:mod_edgesplit
+      geo_mod_explode:mod_explode
+      geo_mod_particle_instance:mod_particle_instance
+      geo_mod_remesh:mod_remesh
+      geo_mod_screw:mod_screw
+      geo_mod_smooth:mod_smooth
+      geo_mod_subsurf:mod_subsurf
+      geo_mod_triangulate:mod_triangulate
+      geo_normals_face:normals_face
+      geo_object_data:object_data
+      geo_outliner_collection:outliner_collection
+      geo_outliner_ob_curve:outliner_ob_curve
+      geo_outliner_ob_curves:outliner_ob_curves
+      geo_outliner_ob_font:outliner_ob_font
+      geo_outliner_ob_mesh:outliner_ob_mesh
+      geo_outliner_ob_pointcloud:outliner_ob_pointcloud
+      geo_outliner_ob_volume:outliner_ob_volume
+      geo_resample:mod_remesh
+      geo_resize:con_sizelike
+      geo_smooth_vertices:mod_smooth
+      geo_transform:con_transform
+      geo_translate:con_translike
+      geo_trash:trash
+      geo_uv:uv
+    )
+    foreach(alias ${SVG_ALIASES})
+      string(REPLACE ":" ";" alias ${alias})
+      list(GET alias 0 alias_name)
+      list(GET alias 1 svg)
+      string(TOUPPER ${alias_name} svg_name_upper)
+      list(APPEND SVG_CONTENTS_C
+        "case blender::ICON_${svg_name_upper}: return datatoc_${svg}_svg\;\n"
+      )
+    endforeach()
+    unset(SVG_ALIASES)
+    unset(alias_name)
     unset(svg_name_upper)
 
     list(JOIN SVG_CONTENTS_C "" SVG_CONTENTS_C)

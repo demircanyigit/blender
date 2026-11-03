@@ -37,6 +37,8 @@ struct IconTextOverlay {
 #define ICON_DEFAULT_WIDTH 16
 
 #define ICON_DEFAULT_HEIGHT_TOOLBAR 32
+/** Size of the built-in (classic) icons drawn on tools, smaller than the toolbar's buttons. */
+#define ICON_DEFAULT_HEIGHT_TOOL_CLASSIC 24
 
 #define ICON_DEFAULT_HEIGHT_SCALE ((int)(UI_UNIT_Y * 0.8f))
 #define ICON_DEFAULT_WIDTH_SCALE ((int)(UI_UNIT_X * 0.8f))

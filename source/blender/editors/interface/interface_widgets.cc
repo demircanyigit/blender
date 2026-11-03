@@ -602,6 +602,7 @@ static void widget_init(WidgetBase *wtb)
 
   wtb->uniform_params.shade_dir = 1.0f;
   wtb->uniform_params.alpha_discard = 1.0f;
+  wtb->uniform_params.bevel = 0.0f;
 }
 
 /** \} */
@@ -1171,6 +1172,13 @@ static void widgetbase_draw(WidgetBase *wtb, const uiWidgetColors *wcol)
     }
   }
 
+  /* Raised or sunken like the gradient, pressed buttons swap the shading so they sink. */
+  wtb->uniform_params.bevel = 0.0f;
+  if (wtb->draw_inner && wcol->bevel != 0) {
+    const bool sunken = wcol->shaded && (wcol->shadetop < wcol->shadedown);
+    wtb->uniform_params.bevel = (sunken ? -1.0f : 1.0f) * float(wcol->bevel) / 100.0f;
+  }
+
   if (wtb->draw_outline) {
     outline_col[0] = wcol->outline[0];
     outline_col[1] = wcol->outline[1];
@@ -1229,6 +1237,7 @@ static void widgetbase_draw_color(WidgetBase *wtb,
       wtb, unused_col, unused_col, outline_col, emboss_col, unused_col);
   copy_v4_v4(wtb->uniform_params.color_inner1, color);
   copy_v4_v4(wtb->uniform_params.color_inner2, color);
+  wtb->uniform_params.bevel = 0.0f;
 
   GPU_blend(GPU_BLEND_ALPHA);
   draw_widgetbase_batch(wtb);
@@ -1348,7 +1357,18 @@ static void widget_draw_icon(
     return;
   }
 
-  const float aspect = but->block->aspect * UI_INV_SCALE_FAC;
+  float aspect = but->block->aspect * UI_INV_SCALE_FAC;
+  /* Spacing from the button's edge, not affected by the larger tool icons. */
+  const float ofs = 1.0f / aspect;
+  bool center_tool_icon = false;
+#ifdef USE_UI_TOOLBAR_HACK
+  /* Built-in (classic) icons on tools are drawn larger, with some room left around them in the
+   * toolbar's buttons. */
+  if ((icon < BIFICONID_LAST_STATIC) && but_is_tool(but)) {
+    aspect *= float(ICON_DEFAULT_HEIGHT) / float(ICON_DEFAULT_HEIGHT_TOOL_CLASSIC);
+    center_tool_icon = but->str.empty();
+  }
+#endif
   const float height = ICON_DEFAULT_HEIGHT / aspect;
 
   /* calculate blend color */
@@ -1388,10 +1408,12 @@ static void widget_draw_icon(
   GPU_blend(GPU_BLEND_ALPHA);
 
   if (icon && icon != ICON_BLANK1) {
-    const float ofs = 1.0f / aspect;
     float xs, ys;
 
-    if (but->drawflag & BUT_ICON_LEFT) {
+    if (center_tool_icon) {
+      xs = (rect->xmin + rect->xmax - height) / 2.0f;
+    }
+    else if (but->drawflag & BUT_ICON_LEFT) {
       /* special case - icon_only pie buttons */
       if (block_is_pie_menu(but->block) &&
           !ELEM(but->type, ButtonType::Menu, ButtonType::Popover) && but->str.empty())
@@ -1399,6 +1421,10 @@ static void widget_draw_icon(
         xs = rect->xmin + 2.0f * ofs;
       }
       else if (but->emboss == EmbossType::None || but->type == ButtonType::Label) {
+        xs = rect->xmin + 2.0f * ofs;
+      }
+      else if ((but->icon != ICON_NONE) && but_is_tool(but)) {
+        /* Center in #UI_TOOLBAR_COLUMN. */
         xs = rect->xmin + 2.0f * ofs;
       }
       else {
@@ -1411,7 +1437,7 @@ static void widget_draw_icon(
     ys = (rect->ymin + rect->ymax - height) / 2.0f;
 
     /* force positions to integers, for zoom levels near 1. draws icons crisp. */
-    if (aspect > 0.95f && aspect < 1.05f) {
+    if ((ofs > 0.95f && ofs < 1.05f) || (aspect > 0.95f && aspect < 1.05f)) {
       xs = roundf(xs);
       ys = roundf(ys);
     }
@@ -2460,7 +2486,7 @@ static void widget_draw_text_icon(const uiFontStyle *fstyle,
 #ifdef USE_UI_TOOLBAR_HACK
     const float aspect_orig = but->block->aspect;
     if (is_tool && (but->block->flag & BLOCK_POPOVER)) {
-      but->block->aspect *= 2.0f;
+      but->block->aspect *= float(ICON_DEFAULT_HEIGHT_TOOLBAR) / float(ICON_DEFAULT_HEIGHT);
     }
 #endif
 

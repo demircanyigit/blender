@@ -360,6 +360,11 @@ static int rna_Struct_translation_context_length(PointerRNA *ptr)
   return strlen((static_cast<StructRNA *>(ptr->data))->translation_context);
 }
 
+static int rna_Struct_icon_get(PointerRNA *ptr)
+{
+  return RNA_struct_ui_icon(static_cast<StructRNA *>(ptr->data));
+}
+
 static PointerRNA rna_Struct_base_get(PointerRNA *ptr)
 {
   return RNA_pointer_create_discrete(
@@ -3191,6 +3196,12 @@ static void rna_def_struct(BlenderRNA *brna)
                                 nullptr);
   RNA_def_property_ui_text(
       prop, "Translation Context", "Translation context of the struct's name");
+
+  prop = RNA_def_property(srna, "icon", PROP_ENUM, PROP_NONE);
+  RNA_def_property_clear_flag(prop, PROP_EDITABLE);
+  RNA_def_property_enum_items(prop, rna_enum_icon_items);
+  RNA_def_property_enum_funcs(prop, "rna_Struct_icon_get", nullptr, nullptr);
+  RNA_def_property_ui_text(prop, "Icon", "Icon of the struct");
 
   prop = RNA_def_property(srna, "base", PROP_POINTER, PROP_NONE);
   RNA_def_property_clear_flag(prop, PROP_EDITABLE);

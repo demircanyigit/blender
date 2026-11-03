@@ -3042,9 +3042,7 @@ static void node_draw_basis(const bContext &C,
                     (void *)("NODE_OT_preview_toggle"));
     block_emboss_set(&block, ui::EmbossType::Emboss);
   }
-  if (ELEM(node.type_legacy, NODE_CUSTOM, NODE_CUSTOM_GROUP) &&
-      node.typeinfo->ui_icon != ICON_NONE)
-  {
+  if (node.typeinfo->ui_icon != ICON_NONE) {
     iconofs -= iconbutw;
     block_emboss_set(&block, ui::EmbossType::None);
     uiDefIconBut(&block,

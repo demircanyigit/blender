@@ -1623,6 +1623,17 @@ static void region_rect_recursive(
     }
   }
 
+  /* Toolbars saved at the one and two column widths of other icon sizes (the stock icons and
+   * the earlier smaller ones). */
+  if (region->runtime->type->snap_size == ED_region_generic_tools_region_snap_size) {
+    if (region->sizex >= 30 && region->sizex <= 60) {
+      region->sizex = int(UI_TOOLBAR_WIDTH);
+    }
+    else if (region->sizex > 60 && region->sizex <= 100) {
+      region->sizex = int(UI_TOOLBAR_MARGIN + 2.0f * UI_TOOLBAR_COLUMN);
+    }
+  }
+
   /* `prefsizex/y`, taking into account DPI. */
   int prefsizex = UI_SCALE_FAC *
                   ((region->sizex > 1) ? region->sizex + 0.5f : region->runtime->type->prefsizex);

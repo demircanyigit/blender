@@ -1262,16 +1262,16 @@ class VIEW3D_MT_transform_base:
     def draw(self, context):
         layout = self.layout
 
-        layout.operator("transform.translate")
-        layout.operator("transform.rotate")
-        layout.operator("transform.resize", text="Scale")
+        layout.operator("transform.translate", icon='TOOL_MOVE')
+        layout.operator("transform.rotate", icon='TOOL_ROTATE')
+        layout.operator("transform.resize", text="Scale", icon='TOOL_SCALE')
 
         layout.separator()
 
-        layout.operator("transform.tosphere", text="To Sphere")
-        layout.operator("transform.shear", text="Shear")
+        layout.operator("transform.tosphere", text="To Sphere", icon='TOOL_TO_SPHERE')
+        layout.operator("transform.shear", text="Shear", icon='OP_SHEAR')
         layout.operator("transform.bend", text="Bend")
-        layout.operator("transform.push_pull", text="Push/Pull")
+        layout.operator("transform.push_pull", text="Push/Pull", icon='OP_PUSH_PULL')
 
         if context.mode in {
             'EDIT_MESH',
@@ -1285,7 +1285,7 @@ class VIEW3D_MT_transform_base:
         }:
             layout.operator("transform.vertex_warp", text="Warp")
             layout.operator_context = 'EXEC_REGION_WIN'
-            layout.operator("transform.vertex_random", text="Randomize").offset = 0.1
+            layout.operator("transform.vertex_random", text="Randomize", icon='OP_RANDOMIZE').offset = 0.1
             layout.operator_context = 'INVOKE_REGION_WIN'
 
 
@@ -1298,7 +1298,7 @@ class VIEW3D_MT_transform(VIEW3D_MT_transform_base, Menu):
         # generic...
         layout = self.layout
         if context.mode == 'EDIT_MESH':
-            layout.operator("transform.shrink_fatten", text="Shrink/Fatten")
+            layout.operator("transform.shrink_fatten", text="Shrink/Fatten", icon='OP_SHRINK_FATTEN')
             layout.operator("transform.skin_resize")
         elif context.mode in {'EDIT_CURVE', 'EDIT_GREASE_PENCIL', 'EDIT_CURVES', 'EDIT_POINTCLOUD'}:
             layout.operator("transform.transform", text="Radius").mode = 'CURVE_SHRINKFATTEN'
@@ -1405,17 +1405,17 @@ class VIEW3D_MT_snap(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("view3d.snap_selected_to_grid", text="Selection to Grid")
-        layout.operator("view3d.snap_selected_to_cursor", text="Selection to Cursor").use_offset = False
-        layout.operator("view3d.snap_selected_to_cursor", text="Selection to Cursor (Keep Offset)").use_offset = True
-        layout.operator("view3d.snap_selected_to_active", text="Selection to Active")
+        layout.operator("view3d.snap_selected_to_grid", text="Selection to Grid", icon='OP_SNAP_SEL_GRID')
+        layout.operator("view3d.snap_selected_to_cursor", text="Selection to Cursor", icon='OP_SNAP_SEL_CURSOR').use_offset = False
+        layout.operator("view3d.snap_selected_to_cursor", text="Selection to Cursor (Keep Offset)", icon='OP_SNAP_SEL_CURSOR_OFFSET').use_offset = True
+        layout.operator("view3d.snap_selected_to_active", text="Selection to Active", icon='OP_SNAP_SEL_ACTIVE')
 
         layout.separator()
 
-        layout.operator("view3d.snap_cursor_to_selected", text="Cursor to Selected")
-        layout.operator("view3d.snap_cursor_to_center", text="Cursor to World Origin")
-        layout.operator("view3d.snap_cursor_to_grid", text="Cursor to Grid")
-        layout.operator("view3d.snap_cursor_to_active", text="Cursor to Active")
+        layout.operator("view3d.snap_cursor_to_selected", text="Cursor to Selected", icon='OP_SNAP_CURSOR_SELECTED')
+        layout.operator("view3d.snap_cursor_to_center", text="Cursor to World Origin", icon='OP_SNAP_CURSOR_WORLD')
+        layout.operator("view3d.snap_cursor_to_grid", text="Cursor to Grid", icon='OP_SNAP_CURSOR_GRID')
+        layout.operator("view3d.snap_cursor_to_active", text="Cursor to Active", icon='OP_SNAP_CURSOR_ACTIVE')
 
 
 class VIEW3D_MT_uv_map(Menu):
@@ -1429,17 +1429,17 @@ class VIEW3D_MT_uv_map(Menu):
         layout.separator()
 
         layout.operator_context = 'INVOKE_REGION_WIN'
-        layout.operator("uv.project_from_view").scale_to_bounds = False
-        layout.operator("uv.project_from_view", text="Project from View (Bounds)").scale_to_bounds = True
+        layout.operator("uv.project_from_view", icon='OP_PROJECT_VIEW').scale_to_bounds = False
+        layout.operator("uv.project_from_view", text="Project from View (Bounds)", icon='OP_PROJECT_VIEW_BOUNDS').scale_to_bounds = True
 
         layout.separator()
 
         layout.operator("mesh.mark_seam", icon='EDGE_SEAM').clear = False
-        layout.operator("mesh.mark_seam", text="Clear Seam").clear = True
+        layout.operator("mesh.mark_seam", text="Clear Seam", icon='OP_CLEAR_SEAM').clear = True
 
         layout.separator()
 
-        layout.operator("uv.reset")
+        layout.operator("uv.reset", icon='OP_UV_RESET')
 
         layout.template_node_operator_asset_menu_items(catalog_path="UV")
 
@@ -1463,14 +1463,14 @@ class VIEW3D_MT_view(Menu):
         layout.separator()
 
         if context.mode in {'PAINT_TEXTURE', 'PAINT_VERTEX', 'PAINT_WEIGHT', 'SCULPT'}:
-            layout.operator("view3d.view_selected", text="Center Last Stroke")
+            layout.operator("view3d.view_selected", text="Center Last Stroke", icon='OP_FRAME_SELECTED')
         else:
-            layout.operator("view3d.view_selected", text="Frame Selected")
+            layout.operator("view3d.view_selected", text="Frame Selected", icon='OP_FRAME_SELECTED')
         if view.region_quadviews:
-            layout.operator("view3d.view_selected", text="Frame Selected (Quad View)").use_all_regions = True
+            layout.operator("view3d.view_selected", text="Frame Selected (Quad View)", icon='OP_FRAME_SELECTED').use_all_regions = True
 
-        layout.operator("view3d.view_all").center = False
-        layout.operator("view3d.view_persportho", text="Perspective/Orthographic")
+        layout.operator("view3d.view_all", icon='OP_FRAME_ALL').center = False
+        layout.operator("view3d.view_persportho", text="Perspective/Orthographic", icon='OP_PERSP_ORTHO')
         layout.menu("VIEW3D_MT_view_local")
         layout.prop(view, "show_viewer", text="Viewer Node")
 
@@ -1523,8 +1523,8 @@ class VIEW3D_MT_view_local(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("view3d.localview", text="Toggle Local View")
-        layout.operator("view3d.localview_remove_from")
+        layout.operator("view3d.localview", text="Toggle Local View", icon='OP_LOCAL_VIEW')
+        layout.operator("view3d.localview_remove_from", icon='OP_LOCAL_VIEW_REMOVE')
 
 
 class VIEW3D_MT_view_cameras(Menu):
@@ -1533,9 +1533,9 @@ class VIEW3D_MT_view_cameras(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("view3d.object_as_camera")
+        layout.operator("view3d.object_as_camera", icon='OP_SET_ACTIVE_CAMERA')
         layout.operator("view3d.view_camera", text="Active Camera")
-        layout.operator("view3d.view_center_camera")
+        layout.operator("view3d.view_center_camera", icon='OP_CENTER_CAMERA')
 
 
 class VIEW3D_MT_view_viewpoint(Menu):
@@ -1548,18 +1548,18 @@ class VIEW3D_MT_view_viewpoint(Menu):
 
         layout.separator()
 
-        layout.operator("view3d.view_axis", text="Top", text_ctxt=i18n_contexts.editor_view3d).type = 'TOP'
-        layout.operator("view3d.view_axis", text="Bottom", text_ctxt=i18n_contexts.editor_view3d).type = 'BOTTOM'
+        layout.operator("view3d.view_axis", text="Top", text_ctxt=i18n_contexts.editor_view3d, icon='OP_VIEW_TOP').type = 'TOP'
+        layout.operator("view3d.view_axis", text="Bottom", text_ctxt=i18n_contexts.editor_view3d, icon='OP_VIEW_BOTTOM').type = 'BOTTOM'
 
         layout.separator()
 
-        layout.operator("view3d.view_axis", text="Front", text_ctxt=i18n_contexts.editor_view3d).type = 'FRONT'
-        layout.operator("view3d.view_axis", text="Back", text_ctxt=i18n_contexts.editor_view3d).type = 'BACK'
+        layout.operator("view3d.view_axis", text="Front", text_ctxt=i18n_contexts.editor_view3d, icon='OP_VIEW_FRONT').type = 'FRONT'
+        layout.operator("view3d.view_axis", text="Back", text_ctxt=i18n_contexts.editor_view3d, icon='OP_VIEW_BACK').type = 'BACK'
 
         layout.separator()
 
-        layout.operator("view3d.view_axis", text="Right", text_ctxt=i18n_contexts.editor_view3d).type = 'RIGHT'
-        layout.operator("view3d.view_axis", text="Left", text_ctxt=i18n_contexts.editor_view3d).type = 'LEFT'
+        layout.operator("view3d.view_axis", text="Right", text_ctxt=i18n_contexts.editor_view3d, icon='OP_VIEW_RIGHT').type = 'RIGHT'
+        layout.operator("view3d.view_axis", text="Left", text_ctxt=i18n_contexts.editor_view3d, icon='OP_VIEW_LEFT').type = 'LEFT'
 
 
 class VIEW3D_MT_view_navigation(Menu):
@@ -1570,14 +1570,14 @@ class VIEW3D_MT_view_navigation(Menu):
         layout = self.layout
 
         layout.operator_enum("view3d.view_orbit", "type")
-        props = layout.operator("view3d.view_orbit", text="Orbit Opposite")
+        props = layout.operator("view3d.view_orbit", text="Orbit Opposite", icon='OP_ORBIT_OPPOSITE')
         props.type = 'ORBITRIGHT'
         props.angle = pi
 
         layout.separator()
 
-        layout.operator("view3d.view_roll", text="Roll Left").type = 'LEFT'
-        layout.operator("view3d.view_roll", text="Roll Right").type = 'RIGHT'
+        layout.operator("view3d.view_roll", text="Roll Left", icon='OP_ROLL_LEFT').type = 'LEFT'
+        layout.operator("view3d.view_roll", text="Roll Right", icon='OP_ROLL_RIGHT').type = 'RIGHT'
 
         layout.separator()
 
@@ -1587,14 +1587,14 @@ class VIEW3D_MT_view_navigation(Menu):
 
         layout.operator("view3d.zoom", text="Zoom In").delta = 1
         layout.operator("view3d.zoom", text="Zoom Out").delta = -1
-        layout.operator("view3d.zoom_border", text="Zoom Region...")
-        layout.operator("view3d.dolly", text="Dolly View...")
+        layout.operator("view3d.zoom_border", text="Zoom Region...", icon='OP_ZOOM_REGION')
+        layout.operator("view3d.dolly", text="Dolly View...", icon='OP_DOLLY')
         layout.operator("view3d.zoom_camera_1_to_1", text="Zoom Camera 1:1")
 
         layout.separator()
 
-        layout.operator("view3d.fly")
-        layout.operator("view3d.walk")
+        layout.operator("view3d.fly", icon='OP_FLY')
+        layout.operator("view3d.walk", icon='OP_WALK')
 
 
 class VIEW3D_MT_view_align(Menu):
@@ -1603,22 +1603,22 @@ class VIEW3D_MT_view_align(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.menu("VIEW3D_MT_view_align_selected")
+        layout.menu("VIEW3D_MT_view_align_selected", icon='OP_ALIGN_VIEW_ACTIVE')
 
         layout.separator()
 
-        layout.operator("view3d.camera_to_view", text="Align Active Camera to View")
+        layout.operator("view3d.camera_to_view", text="Align Active Camera to View", icon='OP_CAMERA_TO_VIEW')
         layout.operator("view3d.camera_to_view_selected", text="Align Active Camera to Selected")
 
         layout.separator()
 
-        layout.operator("view3d.view_all", text="Center Cursor and Frame All").center = True
-        layout.operator("view3d.view_center_cursor")
+        layout.operator("view3d.view_all", text="Center Cursor and Frame All", icon='OP_CENTER_CURSOR_FRAME_ALL').center = True
+        layout.operator("view3d.view_center_cursor", icon='OP_VIEW_CENTER_CURSOR')
 
         layout.separator()
 
-        layout.operator("view3d.view_lock_to_active")
-        layout.operator("view3d.view_lock_clear")
+        layout.operator("view3d.view_lock_to_active", icon='OP_LOCK_TO_ACTIVE')
+        layout.operator("view3d.view_lock_clear", icon='OP_LOCK_CLEAR')
 
 
 class VIEW3D_MT_view_align_selected(Menu):
@@ -1627,31 +1627,31 @@ class VIEW3D_MT_view_align_selected(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        props = layout.operator("view3d.view_axis", text="Top", text_ctxt=i18n_contexts.editor_view3d)
+        props = layout.operator("view3d.view_axis", text="Top", text_ctxt=i18n_contexts.editor_view3d, icon='OP_VIEW_TOP')
         props.align_active = True
         props.type = 'TOP'
 
-        props = layout.operator("view3d.view_axis", text="Bottom", text_ctxt=i18n_contexts.editor_view3d)
+        props = layout.operator("view3d.view_axis", text="Bottom", text_ctxt=i18n_contexts.editor_view3d, icon='OP_VIEW_BOTTOM')
         props.align_active = True
         props.type = 'BOTTOM'
 
         layout.separator()
 
-        props = layout.operator("view3d.view_axis", text="Front", text_ctxt=i18n_contexts.editor_view3d)
+        props = layout.operator("view3d.view_axis", text="Front", text_ctxt=i18n_contexts.editor_view3d, icon='OP_VIEW_FRONT')
         props.align_active = True
         props.type = 'FRONT'
 
-        props = layout.operator("view3d.view_axis", text="Back", text_ctxt=i18n_contexts.editor_view3d)
+        props = layout.operator("view3d.view_axis", text="Back", text_ctxt=i18n_contexts.editor_view3d, icon='OP_VIEW_BACK')
         props.align_active = True
         props.type = 'BACK'
 
         layout.separator()
 
-        props = layout.operator("view3d.view_axis", text="Right", text_ctxt=i18n_contexts.editor_view3d)
+        props = layout.operator("view3d.view_axis", text="Right", text_ctxt=i18n_contexts.editor_view3d, icon='OP_VIEW_RIGHT')
         props.align_active = True
         props.type = 'RIGHT'
 
-        props = layout.operator("view3d.view_axis", text="Left", text_ctxt=i18n_contexts.editor_view3d)
+        props = layout.operator("view3d.view_axis", text="Left", text_ctxt=i18n_contexts.editor_view3d, icon='OP_VIEW_LEFT')
         props.align_active = True
         props.type = 'LEFT'
 
@@ -1661,12 +1661,12 @@ class VIEW3D_MT_view_regions(Menu):
 
     def draw(self, _context):
         layout = self.layout
-        layout.operator("view3d.clip_border", text="Clipping Region...")
-        layout.operator("view3d.render_border", text="Render Region...")
+        layout.operator("view3d.clip_border", text="Clipping Region...", icon='OP_CLIP_REGION')
+        layout.operator("view3d.render_border", text="Render Region...", icon='OP_RENDER_REGION')
 
         layout.separator()
 
-        layout.operator("view3d.clear_render_border")
+        layout.operator("view3d.clear_render_border", icon='OP_CLEAR_RENDER_REGION')
 
 
 # ********** Select menus, suffix from context.mode **********
@@ -1677,26 +1677,26 @@ class VIEW3D_MT_select_object_more_less(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("object.select_more", text="More")
-        layout.operator("object.select_less", text="Less")
+        layout.operator("object.select_more", text="More", icon='OP_SELECT_MORE')
+        layout.operator("object.select_less", text="Less", icon='OP_SELECT_LESS')
 
         layout.separator()
 
-        props = layout.operator("object.select_hierarchy", text="Parent", text_ctxt=i18n_contexts.default)
+        props = layout.operator("object.select_hierarchy", text="Parent", text_ctxt=i18n_contexts.default, icon='OP_SELECT_PARENT')
         props.extend = False
         props.direction = 'PARENT'
 
-        props = layout.operator("object.select_hierarchy", text="Child")
+        props = layout.operator("object.select_hierarchy", text="Child", icon='OP_SELECT_CHILD')
         props.extend = False
         props.direction = 'CHILD'
 
         layout.separator()
 
-        props = layout.operator("object.select_hierarchy", text="Extend Parent")
+        props = layout.operator("object.select_hierarchy", text="Extend Parent", icon='OP_SELECT_EXTEND_PARENT')
         props.extend = True
         props.direction = 'PARENT'
 
-        props = layout.operator("object.select_hierarchy", text="Extend Child")
+        props = layout.operator("object.select_hierarchy", text="Extend Child", icon='OP_SELECT_EXTEND_CHILD')
         props.extend = True
         props.direction = 'CHILD'
 
@@ -1707,21 +1707,21 @@ class VIEW3D_MT_select_object(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("object.select_all", text="All").action = 'SELECT'
-        layout.operator("object.select_all", text="None").action = 'DESELECT'
-        layout.operator("object.select_all", text="Invert").action = 'INVERT'
+        layout.operator("object.select_all", text="All", icon='OP_SELECT_ALL').action = 'SELECT'
+        layout.operator("object.select_all", text="None", icon='OP_SELECT_NONE').action = 'DESELECT'
+        layout.operator("object.select_all", text="Invert", icon='OP_SELECT_INVERT').action = 'INVERT'
 
         layout.separator()
 
-        layout.operator("view3d.select_box")
-        layout.operator("view3d.select_circle")
+        layout.operator("view3d.select_box", icon='TOOL_SELECT_BOX')
+        layout.operator("view3d.select_circle", icon='TOOL_SELECT_CIRCLE')
         layout.operator_menu_enum("view3d.select_lasso", "mode")
 
         layout.separator()
 
-        layout.operator("object.select_camera", text="Select Active Camera")
-        layout.operator("object.select_mirror")
-        layout.operator("object.select_random", text="Select Random")
+        layout.operator("object.select_camera", text="Select Active Camera", icon='OP_SELECT_ACTIVE_CAMERA')
+        layout.operator("object.select_mirror", icon='OP_SELECT_MIRROR')
+        layout.operator("object.select_random", text="Select Random", icon='OP_SELECT_RANDOM')
 
         layout.separator()
 
@@ -1729,10 +1729,10 @@ class VIEW3D_MT_select_object(Menu):
 
         layout.separator()
 
-        layout.operator_menu_enum("object.select_by_type", "type", text="Select All by Type")
-        layout.operator_menu_enum("object.select_grouped", "type", text="Select Grouped")
-        layout.operator_menu_enum("object.select_linked", "type", text="Select Linked")
-        layout.operator("object.select_pattern", text="Select Pattern...")
+        layout.operator_menu_enum("object.select_by_type", "type", text="Select All by Type", icon='OP_SELECT_BY_TYPE')
+        layout.operator_menu_enum("object.select_grouped", "type", text="Select Grouped", icon='OP_SELECT_GROUPED')
+        layout.operator_menu_enum("object.select_linked", "type", text="Select Linked", icon='OP_SELECT_LINKED')
+        layout.operator("object.select_pattern", text="Select Pattern...", icon='OP_SELECT_PATTERN')
 
 
 class VIEW3D_MT_select_pose_more_less(Menu):
@@ -1772,8 +1772,8 @@ class VIEW3D_MT_select_pose(Menu):
 
         layout.separator()
 
-        layout.operator("view3d.select_box")
-        layout.operator("view3d.select_circle")
+        layout.operator("view3d.select_box", icon='TOOL_SELECT_BOX')
+        layout.operator("view3d.select_circle", icon='TOOL_SELECT_CIRCLE')
         layout.operator_menu_enum("view3d.select_lasso", "mode")
 
         layout.separator()
@@ -1788,7 +1788,7 @@ class VIEW3D_MT_select_pose(Menu):
 
         layout.operator_menu_enum("pose.select_grouped", "type", text="Select Grouped")
         layout.operator("pose.select_linked", text="Select Linked")
-        layout.operator("object.select_pattern", text="Select Pattern...")
+        layout.operator("object.select_pattern", text="Select Pattern...", icon='OP_SELECT_PATTERN')
 
         layout.separator()
 
@@ -1808,8 +1808,8 @@ class VIEW3D_MT_select_particle(Menu):
 
         layout.separator()
 
-        layout.operator("view3d.select_box")
-        layout.operator("view3d.select_circle")
+        layout.operator("view3d.select_box", icon='TOOL_SELECT_BOX')
+        layout.operator("view3d.select_circle", icon='TOOL_SELECT_CIRCLE')
         layout.operator_menu_enum("view3d.select_lasso", "mode")
 
         layout.separator()
@@ -1852,15 +1852,15 @@ class VIEW3D_MT_edit_mesh_select_by_trait(Menu):
         _is_vert_mode, _is_edge_mode, is_face_mode = context.tool_settings.mesh_select_mode
 
         if is_face_mode is False:
-            layout.operator("mesh.select_non_manifold", text="Non Manifold")
-        layout.operator("mesh.select_loose", text="Loose Geometry")
-        layout.operator("mesh.select_interior_faces", text="Interior Faces")
-        layout.operator("mesh.select_face_by_sides", text="Faces by Sides")
-        layout.operator("mesh.select_by_pole_count", text="Poles by Count")
+            layout.operator("mesh.select_non_manifold", text="Non Manifold", icon='OP_NON_MANIFOLD')
+        layout.operator("mesh.select_loose", text="Loose Geometry", icon='OP_SELECT_LOOSE')
+        layout.operator("mesh.select_interior_faces", text="Interior Faces", icon='OP_INTERIOR_FACES')
+        layout.operator("mesh.select_face_by_sides", text="Faces by Sides", icon='OP_FACES_BY_SIDES')
+        layout.operator("mesh.select_by_pole_count", text="Poles by Count", icon='OP_POLES')
 
         layout.separator()
 
-        layout.operator("mesh.select_ungrouped", text="Ungrouped Vertices")
+        layout.operator("mesh.select_ungrouped", text="Ungrouped Vertices", icon='OP_UNGROUPED')
 
 
 class VIEW3D_MT_edit_mesh_select_more_less(Menu):
@@ -1869,13 +1869,13 @@ class VIEW3D_MT_edit_mesh_select_more_less(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("mesh.select_more", text="More")
-        layout.operator("mesh.select_less", text="Less")
+        layout.operator("mesh.select_more", text="More", icon='OP_SELECT_MORE')
+        layout.operator("mesh.select_less", text="Less", icon='OP_SELECT_LESS')
 
         layout.separator()
 
-        layout.operator("mesh.select_next_item", text="Next Active")
-        layout.operator("mesh.select_prev_item", text="Previous Active")
+        layout.operator("mesh.select_next_item", text="Next Active", icon='OP_NEXT_ACTIVE')
+        layout.operator("mesh.select_prev_item", text="Previous Active", icon='OP_PREV_ACTIVE')
 
 
 class VIEW3D_MT_edit_mesh_select_linked(Menu):
@@ -1884,8 +1884,8 @@ class VIEW3D_MT_edit_mesh_select_linked(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("mesh.select_linked", text="Linked")
-        layout.operator("mesh.shortest_path_select", text="Shortest Path")
+        layout.operator("mesh.select_linked", text="Linked", icon='OP_SELECT_LINKED')
+        layout.operator("mesh.shortest_path_select", text="Shortest Path", icon='OP_CONNECT_PATH')
         layout.operator("mesh.faces_select_linked_flat", text="Linked Flat Faces")
 
 
@@ -1911,21 +1911,21 @@ class VIEW3D_MT_select_edit_mesh(Menu):
         layout = self.layout
 
         # primitive
-        layout.operator("mesh.select_all", text="All").action = 'SELECT'
-        layout.operator("mesh.select_all", text="None").action = 'DESELECT'
-        layout.operator("mesh.select_all", text="Invert").action = 'INVERT'
+        layout.operator("mesh.select_all", text="All", icon='OP_SELECT_ALL').action = 'SELECT'
+        layout.operator("mesh.select_all", text="None", icon='OP_SELECT_NONE').action = 'DESELECT'
+        layout.operator("mesh.select_all", text="Invert", icon='OP_SELECT_INVERT').action = 'INVERT'
 
         # gesture
         layout.separator()
-        layout.operator("view3d.select_box")
-        layout.operator("view3d.select_circle")
+        layout.operator("view3d.select_box", icon='TOOL_SELECT_BOX')
+        layout.operator("view3d.select_circle", icon='TOOL_SELECT_CIRCLE')
         layout.operator_menu_enum("view3d.select_lasso", "mode")
 
         # numeric
         layout.separator()
-        layout.operator("mesh.select_mirror")
-        layout.operator("mesh.select_random", text="Select Random")
-        layout.operator("mesh.select_nth")
+        layout.operator("mesh.select_mirror", icon='OP_SELECT_MIRROR')
+        layout.operator("mesh.select_random", text="Select Random", icon='OP_SELECT_RANDOM')
+        layout.operator("mesh.select_nth", icon='OP_CHECKER_DESELECT')
 
         # more/less
         layout.separator()
@@ -1962,8 +1962,8 @@ class VIEW3D_MT_select_edit_curve(Menu):
 
         layout.separator()
 
-        layout.operator("view3d.select_box")
-        layout.operator("view3d.select_circle")
+        layout.operator("view3d.select_box", icon='TOOL_SELECT_BOX')
+        layout.operator("view3d.select_circle", icon='TOOL_SELECT_CIRCLE')
         layout.operator_menu_enum("view3d.select_lasso", "mode")
 
         layout.separator()
@@ -2001,8 +2001,8 @@ class VIEW3D_MT_select_edit_surface(Menu):
 
         layout.separator()
 
-        layout.operator("view3d.select_box")
-        layout.operator("view3d.select_circle")
+        layout.operator("view3d.select_box", icon='TOOL_SELECT_BOX')
+        layout.operator("view3d.select_circle", icon='TOOL_SELECT_CIRCLE')
         layout.operator_menu_enum("view3d.select_lasso", "mode")
 
         layout.separator()
@@ -2071,8 +2071,8 @@ class VIEW3D_MT_select_edit_metaball(Menu):
 
         layout.separator()
 
-        layout.operator("view3d.select_box")
-        layout.operator("view3d.select_circle")
+        layout.operator("view3d.select_box", icon='TOOL_SELECT_BOX')
+        layout.operator("view3d.select_circle", icon='TOOL_SELECT_CIRCLE')
         layout.operator_menu_enum("view3d.select_lasso", "mode")
 
         layout.separator()
@@ -2090,9 +2090,9 @@ class VIEW3D_MT_edit_lattice_context_menu(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.menu("VIEW3D_MT_mirror")
+        layout.menu("VIEW3D_MT_mirror", icon='OP_MIRROR')
         layout.operator_menu_enum("lattice.flip", "axis")
-        layout.menu("VIEW3D_MT_snap")
+        layout.menu("VIEW3D_MT_snap", icon='OP_SNAP')
 
         layout.separator()
 
@@ -2111,8 +2111,8 @@ class VIEW3D_MT_select_edit_lattice(Menu):
 
         layout.separator()
 
-        layout.operator("view3d.select_box")
-        layout.operator("view3d.select_circle")
+        layout.operator("view3d.select_box", icon='TOOL_SELECT_BOX')
+        layout.operator("view3d.select_circle", icon='TOOL_SELECT_CIRCLE')
         layout.operator_menu_enum("view3d.select_lasso", "mode")
 
         layout.separator()
@@ -2142,8 +2142,8 @@ class VIEW3D_MT_select_edit_armature(Menu):
 
         layout.separator()
 
-        layout.operator("view3d.select_box")
-        layout.operator("view3d.select_circle")
+        layout.operator("view3d.select_box", icon='TOOL_SELECT_BOX')
+        layout.operator("view3d.select_circle", icon='TOOL_SELECT_CIRCLE')
         layout.operator_menu_enum("view3d.select_lasso", "mode")
 
         layout.separator()
@@ -2159,7 +2159,7 @@ class VIEW3D_MT_select_edit_armature(Menu):
 
         layout.operator("armature.select_linked", text="Select Linked")
         layout.operator_menu_enum("armature.select_similar", "type")
-        layout.operator("object.select_pattern", text="Select Pattern...")
+        layout.operator("object.select_pattern", text="Select Pattern...", icon='OP_SELECT_PATTERN')
 
         layout.separator()
 
@@ -2192,8 +2192,8 @@ class VIEW3D_MT_select_edit_grease_pencil(Menu):
 
         layout.separator()
 
-        layout.operator("view3d.select_box", text="Box Select")
-        layout.operator("view3d.select_circle", text="Circle Select")
+        layout.operator("view3d.select_box", text="Box Select", icon='TOOL_SELECT_BOX')
+        layout.operator("view3d.select_circle", text="Circle Select", icon='TOOL_SELECT_CIRCLE')
         layout.operator_menu_enum("view3d.select_lasso", "mode")
 
         layout.separator()
@@ -2277,8 +2277,8 @@ class VIEW3D_MT_select_paint_mask(Menu):
 
         layout.separator()
 
-        layout.operator("view3d.select_box")
-        layout.operator("view3d.select_circle")
+        layout.operator("view3d.select_box", icon='TOOL_SELECT_BOX')
+        layout.operator("view3d.select_circle", icon='TOOL_SELECT_CIRCLE')
         layout.operator_menu_enum("view3d.select_lasso", "mode")
 
         layout.separator()
@@ -2303,8 +2303,8 @@ class VIEW3D_MT_select_paint_mask_vertex(Menu):
 
         layout.separator()
 
-        layout.operator("view3d.select_box")
-        layout.operator("view3d.select_circle")
+        layout.operator("view3d.select_box", icon='TOOL_SELECT_BOX')
+        layout.operator("view3d.select_circle", icon='TOOL_SELECT_CIRCLE')
         layout.operator_menu_enum("view3d.select_lasso", "mode")
 
         layout.separator()
@@ -2490,8 +2490,8 @@ class VIEW3D_MT_edit_metaball_context_menu(Menu):
         layout.separator()
 
         # Modify
-        layout.menu("VIEW3D_MT_mirror")
-        layout.menu("VIEW3D_MT_snap")
+        layout.menu("VIEW3D_MT_mirror", icon='OP_MIRROR')
+        layout.menu("VIEW3D_MT_snap", icon='OP_SNAP')
 
         layout.separator()
 
@@ -2772,8 +2772,8 @@ class VIEW3D_MT_object_relations(Menu):
 
         layout.separator()
 
-        layout.operator_menu_enum("object.make_local", "type", text="Make Local")
-        layout.menu("VIEW3D_MT_make_single_user")
+        layout.operator_menu_enum("object.make_local", "type", text="Make Local", icon='OP_MAKE_LOCAL')
+        layout.menu("VIEW3D_MT_make_single_user", icon='OP_MAKE_SINGLE_USER')
 
 
 class VIEW3D_MT_object_liboverride(Menu):
@@ -2797,17 +2797,17 @@ class VIEW3D_MT_object(Menu):
         ob = context.object
 
         layout.menu("VIEW3D_MT_transform_object")
-        layout.operator_menu_enum("object.origin_set", text="Set Origin", property="type")
-        layout.menu("VIEW3D_MT_mirror")
-        layout.menu("VIEW3D_MT_object_clear")
-        layout.menu("VIEW3D_MT_object_apply")
-        layout.menu("VIEW3D_MT_snap")
+        layout.operator_menu_enum("object.origin_set", text="Set Origin", property="type", icon='OP_SET_ORIGIN')
+        layout.menu("VIEW3D_MT_mirror", icon='OP_MIRROR')
+        layout.menu("VIEW3D_MT_object_clear", icon='OP_CLEAR_LOCATION')
+        layout.menu("VIEW3D_MT_object_apply", icon='OP_APPLY_TRANSFORM')
+        layout.menu("VIEW3D_MT_snap", icon='OP_SNAP')
 
         layout.separator()
 
-        layout.operator("object.duplicate_move")
-        layout.operator("object.duplicate_move_linked")
-        layout.operator("object.join")
+        layout.operator("object.duplicate_move", icon='OP_DUPLICATE')
+        layout.operator("object.duplicate_move_linked", icon='OP_DUPLICATE_LINKED')
+        layout.operator("object.join", icon='OP_JOIN')
 
         layout.separator()
 
@@ -2817,48 +2817,48 @@ class VIEW3D_MT_object(Menu):
         layout.separator()
 
         layout.menu("VIEW3D_MT_object_asset", icon='ASSET_MANAGER')
-        layout.menu("VIEW3D_MT_object_collection")
+        layout.menu("VIEW3D_MT_object_collection", icon='OP_MOVE_TO_COLLECTION')
 
         layout.separator()
 
         layout.menu("VIEW3D_MT_object_liboverride", icon='LIBRARY_DATA_OVERRIDE')
         layout.menu("VIEW3D_MT_object_relations")
-        layout.menu("VIEW3D_MT_object_parent")
+        layout.menu("VIEW3D_MT_object_parent", icon='OP_PARENT_SET')
         layout.menu("VIEW3D_MT_object_modifiers", icon='MODIFIER')
         layout.menu("VIEW3D_MT_object_constraints", icon='CONSTRAINT')
-        layout.menu("VIEW3D_MT_object_track")
-        layout.menu("VIEW3D_MT_make_links")
+        layout.menu("VIEW3D_MT_object_track", icon='OP_TRACK_TO')
+        layout.menu("VIEW3D_MT_make_links", icon='OP_MAKE_LINKS')
 
         layout.separator()
 
-        layout.operator("object.shade_smooth")
+        layout.operator("object.shade_smooth", icon='OP_SHADE_SMOOTH')
         if ob and ob.type == 'MESH':
-            layout.operator("object.shade_auto_smooth")
-        layout.operator("object.shade_flat")
+            layout.operator("object.shade_auto_smooth", icon='OP_SHADE_AUTO_SMOOTH')
+        layout.operator("object.shade_flat", icon='OP_SHADE_FLAT')
 
         layout.separator()
 
-        layout.menu("VIEW3D_MT_object_animation")
-        layout.menu("VIEW3D_MT_object_rigid_body")
+        layout.menu("VIEW3D_MT_object_animation", icon='OP_INSERT_KEYFRAME')
+        layout.menu("VIEW3D_MT_object_rigid_body", icon='OP_RIGID_ACTIVE')
 
         layout.separator()
 
-        layout.menu("VIEW3D_MT_object_quick_effects")
+        layout.menu("VIEW3D_MT_object_quick_effects", icon='OP_QUICK_EXPLODE')
 
         layout.separator()
 
-        layout.menu("VIEW3D_MT_object_convert")
+        layout.menu("VIEW3D_MT_object_convert", icon='OP_CONVERT')
 
         layout.separator()
 
-        layout.menu("VIEW3D_MT_object_showhide")
+        layout.menu("VIEW3D_MT_object_showhide", icon='OP_HIDE_SELECTED')
         layout.menu("VIEW3D_MT_object_cleanup")
 
         layout.separator()
 
         layout.operator_context = 'EXEC_REGION_WIN'
-        layout.operator("object.delete", text="Delete").use_global = False
-        layout.operator("object.delete", text="Delete Global").use_global = True
+        layout.operator("object.delete", text="Delete", icon='X').use_global = False
+        layout.operator("object.delete", text="Delete Global", icon='X').use_global = True
 
         layout.template_node_operator_asset_menu_items(catalog_path="Object")
 
@@ -2869,15 +2869,15 @@ class VIEW3D_MT_object_animation(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("anim.keyframe_insert", text="Insert Keyframe")
-        layout.operator("anim.keyframe_insert_menu", text="Insert Keyframe with Keying Set...").always_prompt = True
-        layout.operator("anim.keyframe_delete_v3d", text="Delete Keyframes...")
-        layout.operator("anim.keyframe_clear_v3d", text="Clear Keyframes...")
-        layout.operator("anim.keying_set_active_set", text="Change Keying Set...")
+        layout.operator("anim.keyframe_insert", text="Insert Keyframe", icon='OP_INSERT_KEYFRAME')
+        layout.operator("anim.keyframe_insert_menu", text="Insert Keyframe with Keying Set...", icon='KEYINGSET').always_prompt = True
+        layout.operator("anim.keyframe_delete_v3d", text="Delete Keyframes...", icon='OP_KEY_DELETE')
+        layout.operator("anim.keyframe_clear_v3d", text="Clear Keyframes...", icon='OP_KEY_CLEAR')
+        layout.operator("anim.keying_set_active_set", text="Change Keying Set...", icon='OP_KEYING_SET_CHANGE')
 
         layout.separator()
 
-        layout.operator("nla.bake", text="Bake Action...")
+        layout.operator("nla.bake", text="Bake Action...", icon='OP_BAKE_ACTION')
         layout.operator("grease_pencil.bake_grease_pencil_animation", text="Bake Object Transform to Grease Pencil...")
         layout.operator("anim.replace_action")
         layout.operator("anim.replace_action_new")
@@ -2889,24 +2889,24 @@ class VIEW3D_MT_object_rigid_body(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("rigidbody.objects_add", text="Add Active").type = 'ACTIVE'
-        layout.operator("rigidbody.objects_add", text="Add Passive").type = 'PASSIVE'
+        layout.operator("rigidbody.objects_add", text="Add Active", icon='OP_RIGID_ACTIVE').type = 'ACTIVE'
+        layout.operator("rigidbody.objects_add", text="Add Passive", icon='OP_RIGID_PASSIVE').type = 'PASSIVE'
 
         layout.separator()
 
-        layout.operator("rigidbody.objects_remove", text="Remove")
+        layout.operator("rigidbody.objects_remove", text="Remove", icon='OP_RIGID_REMOVE')
 
         layout.separator()
 
-        layout.operator("rigidbody.shape_change", text="Change Shape")
-        layout.operator("rigidbody.mass_calculate", text="Calculate Mass")
-        layout.operator("rigidbody.object_settings_copy", text="Copy from Active")
-        layout.operator("object.visual_transform_apply", text="Apply Transformation")
-        layout.operator("rigidbody.bake_to_keyframes", text="Bake to Keyframes")
+        layout.operator("rigidbody.shape_change", text="Change Shape", icon='OP_RIGID_SHAPE')
+        layout.operator("rigidbody.mass_calculate", text="Calculate Mass", icon='OP_RIGID_MASS')
+        layout.operator("rigidbody.object_settings_copy", text="Copy from Active", icon='OP_RIGID_COPY')
+        layout.operator("object.visual_transform_apply", text="Apply Transformation", icon='OP_VISUAL_TRANSFORM')
+        layout.operator("rigidbody.bake_to_keyframes", text="Bake to Keyframes", icon='OP_RIGID_BAKE')
 
         layout.separator()
 
-        layout.operator("rigidbody.connect", text="Connect")
+        layout.operator("rigidbody.connect", text="Connect", icon='OP_RIGID_CONNECT')
 
 
 class VIEW3D_MT_object_clear(Menu):
@@ -2915,13 +2915,13 @@ class VIEW3D_MT_object_clear(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("object.location_clear", text="Location", text_ctxt=i18n_contexts.default).clear_delta = False
-        layout.operator("object.rotation_clear", text="Rotation", text_ctxt=i18n_contexts.default).clear_delta = False
-        layout.operator("object.scale_clear", text="Scale", text_ctxt=i18n_contexts.default).clear_delta = False
+        layout.operator("object.location_clear", text="Location", text_ctxt=i18n_contexts.default, icon='OP_CLEAR_LOCATION').clear_delta = False
+        layout.operator("object.rotation_clear", text="Rotation", text_ctxt=i18n_contexts.default, icon='OP_CLEAR_ROTATION').clear_delta = False
+        layout.operator("object.scale_clear", text="Scale", text_ctxt=i18n_contexts.default, icon='OP_CLEAR_SCALE').clear_delta = False
 
         layout.separator()
 
-        layout.operator("object.origin_clear", text="Origin")
+        layout.operator("object.origin_clear", text="Origin", icon='OP_CLEAR_ORIGIN')
 
 
 class VIEW3D_MT_object_context_menu(Menu):
@@ -2956,7 +2956,7 @@ class VIEW3D_MT_object_context_menu(Menu):
         elif obj.type == 'CAMERA':
             layout.operator_context = 'INVOKE_REGION_WIN'
 
-            layout.operator("view3d.object_as_camera", text="Set Active Camera")
+            layout.operator("view3d.object_as_camera", text="Set Active Camera", icon='OP_SET_ACTIVE_CAMERA')
 
             if obj.data.type == 'PERSP':
                 props = layout.operator("wm.context_modal_mouse", text="Adjust Focal Length")
@@ -3081,22 +3081,22 @@ class VIEW3D_MT_object_context_menu(Menu):
         # Shared among some object types.
         if obj is not None:
             if obj.type in {'MESH', 'CURVE', 'SURFACE'}:
-                layout.operator("object.shade_smooth")
+                layout.operator("object.shade_smooth", icon='OP_SHADE_SMOOTH')
                 if obj.type == 'MESH':
-                    layout.operator("object.shade_auto_smooth")
-                layout.operator("object.shade_flat")
+                    layout.operator("object.shade_auto_smooth", icon='OP_SHADE_AUTO_SMOOTH')
+                layout.operator("object.shade_flat", icon='OP_SHADE_FLAT')
 
                 layout.separator()
 
             if obj.type in {'MESH', 'CURVE', 'SURFACE', 'ARMATURE', 'GREASEPENCIL'}:
                 if selected_objects_len > 1:
-                    layout.operator("object.join")
+                    layout.operator("object.join", icon='OP_JOIN')
 
             if obj.type in {
                     'MESH', 'CURVE', 'CURVES', 'SURFACE', 'POINTCLOUD',
                     'META', 'FONT', 'GREASEPENCIL'
             }:
-                layout.operator_menu_enum("object.convert", "target")
+                layout.operator_menu_enum("object.convert", "target", icon='OP_CONVERT')
 
             if (obj.type in {
                 'MESH',
@@ -3111,7 +3111,7 @@ class VIEW3D_MT_object_context_menu(Menu):
                 'POINTCLOUD',
             } or (obj.type == 'EMPTY' and obj.instance_collection is not None)):
                 layout.operator_context = 'INVOKE_REGION_WIN'
-                layout.operator_menu_enum("object.origin_set", text="Set Origin", property="type")
+                layout.operator_menu_enum("object.origin_set", text="Set Origin", property="type", icon='OP_SET_ORIGIN')
                 layout.operator_context = 'INVOKE_DEFAULT'
 
                 layout.separator()
@@ -3123,35 +3123,35 @@ class VIEW3D_MT_object_context_menu(Menu):
         layout.separator()
 
         layout.operator("object.duplicate_move", icon='DUPLICATE')
-        layout.operator("object.duplicate_move_linked")
+        layout.operator("object.duplicate_move_linked", icon='OP_DUPLICATE_LINKED')
 
         layout.separator()
 
-        props = layout.operator("wm.call_panel", text="Rename Active Object...")
+        props = layout.operator("wm.call_panel", text="Rename Active Object...", icon='SORTALPHA')
         props.name = "TOPBAR_PT_name"
         props.keep_open = False
 
         layout.separator()
 
-        layout.menu("VIEW3D_MT_mirror")
-        layout.menu("VIEW3D_MT_snap")
-        layout.menu("VIEW3D_MT_object_parent")
+        layout.menu("VIEW3D_MT_mirror", icon='OP_MIRROR')
+        layout.menu("VIEW3D_MT_snap", icon='OP_SNAP')
+        layout.menu("VIEW3D_MT_object_parent", icon='OP_PARENT_SET')
         layout.operator_context = 'INVOKE_REGION_WIN'
 
         if view and view.local_view:
-            layout.operator("view3d.localview_remove_from")
+            layout.operator("view3d.localview_remove_from", icon='OP_LOCAL_VIEW_REMOVE')
         else:
-            layout.menu("OBJECT_MT_move_to_collection")
+            layout.menu("OBJECT_MT_move_to_collection", icon='OP_MOVE_TO_COLLECTION')
 
         layout.separator()
 
-        layout.operator("anim.keyframe_insert", text="Insert Keyframe")
-        layout.operator("anim.keyframe_insert_menu", text="Insert Keyframe with Keying Set...").always_prompt = True
+        layout.operator("anim.keyframe_insert", text="Insert Keyframe", icon='OP_INSERT_KEYFRAME')
+        layout.operator("anim.keyframe_insert_menu", text="Insert Keyframe with Keying Set...", icon='KEYINGSET').always_prompt = True
 
         layout.separator()
 
         layout.operator_context = 'EXEC_REGION_WIN'
-        layout.operator("object.delete", text="Delete").use_global = False
+        layout.operator("object.delete", text="Delete", icon='X').use_global = False
 
         layout.template_node_operator_asset_menu_items(catalog_path="Object")
 
@@ -3162,8 +3162,8 @@ class VIEW3D_MT_object_shading(Menu):
 
     def draw(self, _context):
         layout = self.layout
-        layout.operator("object.shade_smooth", text="Smooth")
-        layout.operator("object.shade_flat", text="Flat")
+        layout.operator("object.shade_smooth", text="Smooth", icon='OP_SHADE_SMOOTH')
+        layout.operator("object.shade_flat", text="Flat", icon='OP_SHADE_FLAT')
 
 
 class VIEW3D_MT_object_apply(Menu):
@@ -3175,19 +3175,19 @@ class VIEW3D_MT_object_apply(Menu):
         # Need invoke for the popup confirming the multi-user data operation
         layout.operator_context = 'INVOKE_DEFAULT'
 
-        props = layout.operator("object.transform_apply", text="Location", text_ctxt=i18n_contexts.default)
+        props = layout.operator("object.transform_apply", text="Location", text_ctxt=i18n_contexts.default, icon='OP_APPLY_LOCATION')
         props.location, props.rotation, props.scale = True, False, False
 
-        props = layout.operator("object.transform_apply", text="Rotation", text_ctxt=i18n_contexts.default)
+        props = layout.operator("object.transform_apply", text="Rotation", text_ctxt=i18n_contexts.default, icon='OP_APPLY_ROTATION')
         props.location, props.rotation, props.scale = False, True, False
 
-        props = layout.operator("object.transform_apply", text="Scale", text_ctxt=i18n_contexts.default)
+        props = layout.operator("object.transform_apply", text="Scale", text_ctxt=i18n_contexts.default, icon='OP_APPLY_SCALE')
         props.location, props.rotation, props.scale = False, False, True
 
-        props = layout.operator("object.transform_apply", text="All Transforms", text_ctxt=i18n_contexts.default)
+        props = layout.operator("object.transform_apply", text="All Transforms", text_ctxt=i18n_contexts.default, icon='OP_APPLY_ALL')
         props.location, props.rotation, props.scale = True, True, True
 
-        props = layout.operator("object.transform_apply", text="Rotation & Scale", text_ctxt=i18n_contexts.default)
+        props = layout.operator("object.transform_apply", text="Rotation & Scale", text_ctxt=i18n_contexts.default, icon='OP_APPLY_ROT_SCALE')
         props.location, props.rotation, props.scale = False, True, True
 
         layout.separator()
@@ -3221,15 +3221,17 @@ class VIEW3D_MT_object_apply(Menu):
             "object.visual_transform_apply",
             text="Visual Transform",
             text_ctxt=i18n_contexts.default,
+            icon='OP_VISUAL_TRANSFORM',
         )
         layout.operator(
             "object.convert",
             text="Visual Geometry to Mesh",
             text_ctxt=i18n_contexts.default,
+            icon='OP_CONVERT',
         ).target = 'MESH'
         layout.operator("object.visual_geometry_to_objects")
-        layout.operator("object.duplicates_make_real")
-        layout.operator("object.parent_inverse_apply", text="Parent Inverse", text_ctxt=i18n_contexts.default)
+        layout.operator("object.duplicates_make_real", icon='OP_INSTANCES_REAL')
+        layout.operator("object.parent_inverse_apply", text="Parent Inverse", text_ctxt=i18n_contexts.default, icon='OP_PARENT_INVERSE')
 
         layout.template_node_operator_asset_menu_items(catalog_path="Object/Apply")
 
@@ -3248,8 +3250,8 @@ class VIEW3D_MT_object_parent(Menu):
         layout.separator()
 
         with operator_context(layout, 'EXEC_REGION_WIN'):
-            layout.operator("object.parent_no_inverse_set").keep_transform = False
-            props = layout.operator("object.parent_no_inverse_set", text="Make Parent without Inverse (Keep Transform)")
+            layout.operator("object.parent_no_inverse_set", icon='OP_PARENT_NO_INVERSE').keep_transform = False
+            props = layout.operator("object.parent_no_inverse_set", text="Make Parent without Inverse (Keep Transform)", icon='OP_PARENT_NO_INVERSE')
             props.keep_transform = True
 
         layout.separator()
@@ -3277,7 +3279,7 @@ class VIEW3D_MT_object_collection(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.menu("OBJECT_MT_move_to_collection")
+        layout.menu("OBJECT_MT_move_to_collection", icon='OP_MOVE_TO_COLLECTION')
         layout.menu("OBJECT_MT_link_to_collection")
 
         layout.separator()
@@ -3285,12 +3287,12 @@ class VIEW3D_MT_object_collection(Menu):
         layout.operator("collection.create")
         # layout.operator_menu_enum("collection.objects_remove", "collection")  # BUGGY
         layout.operator("collection.objects_remove")
-        layout.operator("collection.objects_remove_all")
+        layout.operator("collection.objects_remove_all", icon='OP_COLLECTION_REMOVE_ALL')
 
         layout.separator()
 
-        layout.operator("collection.objects_add_active")
-        layout.operator("collection.objects_remove_active")
+        layout.operator("collection.objects_add_active", icon='OP_COLLECTION_ADD_ACTIVE')
+        layout.operator("collection.objects_remove_active", icon='OP_COLLECTION_REMOVE_SELECTED')
 
 
 class VIEW3D_MT_object_constraints(Menu):
@@ -3299,12 +3301,12 @@ class VIEW3D_MT_object_constraints(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("object.constraint_add_with_targets")
-        layout.operator("object.constraints_copy")
+        layout.operator("object.constraint_add_with_targets", icon='OP_CONSTRAINT_TARGETS')
+        layout.operator("object.constraints_copy", icon='OP_CONSTRAINT_COPY')
 
         layout.separator()
 
-        layout.operator("object.constraints_clear")
+        layout.operator("object.constraints_clear", icon='OP_CONSTRAINT_CLEAR')
 
 
 class VIEW3D_MT_object_modifiers(Menu):
@@ -3342,10 +3344,10 @@ class VIEW3D_MT_object_quick_effects(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("object.quick_fur")
-        layout.operator("object.quick_explode")
-        layout.operator("object.quick_smoke")
-        layout.operator("object.quick_liquid")
+        layout.operator("object.quick_fur", icon='OP_QUICK_FUR')
+        layout.operator("object.quick_explode", icon='OP_QUICK_EXPLODE')
+        layout.operator("object.quick_smoke", icon='OP_QUICK_SMOKE')
+        layout.operator("object.quick_liquid", icon='OP_QUICK_LIQUID')
         layout.template_node_operator_asset_menu_items(catalog_path="Object/Quick Effects")
 
 
@@ -3355,12 +3357,12 @@ class VIEW3D_MT_object_showhide(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("object.hide_view_clear")
+        layout.operator("object.hide_view_clear", icon='OP_REVEAL_HIDDEN')
 
         layout.separator()
 
-        layout.operator("object.hide_view_set", text="Hide Selected").unselected = False
-        layout.operator("object.hide_view_set", text="Hide Unselected").unselected = True
+        layout.operator("object.hide_view_set", text="Hide Selected", icon='OP_HIDE_SELECTED').unselected = False
+        layout.operator("object.hide_view_set", text="Hide Unselected", icon='OP_HIDE_UNSELECTED').unselected = True
 
 
 class VIEW3D_MT_object_cleanup(Menu):
@@ -3458,7 +3460,7 @@ class VIEW3D_MT_make_links(Menu):
             layout.operator("object.make_links_scene", text="Link Objects to Scene...", icon='OUTLINER_OB_EMPTY')
         else:
             layout.operator_context = 'EXEC_REGION_WIN'
-            layout.operator_menu_enum("object.make_links_scene", "scene", text="Link Objects to Scene")
+            layout.operator_menu_enum("object.make_links_scene", "scene", text="Link Objects to Scene", icon='OP_LINK_SCENE')
 
         layout.separator()
 
@@ -3757,9 +3759,9 @@ class VIEW3D_MT_sculpt_transform(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("transform.translate")
-        layout.operator("transform.rotate")
-        layout.operator("transform.resize", text="Scale")
+        layout.operator("transform.translate", icon='TOOL_MOVE')
+        layout.operator("transform.rotate", icon='TOOL_ROTATE')
+        layout.operator("transform.resize", text="Scale", icon='TOOL_SCALE')
 
         layout.separator()
         props = layout.operator("sculpt.mesh_filter", text="To Sphere")
@@ -4166,11 +4168,11 @@ class VIEW3D_MT_pose(Menu):
         layout.menu("VIEW3D_MT_pose_transform")
         layout.menu("VIEW3D_MT_pose_apply")
 
-        layout.menu("VIEW3D_MT_snap")
+        layout.menu("VIEW3D_MT_snap", icon='OP_SNAP')
 
         layout.separator()
 
-        layout.menu("VIEW3D_MT_object_animation")
+        layout.menu("VIEW3D_MT_object_animation", icon='OP_INSERT_KEYFRAME')
 
         layout.separator()
 
@@ -4190,7 +4192,7 @@ class VIEW3D_MT_pose(Menu):
 
         layout.separator()
 
-        layout.menu("VIEW3D_MT_object_parent")
+        layout.menu("VIEW3D_MT_object_parent", icon='OP_PARENT_SET')
         layout.menu("VIEW3D_MT_pose_ik")
         layout.menu("VIEW3D_MT_pose_constraints")
 
@@ -4355,8 +4357,8 @@ class VIEW3D_MT_pose_context_menu(Menu):
 
         layout.operator_context = 'INVOKE_REGION_WIN'
 
-        layout.operator("anim.keyframe_insert", text="Insert Keyframe")
-        layout.operator("anim.keyframe_insert_menu", text="Insert Keyframe with Keying Set...").always_prompt = True
+        layout.operator("anim.keyframe_insert", text="Insert Keyframe", icon='OP_INSERT_KEYFRAME')
+        layout.operator("anim.keyframe_insert_menu", text="Insert Keyframe with Keying Set...", icon='KEYINGSET').always_prompt = True
 
         layout.separator()
 
@@ -4366,7 +4368,7 @@ class VIEW3D_MT_pose_context_menu(Menu):
 
         layout.separator()
 
-        props = layout.operator("wm.call_panel", text="Rename Active Bone...")
+        props = layout.operator("wm.call_panel", text="Rename Active Bone...", icon='SORTALPHA')
         props.name = "TOPBAR_PT_name"
         props.keep_open = False
 
@@ -4453,35 +4455,35 @@ class VIEW3D_MT_edit_mesh(Menu):
         with_bullet = bpy.app.build_options.bullet
 
         layout.menu("VIEW3D_MT_transform")
-        layout.menu("VIEW3D_MT_mirror")
-        layout.menu("VIEW3D_MT_snap")
+        layout.menu("VIEW3D_MT_mirror", icon='OP_MIRROR')
+        layout.menu("VIEW3D_MT_snap", icon='OP_SNAP')
 
         layout.separator()
 
         layout.operator("mesh.duplicate_move", text="Duplicate")
-        layout.menu("VIEW3D_MT_edit_mesh_extrude")
+        layout.menu("VIEW3D_MT_edit_mesh_extrude", icon='OP_EXTRUDE_REGION')
 
         layout.separator()
 
-        layout.menu("VIEW3D_MT_edit_mesh_merge", text="Merge")
+        layout.menu("VIEW3D_MT_edit_mesh_merge", text="Merge", icon='OP_MERGE')
         layout.menu("VIEW3D_MT_edit_mesh_split", text="Split")
-        layout.operator_menu_enum("mesh.separate", "type")
+        layout.operator_menu_enum("mesh.separate", "type", icon='OP_SEPARATE')
 
         layout.separator()
 
-        layout.operator("mesh.bisect")
-        layout.operator("mesh.knife_project")
-        props = layout.operator("mesh.knife_tool")
+        layout.operator("mesh.bisect", icon='OP_BISECT')
+        layout.operator("mesh.knife_project", icon='OP_KNIFE_PROJECT')
+        props = layout.operator("mesh.knife_tool", icon='OP_KNIFE')
         props.use_occlude_geometry = True
         props.only_selected = False
 
         if with_bullet:
-            layout.operator("mesh.convex_hull")
+            layout.operator("mesh.convex_hull", icon='OP_CONVEX_HULL')
 
         layout.separator()
 
-        layout.operator("mesh.symmetrize")
-        layout.operator("mesh.symmetry_snap")
+        layout.operator("mesh.symmetrize", icon='OP_SYMMETRIZE')
+        layout.operator("mesh.symmetry_snap", icon='OP_SNAP_SYMMETRY')
 
         layout.separator()
 
@@ -4489,7 +4491,7 @@ class VIEW3D_MT_edit_mesh(Menu):
         layout.menu("VIEW3D_MT_edit_mesh_shading")
         layout.menu("VIEW3D_MT_edit_mesh_weights")
         layout.operator("mesh.attribute_set")
-        layout.operator_menu_enum("mesh.sort_elements", "type", text="Sort Elements")
+        layout.operator_menu_enum("mesh.sort_elements", "type", text="Sort Elements", icon='OP_SORT_ELEMENTS')
 
         layout.separator()
 
@@ -4551,36 +4553,36 @@ class VIEW3D_MT_edit_mesh_context_menu(Menu):
             col.separator()
 
             # Additive Operators
-            col.operator("mesh.subdivide", text="Subdivide")
+            col.operator("mesh.subdivide", text="Subdivide", icon='OP_SUBDIVIDE')
 
             col.separator()
 
-            col.operator("mesh.extrude_vertices_move", text="Extrude Vertices")
-            col.operator("mesh.bevel", text="Bevel Vertices").affect = 'VERTICES'
+            col.operator("mesh.extrude_vertices_move", text="Extrude Vertices", icon='OP_EXTRUDE_VERTICES')
+            col.operator("mesh.bevel", text="Bevel Vertices", icon='OP_BEVEL').affect = 'VERTICES'
 
             if selected_verts_len > 1:
                 col.separator()
-                col.operator("mesh.edge_face_add", text="New Edge/Face from Vertices")
-                col.operator("mesh.vert_connect_path", text="Connect Vertex Path")
-                col.operator("mesh.vert_connect", text="Connect Vertex Pairs")
+                col.operator("mesh.edge_face_add", text="New Edge/Face from Vertices", icon='OP_NEW_FACE')
+                col.operator("mesh.vert_connect_path", text="Connect Vertex Path", icon='OP_CONNECT_PATH')
+                col.operator("mesh.vert_connect", text="Connect Vertex Pairs", icon='OP_CONNECT_PAIRS')
 
             col.separator()
 
             # Deform Operators
-            col.operator("transform.push_pull", text="Push/Pull")
-            col.operator("transform.shrink_fatten", text="Shrink/Fatten")
-            col.operator("transform.shear", text="Shear")
-            col.operator("transform.vert_slide", text="Slide Vertices")
+            col.operator("transform.push_pull", text="Push/Pull", icon='OP_PUSH_PULL')
+            col.operator("transform.shrink_fatten", text="Shrink/Fatten", icon='OP_SHRINK_FATTEN')
+            col.operator("transform.shear", text="Shear", icon='OP_SHEAR')
+            col.operator("transform.vert_slide", text="Slide Vertices", icon='OP_VERT_SLIDE')
             col.operator_context = 'EXEC_REGION_WIN'
-            col.operator("transform.vertex_random", text="Randomize Vertices").offset = 0.1
-            col.operator("mesh.vertices_smooth", text="Smooth Vertices").factor = 0.5
+            col.operator("transform.vertex_random", text="Randomize Vertices", icon='OP_RANDOMIZE').offset = 0.1
+            col.operator("mesh.vertices_smooth", text="Smooth Vertices", icon='OP_SMOOTH_VERTICES').factor = 0.5
             col.operator_context = 'INVOKE_REGION_WIN'
-            col.operator("mesh.vertices_smooth_laplacian", text="Smooth Laplacian")
+            col.operator("mesh.vertices_smooth_laplacian", text="Smooth Laplacian", icon='OP_SMOOTH_LAPLACIAN')
 
             col.separator()
 
-            col.menu("VIEW3D_MT_mirror", text="Mirror Vertices")
-            col.menu("VIEW3D_MT_snap", text="Snap Vertices")
+            col.menu("VIEW3D_MT_mirror", text="Mirror Vertices", icon='OP_MIRROR')
+            col.menu("VIEW3D_MT_snap", text="Snap Vertices", icon='OP_SNAP')
 
             col.separator()
 
@@ -4590,11 +4592,11 @@ class VIEW3D_MT_edit_mesh_context_menu(Menu):
 
             # Removal Operators
             if selected_verts_len > 1:
-                col.menu("VIEW3D_MT_edit_mesh_merge", text="Merge Vertices")
-            col.operator("mesh.split")
-            col.operator_menu_enum("mesh.separate", "type")
-            col.operator("mesh.dissolve_verts")
-            col.operator("mesh.delete", text="Delete Vertices").type = 'VERT'
+                col.menu("VIEW3D_MT_edit_mesh_merge", text="Merge Vertices", icon='OP_MERGE')
+            col.operator("mesh.split", icon='OP_SPLIT')
+            col.operator_menu_enum("mesh.separate", "type", icon='OP_SEPARATE')
+            col.operator("mesh.dissolve_verts", icon='OP_DISSOLVE_VERTS')
+            col.operator("mesh.delete", text="Delete Vertices", icon='OP_DELETE_VERTS').type = 'VERT'
 
         if is_edge_mode:
             col = row.column(align=True)
@@ -4602,36 +4604,36 @@ class VIEW3D_MT_edit_mesh_context_menu(Menu):
             col.separator()
 
             # Additive Operators
-            col.operator("mesh.subdivide", text="Subdivide")
+            col.operator("mesh.subdivide", text="Subdivide", icon='OP_SUBDIVIDE')
 
             col.separator()
 
-            col.operator("mesh.extrude_edges_move", text="Extrude Edges")
-            col.operator("mesh.bevel", text="Bevel Edges").affect = 'EDGES'
+            col.operator("mesh.extrude_edges_move", text="Extrude Edges", icon='OP_EXTRUDE_EDGES')
+            col.operator("mesh.bevel", text="Bevel Edges", icon='OP_BEVEL').affect = 'EDGES'
             if selected_edges_len >= 2:
-                col.operator("mesh.bridge_edge_loops")
+                col.operator("mesh.bridge_edge_loops", icon='OP_BRIDGE')
             if selected_edges_len >= 1:
-                col.operator("mesh.edge_face_add", text="New Face from Edges")
+                col.operator("mesh.edge_face_add", text="New Face from Edges", icon='OP_NEW_FACE')
             if selected_edges_len >= 2:
-                col.operator("mesh.fill")
+                col.operator("mesh.fill", icon='OP_FILL')
 
             col.separator()
 
-            props = col.operator("mesh.loopcut_slide")
+            props = col.operator("mesh.loopcut_slide", icon='OP_LOOPCUT')
             props.TRANSFORM_OT_edge_slide.release_confirm = False
-            col.operator("mesh.offset_edge_loops_slide")
+            col.operator("mesh.offset_edge_loops_slide", icon='OP_OFFSET_EDGE_LOOPS')
 
             col.separator()
 
-            col.operator("mesh.knife_tool")
-            col.operator("mesh.bisect")
+            col.operator("mesh.knife_tool", icon='OP_KNIFE')
+            col.operator("mesh.bisect", icon='OP_BISECT')
 
             col.separator()
 
             # Deform Operators
-            col.operator("mesh.edge_rotate", text="Rotate Edge CW").use_ccw = False
-            col.operator("transform.edge_slide")
-            col.operator("mesh.edge_split")
+            col.operator("mesh.edge_rotate", text="Rotate Edge CW", icon='OP_EDGE_ROTATE').use_ccw = False
+            col.operator("transform.edge_slide", icon='OP_EDGE_SLIDE')
+            col.operator("mesh.edge_split", icon='OP_EDGE_SPLIT')
 
             col.separator()
 
@@ -4642,28 +4644,28 @@ class VIEW3D_MT_edit_mesh_context_menu(Menu):
             col.separator()
 
             col.operator("mesh.mark_seam", icon='EDGE_SEAM').clear = False
-            col.operator("mesh.mark_seam", text="Clear Seam").clear = True
+            col.operator("mesh.mark_seam", text="Clear Seam", icon='OP_CLEAR_SEAM').clear = True
 
             col.separator()
 
             col.operator("mesh.mark_sharp", icon='EDGE_SHARP').clear = False
-            col.operator("mesh.mark_sharp", text="Clear Sharp").clear = True
-            col.operator("mesh.set_sharpness_by_angle")
+            col.operator("mesh.mark_sharp", text="Clear Sharp", icon='OP_CLEAR_SHARP').clear = True
+            col.operator("mesh.set_sharpness_by_angle", icon='OP_SHARP_BY_ANGLE')
 
             if with_freestyle:
                 col.separator()
 
-                col.operator("mesh.mark_freestyle_edge").clear = False
-                col.operator("mesh.mark_freestyle_edge", text="Clear Freestyle Edge").clear = True
+                col.operator("mesh.mark_freestyle_edge", icon='OP_FREESTYLE_MARK').clear = False
+                col.operator("mesh.mark_freestyle_edge", text="Clear Freestyle Edge", icon='OP_FREESTYLE_CLEAR').clear = True
 
             col.separator()
 
             # Removal Operators
-            col.operator("mesh.unsubdivide")
-            col.operator("mesh.split")
-            col.operator_menu_enum("mesh.separate", "type")
-            col.operator("mesh.dissolve_edges")
-            col.operator("mesh.delete", text="Delete Edges").type = 'EDGE'
+            col.operator("mesh.unsubdivide", icon='OP_UNSUBDIVIDE')
+            col.operator("mesh.split", icon='OP_SPLIT')
+            col.operator_menu_enum("mesh.separate", "type", icon='OP_SEPARATE')
+            col.operator("mesh.dissolve_edges", icon='OP_DISSOLVE_EDGES')
+            col.operator("mesh.delete", text="Delete Edges", icon='OP_DELETE_EDGES').type = 'EDGE'
 
         if is_face_mode:
             col = row.column(align=True)
@@ -4672,19 +4674,19 @@ class VIEW3D_MT_edit_mesh_context_menu(Menu):
             col.separator()
 
             # Additive Operators
-            col.operator("mesh.subdivide", text="Subdivide")
+            col.operator("mesh.subdivide", text="Subdivide", icon='OP_SUBDIVIDE')
 
             col.separator()
 
-            col.operator("view3d.edit_mesh_extrude_move_normal", text="Extrude Faces")
-            col.operator("view3d.edit_mesh_extrude_move_shrink_fatten", text="Extrude Faces Along Normals")
-            col.operator("mesh.extrude_faces_move", text="Extrude Individual Faces")
+            col.operator("view3d.edit_mesh_extrude_move_normal", text="Extrude Faces", icon='OP_EXTRUDE_REGION')
+            col.operator("view3d.edit_mesh_extrude_move_shrink_fatten", text="Extrude Faces Along Normals", icon='OP_EXTRUDE_NORMALS')
+            col.operator("mesh.extrude_faces_move", text="Extrude Individual Faces", icon='OP_EXTRUDE_INDIVIDUAL')
 
-            col.operator("mesh.inset")
-            col.operator("mesh.poke")
+            col.operator("mesh.inset", icon='OP_INSET')
+            col.operator("mesh.poke", icon='OP_POKE')
 
             if selected_faces_len >= 2:
-                col.operator("mesh.bridge_edge_loops", text="Bridge Faces")
+                col.operator("mesh.bridge_edge_loops", text="Bridge Faces", icon='OP_BRIDGE')
 
             col.separator()
 
@@ -4693,23 +4695,23 @@ class VIEW3D_MT_edit_mesh_context_menu(Menu):
 
             col.separator()
 
-            props = col.operator("mesh.quads_convert_to_tris")
+            props = col.operator("mesh.quads_convert_to_tris", icon='OP_TRIANGULATE')
             props.quad_method = props.ngon_method = 'BEAUTY'
-            col.operator("mesh.tris_convert_to_quads")
+            col.operator("mesh.tris_convert_to_quads", icon='OP_TRIS_TO_QUADS')
 
             col.separator()
 
-            col.operator("mesh.faces_shade_smooth")
-            col.operator("mesh.faces_shade_flat")
+            col.operator("mesh.faces_shade_smooth", icon='OP_SHADE_SMOOTH')
+            col.operator("mesh.faces_shade_flat", icon='OP_SHADE_FLAT')
 
             col.separator()
 
             # Removal Operators
-            col.operator("mesh.unsubdivide")
-            col.operator("mesh.split")
-            col.operator_menu_enum("mesh.separate", "type")
-            col.operator("mesh.dissolve_faces")
-            col.operator("mesh.delete", text="Delete Faces").type = 'FACE'
+            col.operator("mesh.unsubdivide", icon='OP_UNSUBDIVIDE')
+            col.operator("mesh.split", icon='OP_SPLIT')
+            col.operator_menu_enum("mesh.separate", "type", icon='OP_SEPARATE')
+            col.operator("mesh.dissolve_faces", icon='OP_DISSOLVE_FACES')
+            col.operator("mesh.delete", text="Delete Faces", icon='OP_DELETE_FACES').type = 'FACE'
 
 
 class VIEW3D_MT_edit_mesh_select_mode(Menu):
@@ -4739,21 +4741,21 @@ class VIEW3D_MT_edit_mesh_extrude(Menu):
         mesh = ob.data
 
         if mesh.total_face_sel:
-            layout.operator("view3d.edit_mesh_extrude_move_normal", text="Extrude Faces")
-            layout.operator("view3d.edit_mesh_extrude_move_shrink_fatten", text="Extrude Faces Along Normals")
-            layout.operator("mesh.extrude_faces_move", text="Extrude Individual Faces")
-            layout.operator("view3d.edit_mesh_extrude_manifold_normal", text="Extrude Manifold")
+            layout.operator("view3d.edit_mesh_extrude_move_normal", text="Extrude Faces", icon='OP_EXTRUDE_REGION')
+            layout.operator("view3d.edit_mesh_extrude_move_shrink_fatten", text="Extrude Faces Along Normals", icon='OP_EXTRUDE_NORMALS')
+            layout.operator("mesh.extrude_faces_move", text="Extrude Individual Faces", icon='OP_EXTRUDE_INDIVIDUAL')
+            layout.operator("view3d.edit_mesh_extrude_manifold_normal", text="Extrude Manifold", icon='TOOL_EXTRUDE_MANIFOLD')
 
         if mesh.total_edge_sel and (select_mode[0] or select_mode[1]):
-            layout.operator("mesh.extrude_edges_move", text="Extrude Edges")
+            layout.operator("mesh.extrude_edges_move", text="Extrude Edges", icon='OP_EXTRUDE_EDGES')
 
         if mesh.total_vert_sel and select_mode[0]:
-            layout.operator("mesh.extrude_vertices_move", text="Extrude Vertices")
+            layout.operator("mesh.extrude_vertices_move", text="Extrude Vertices", icon='OP_EXTRUDE_VERTICES')
 
         layout.separator()
 
-        layout.operator("mesh.extrude_repeat")
-        layout.operator("mesh.spin").angle = pi * 2
+        layout.operator("mesh.extrude_repeat", icon='OP_EXTRUDE_REPEAT')
+        layout.operator("mesh.spin", icon='TOOL_SPIN').angle = pi * 2
         layout.template_node_operator_asset_menu_items(catalog_path="Mesh/Extrude")
 
 
@@ -4764,30 +4766,30 @@ class VIEW3D_MT_edit_mesh_vertices(Menu):
         layout = self.layout
         layout.operator_context = 'INVOKE_REGION_WIN'
 
-        layout.operator("mesh.extrude_vertices_move", text="Extrude Vertices")
-        layout.operator("mesh.dupli_extrude_cursor").rotate_source = True
-        layout.operator("mesh.bevel", text="Bevel Vertices").affect = 'VERTICES'
+        layout.operator("mesh.extrude_vertices_move", text="Extrude Vertices", icon='OP_EXTRUDE_VERTICES')
+        layout.operator("mesh.dupli_extrude_cursor", icon='TOOL_EXTRUDE_TO_CURSOR').rotate_source = True
+        layout.operator("mesh.bevel", text="Bevel Vertices", icon='OP_BEVEL').affect = 'VERTICES'
 
         layout.separator()
 
-        layout.operator("mesh.edge_face_add", text="New Edge/Face from Vertices")
-        layout.operator("mesh.vert_connect_path", text="Connect Vertex Path")
-        layout.operator("mesh.vert_connect", text="Connect Vertex Pairs")
+        layout.operator("mesh.edge_face_add", text="New Edge/Face from Vertices", icon='OP_NEW_FACE')
+        layout.operator("mesh.vert_connect_path", text="Connect Vertex Path", icon='OP_CONNECT_PATH')
+        layout.operator("mesh.vert_connect", text="Connect Vertex Pairs", icon='OP_CONNECT_PAIRS')
 
         layout.separator()
 
-        props = layout.operator("mesh.rip_move", text="Rip Vertices")
+        props = layout.operator("mesh.rip_move", text="Rip Vertices", icon='TOOL_RIP')
         props.MESH_OT_rip.use_fill = False
-        props = layout.operator("mesh.rip_move", text="Rip Vertices and Fill")
+        props = layout.operator("mesh.rip_move", text="Rip Vertices and Fill", icon='OP_RIP_FILL')
         props.MESH_OT_rip.use_fill = True
-        layout.operator("mesh.rip_edge_move", text="Rip Vertices and Extend")
+        layout.operator("mesh.rip_edge_move", text="Rip Vertices and Extend", icon='OP_EXTEND_VERTICES')
 
         layout.separator()
 
-        layout.operator("transform.vert_slide", text="Slide Vertices")
+        layout.operator("transform.vert_slide", text="Slide Vertices", icon='OP_VERT_SLIDE')
         layout.operator_context = 'EXEC_REGION_WIN'
-        layout.operator("mesh.vertices_smooth", text="Smooth Vertices").factor = 0.5
-        layout.operator("mesh.vertices_smooth_laplacian", text="Smooth Vertices (Laplacian)")
+        layout.operator("mesh.vertices_smooth", text="Smooth Vertices", icon='OP_SMOOTH_VERTICES').factor = 0.5
+        layout.operator("mesh.vertices_smooth_laplacian", text="Smooth Vertices (Laplacian)", icon='OP_SMOOTH_LAPLACIAN')
         layout.operator_context = 'INVOKE_REGION_WIN'
 
         layout.separator()
@@ -4802,11 +4804,11 @@ class VIEW3D_MT_edit_mesh_vertices(Menu):
         layout.separator()
 
         layout.menu("VIEW3D_MT_vertex_group")
-        layout.menu("VIEW3D_MT_hook")
+        layout.menu("VIEW3D_MT_hook", icon='OP_HOOK')
 
         layout.separator()
 
-        layout.operator("object.vertex_parent_set")
+        layout.operator("object.vertex_parent_set", icon='OP_VERTEX_PARENT')
 
         layout.template_node_operator_asset_menu_items(catalog_path=self.bl_label)
 
@@ -4821,28 +4823,28 @@ class VIEW3D_MT_edit_mesh_edges(Menu):
 
         layout.operator_context = 'INVOKE_REGION_WIN'
 
-        layout.operator("mesh.extrude_edges_move", text="Extrude Edges")
-        layout.operator("mesh.bevel", text="Bevel Edges").affect = 'EDGES'
-        layout.operator("mesh.bridge_edge_loops")
+        layout.operator("mesh.extrude_edges_move", text="Extrude Edges", icon='OP_EXTRUDE_EDGES')
+        layout.operator("mesh.bevel", text="Bevel Edges", icon='OP_BEVEL').affect = 'EDGES'
+        layout.operator("mesh.bridge_edge_loops", icon='OP_BRIDGE')
         layout.operator("mesh.screw")
 
         layout.separator()
 
-        layout.operator("mesh.subdivide")
-        layout.operator("mesh.subdivide_edgering")
-        layout.operator("mesh.unsubdivide")
+        layout.operator("mesh.subdivide", icon='OP_SUBDIVIDE')
+        layout.operator("mesh.subdivide_edgering", icon='OP_SUBDIVIDE_EDGERING')
+        layout.operator("mesh.unsubdivide", icon='OP_UNSUBDIVIDE')
 
         layout.separator()
 
-        layout.operator("mesh.edge_rotate", text="Rotate Edge CW").use_ccw = False
-        layout.operator("mesh.edge_rotate", text="Rotate Edge CCW").use_ccw = True
+        layout.operator("mesh.edge_rotate", text="Rotate Edge CW", icon='OP_EDGE_ROTATE').use_ccw = False
+        layout.operator("mesh.edge_rotate", text="Rotate Edge CCW", icon='OP_EDGE_ROTATE_CCW').use_ccw = True
 
         layout.separator()
 
-        layout.operator("transform.edge_slide")
-        props = layout.operator("mesh.loopcut_slide")
+        layout.operator("transform.edge_slide", icon='OP_EDGE_SLIDE')
+        props = layout.operator("mesh.loopcut_slide", icon='OP_LOOPCUT')
         props.TRANSFORM_OT_edge_slide.release_confirm = False
-        layout.operator("mesh.offset_edge_loops_slide")
+        layout.operator("mesh.offset_edge_loops_slide", icon='OP_OFFSET_EDGE_LOOPS')
 
         layout.separator()
 
@@ -4852,25 +4854,25 @@ class VIEW3D_MT_edit_mesh_edges(Menu):
         layout.separator()
 
         layout.operator("mesh.mark_seam", icon='EDGE_SEAM').clear = False
-        layout.operator("mesh.mark_seam", text="Clear Seam").clear = True
+        layout.operator("mesh.mark_seam", text="Clear Seam", icon='OP_CLEAR_SEAM').clear = True
 
         layout.separator()
 
         layout.operator("mesh.mark_sharp", icon='EDGE_SHARP')
-        layout.operator("mesh.mark_sharp", text="Clear Sharp").clear = True
+        layout.operator("mesh.mark_sharp", text="Clear Sharp", icon='OP_CLEAR_SHARP').clear = True
 
         layout.operator("mesh.mark_sharp", text="Mark Sharp from Vertices").use_verts = True
         props = layout.operator("mesh.mark_sharp", text="Clear Sharp from Vertices")
         props.use_verts = True
         props.clear = True
 
-        layout.operator("mesh.set_sharpness_by_angle")
+        layout.operator("mesh.set_sharpness_by_angle", icon='OP_SHARP_BY_ANGLE')
 
         if with_freestyle:
             layout.separator()
 
-            layout.operator("mesh.mark_freestyle_edge").clear = False
-            layout.operator("mesh.mark_freestyle_edge", text="Clear Freestyle Edge").clear = True
+            layout.operator("mesh.mark_freestyle_edge", icon='OP_FREESTYLE_MARK').clear = False
+            layout.operator("mesh.mark_freestyle_edge", text="Clear Freestyle Edge", icon='OP_FREESTYLE_CLEAR').clear = True
 
         layout.template_node_operator_asset_menu_items(catalog_path=self.bl_label)
 
@@ -4913,39 +4915,39 @@ class VIEW3D_MT_edit_mesh_faces(Menu):
 
         layout.operator_context = 'INVOKE_REGION_WIN'
 
-        layout.operator("view3d.edit_mesh_extrude_move_normal", text="Extrude Faces")
-        layout.operator("view3d.edit_mesh_extrude_move_shrink_fatten", text="Extrude Faces Along Normals")
-        layout.operator("mesh.extrude_faces_move", text="Extrude Individual Faces")
+        layout.operator("view3d.edit_mesh_extrude_move_normal", text="Extrude Faces", icon='OP_EXTRUDE_REGION')
+        layout.operator("view3d.edit_mesh_extrude_move_shrink_fatten", text="Extrude Faces Along Normals", icon='OP_EXTRUDE_NORMALS')
+        layout.operator("mesh.extrude_faces_move", text="Extrude Individual Faces", icon='OP_EXTRUDE_INDIVIDUAL')
 
         layout.separator()
 
-        layout.operator("mesh.inset")
-        layout.operator("mesh.poke")
-        props = layout.operator("mesh.quads_convert_to_tris")
+        layout.operator("mesh.inset", icon='OP_INSET')
+        layout.operator("mesh.poke", icon='OP_POKE')
+        props = layout.operator("mesh.quads_convert_to_tris", icon='OP_TRIANGULATE')
         props.quad_method = props.ngon_method = 'BEAUTY'
-        layout.operator("mesh.tris_convert_to_quads")
-        layout.operator("mesh.solidify", text="Solidify Faces")
-        layout.operator("mesh.wireframe")
+        layout.operator("mesh.tris_convert_to_quads", icon='OP_TRIS_TO_QUADS')
+        layout.operator("mesh.solidify", text="Solidify Faces", icon='OP_SOLIDIFY')
+        layout.operator("mesh.wireframe", icon='OP_WIREFRAME')
 
         layout.separator()
 
-        layout.operator("mesh.fill")
-        layout.operator("mesh.fill_grid")
-        layout.operator("mesh.beautify_fill")
+        layout.operator("mesh.fill", icon='OP_FILL')
+        layout.operator("mesh.fill_grid", icon='OP_GRID_FILL')
+        layout.operator("mesh.beautify_fill", icon='OP_BEAUTIFY')
 
         layout.separator()
 
-        layout.operator("mesh.intersect")
+        layout.operator("mesh.intersect", icon='OP_INTERSECT_KNIFE')
         layout.operator("mesh.intersect_boolean")
 
         layout.separator()
 
-        layout.operator("mesh.face_split_by_edges")
+        layout.operator("mesh.face_split_by_edges", icon='OP_WELD_EDGES')
 
         layout.separator()
 
-        layout.operator("mesh.faces_shade_smooth")
-        layout.operator("mesh.faces_shade_flat")
+        layout.operator("mesh.faces_shade_smooth", icon='OP_SHADE_SMOOTH')
+        layout.operator("mesh.faces_shade_flat", icon='OP_SHADE_FLAT')
 
         layout.separator()
 
@@ -5009,9 +5011,9 @@ class VIEW3D_MT_edit_mesh_normals(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("mesh.flip_normals", text="Flip")
-        layout.operator("mesh.normals_make_consistent", text="Recalculate Outside").inside = False
-        layout.operator("mesh.normals_make_consistent", text="Recalculate Inside").inside = True
+        layout.operator("mesh.flip_normals", text="Flip", icon='OP_FLIP_NORMALS')
+        layout.operator("mesh.normals_make_consistent", text="Recalculate Outside", icon='OP_RECALC_OUTSIDE').inside = False
+        layout.operator("mesh.normals_make_consistent", text="Recalculate Inside", icon='OP_RECALC_INSIDE').inside = True
 
         layout.separator()
 
@@ -5047,8 +5049,8 @@ class VIEW3D_MT_edit_mesh_shading(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("mesh.faces_shade_smooth", text="Smooth Faces")
-        layout.operator("mesh.faces_shade_flat", text="Flat Faces")
+        layout.operator("mesh.faces_shade_smooth", text="Smooth Faces", icon='OP_SHADE_SMOOTH')
+        layout.operator("mesh.faces_shade_flat", text="Flat Faces", icon='OP_SHADE_FLAT')
 
         layout.separator()
 
@@ -5080,21 +5082,21 @@ class VIEW3D_MT_edit_mesh_clean(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("mesh.delete_loose")
+        layout.operator("mesh.delete_loose", icon='OP_DELETE_LOOSE')
 
         layout.separator()
 
-        layout.operator("mesh.decimate")
-        layout.operator("mesh.dissolve_degenerate")
-        layout.operator("mesh.dissolve_limited")
-        layout.operator("mesh.face_make_planar")
+        layout.operator("mesh.decimate", icon='OP_DECIMATE')
+        layout.operator("mesh.dissolve_degenerate", icon='OP_DEGENERATE_DISSOLVE')
+        layout.operator("mesh.dissolve_limited", icon='OP_LIMITED_DISSOLVE')
+        layout.operator("mesh.face_make_planar", icon='OP_MAKE_PLANAR')
 
         layout.separator()
 
-        layout.operator("mesh.vert_connect_nonplanar")
-        layout.operator("mesh.vert_connect_concave")
+        layout.operator("mesh.vert_connect_nonplanar", icon='OP_SPLIT_NONPLANAR')
+        layout.operator("mesh.vert_connect_concave", icon='OP_SPLIT_CONCAVE')
         layout.operator("mesh.remove_doubles")
-        layout.operator("mesh.fill_holes")
+        layout.operator("mesh.fill_holes", icon='OP_FILL_HOLES')
 
         layout.template_node_operator_asset_menu_items(catalog_path="Mesh/Clean Up")
 
@@ -5109,13 +5111,13 @@ class VIEW3D_MT_edit_mesh_delete(Menu):
 
         layout.separator()
 
-        layout.operator("mesh.dissolve_verts")
-        layout.operator("mesh.dissolve_edges")
-        layout.operator("mesh.dissolve_faces")
+        layout.operator("mesh.dissolve_verts", icon='OP_DISSOLVE_VERTS')
+        layout.operator("mesh.dissolve_edges", icon='OP_DISSOLVE_EDGES')
+        layout.operator("mesh.dissolve_faces", icon='OP_DISSOLVE_FACES')
 
         layout.separator()
 
-        layout.operator("mesh.dissolve_limited")
+        layout.operator("mesh.dissolve_limited", icon='OP_LIMITED_DISSOLVE')
 
         layout.separator()
 
@@ -5146,7 +5148,7 @@ class VIEW3D_MT_edit_mesh_split(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("mesh.split", text="Selection")
+        layout.operator("mesh.split", text="Selection", icon='OP_SPLIT')
 
         layout.separator()
 
@@ -5195,8 +5197,8 @@ def draw_curve(self, _context):
     layout = self.layout
 
     layout.menu("VIEW3D_MT_transform")
-    layout.menu("VIEW3D_MT_mirror")
-    layout.menu("VIEW3D_MT_snap")
+    layout.menu("VIEW3D_MT_mirror", icon='OP_MIRROR')
+    layout.menu("VIEW3D_MT_snap", icon='OP_SNAP')
 
     layout.separator()
 
@@ -5263,11 +5265,11 @@ class VIEW3D_MT_edit_curve_ctrlpoints(Menu):
 
             layout.separator()
 
-        layout.menu("VIEW3D_MT_hook")
+        layout.menu("VIEW3D_MT_hook", icon='OP_HOOK')
 
         layout.separator()
 
-        layout.operator("object.vertex_parent_set")
+        layout.operator("object.vertex_parent_set", icon='OP_VERTEX_PARENT')
 
 
 class VIEW3D_MT_edit_curve_segments(Menu):
@@ -5317,8 +5319,8 @@ class VIEW3D_MT_edit_curve_context_menu(Menu):
 
         layout.separator()
 
-        layout.menu("VIEW3D_MT_mirror")
-        layout.menu("VIEW3D_MT_snap")
+        layout.menu("VIEW3D_MT_mirror", icon='OP_MIRROR')
+        layout.menu("VIEW3D_MT_snap", icon='OP_SNAP')
 
         layout.separator()
 
@@ -5502,8 +5504,8 @@ class VIEW3D_MT_edit_meta(Menu):
         layout = self.layout
 
         layout.menu("VIEW3D_MT_transform")
-        layout.menu("VIEW3D_MT_mirror")
-        layout.menu("VIEW3D_MT_snap")
+        layout.menu("VIEW3D_MT_mirror", icon='OP_MIRROR')
+        layout.menu("VIEW3D_MT_snap", icon='OP_SNAP')
 
         layout.separator()
 
@@ -5537,8 +5539,8 @@ class VIEW3D_MT_edit_lattice(Menu):
         layout.separator()
 
         layout.menu("VIEW3D_MT_transform")
-        layout.menu("VIEW3D_MT_mirror")
-        layout.menu("VIEW3D_MT_snap")
+        layout.menu("VIEW3D_MT_mirror", icon='OP_MIRROR')
+        layout.menu("VIEW3D_MT_snap", icon='OP_SNAP')
         layout.operator_menu_enum("lattice.flip", "axis")
 
         layout.separator()
@@ -5547,7 +5549,7 @@ class VIEW3D_MT_edit_lattice(Menu):
 
         layout.separator()
 
-        layout.operator("object.vertex_parent_set")
+        layout.operator("object.vertex_parent_set", icon='OP_VERTEX_PARENT')
 
 
 class VIEW3D_MT_edit_armature(Menu):
@@ -5560,8 +5562,8 @@ class VIEW3D_MT_edit_armature(Menu):
         arm = edit_object.data
 
         layout.menu("VIEW3D_MT_transform_armature")
-        layout.menu("VIEW3D_MT_mirror")
-        layout.menu("VIEW3D_MT_snap")
+        layout.menu("VIEW3D_MT_mirror", icon='OP_MIRROR')
+        layout.menu("VIEW3D_MT_snap", icon='OP_SNAP')
         layout.menu("VIEW3D_MT_edit_armature_roll")
 
         layout.separator()
@@ -5634,8 +5636,8 @@ class VIEW3D_MT_armature_context_menu(Menu):
         layout.separator()
 
         # Modify
-        layout.menu("VIEW3D_MT_mirror")
-        layout.menu("VIEW3D_MT_snap")
+        layout.menu("VIEW3D_MT_mirror", icon='OP_MIRROR')
+        layout.menu("VIEW3D_MT_snap", icon='OP_SNAP')
         layout.operator("armature.symmetrize")
         layout.operator("armature.switch_direction", text="Switch Direction")
         layout.menu("VIEW3D_MT_edit_armature_names")
@@ -5779,7 +5781,7 @@ class VIEW3D_MT_edit_greasepencil(Menu):
     def draw(self, _context):
         layout = self.layout
         layout.menu("VIEW3D_MT_transform")
-        layout.menu("VIEW3D_MT_mirror")
+        layout.menu("VIEW3D_MT_mirror", icon='OP_MIRROR')
         layout.menu("GREASE_PENCIL_MT_snap")
 
         layout.separator()
@@ -5916,8 +5918,8 @@ class VIEW3D_MT_edit_curves(Menu):
         layout = self.layout
 
         layout.menu("VIEW3D_MT_transform")
-        layout.menu("VIEW3D_MT_mirror")
-        layout.menu("VIEW3D_MT_snap")
+        layout.menu("VIEW3D_MT_mirror", icon='OP_MIRROR')
+        layout.menu("VIEW3D_MT_snap", icon='OP_SNAP')
 
         layout.separator()
 
@@ -5975,8 +5977,8 @@ class VIEW3D_MT_edit_curves_context_menu(Menu):
         layout.separator()
 
         # Deform Operators
-        layout.menu("VIEW3D_MT_mirror")
-        layout.menu("VIEW3D_MT_snap")
+        layout.menu("VIEW3D_MT_mirror", icon='OP_MIRROR')
+        layout.menu("VIEW3D_MT_snap", icon='OP_SNAP')
 
         layout.separator()
 
@@ -8403,7 +8405,7 @@ class VIEW3D_MT_greasepencil_edit_context_menu(Menu):
 
             col.separator()
 
-            col.menu("VIEW3D_MT_mirror")
+            col.menu("VIEW3D_MT_mirror", icon='OP_MIRROR')
 
             col.separator()
 
@@ -8444,10 +8446,10 @@ class VIEW3D_MT_greasepencil_edit_context_menu(Menu):
             col.separator()
 
             # Deform Operators
-            col.operator("transform.tosphere", text="To Sphere")
-            col.operator("transform.shear", text="Shear")
+            col.operator("transform.tosphere", text="To Sphere", icon='TOOL_TO_SPHERE')
+            col.operator("transform.shear", text="Shear", icon='OP_SHEAR')
             col.operator("transform.bend", text="Bend")
-            col.operator("transform.push_pull", text="Push/Pull")
+            col.operator("transform.push_pull", text="Push/Pull", icon='OP_PUSH_PULL')
             col.operator("transform.transform", text="Shrink/Fatten").mode = 'CURVE_SHRINKFATTEN'
             col.operator("grease_pencil.stroke_smooth", text="Smooth Points")
             col.operator("grease_pencil.set_start_point", text="Set Start Point")
@@ -8455,7 +8457,7 @@ class VIEW3D_MT_greasepencil_edit_context_menu(Menu):
 
             col.separator()
 
-            col.menu("VIEW3D_MT_mirror", text="Mirror", text_ctxt=i18n_contexts.operator_default)
+            col.menu("VIEW3D_MT_mirror", text="Mirror", text_ctxt=i18n_contexts.operator_default, icon='OP_MIRROR')
 
             col.separator()
 

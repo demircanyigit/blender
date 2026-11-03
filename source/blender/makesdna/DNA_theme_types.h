@@ -190,7 +190,12 @@ typedef struct uiWidgetColors {
   unsigned char text[4];
   unsigned char text_sel[4];
   unsigned char shaded;
-  char _pad0[3];
+  /** Strength (0-100) of the highlight and shadow inside the edges, raised or sunken following
+   * the shading direction. */
+  unsigned char bevel;
+  /** Set once the bevel and shading defaults were applied to this theme. */
+  unsigned char bevel_init;
+  char _pad0[1];
   short shadetop, shadedown;
   float roundness;
 } uiWidgetColors;

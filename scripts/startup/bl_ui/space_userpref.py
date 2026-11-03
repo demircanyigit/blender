@@ -1136,6 +1136,8 @@ class PreferenceThemeWidgetShadePanel:
         col.prop(widget_style, "shadetop", text="Shade Top")
         col.prop(widget_style, "shadedown", text="Down")
 
+        layout.prop(widget_style, "bevel")
+
     def draw_header(self, context):
         theme = context.preferences.themes[0]
         ui = theme.user_interface

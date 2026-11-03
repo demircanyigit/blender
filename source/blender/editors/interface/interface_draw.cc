@@ -66,13 +66,14 @@ int draw_roundbox_corner_get()
 }
 #endif
 
-void draw_roundbox_4fv_ex(const rctf *rect,
+static void roundbox_draw(const rctf *rect,
                           const float inner1[4],
                           const float inner2[4],
                           float shade_dir,
                           const float outline[4],
                           float outline_width,
-                          float rad)
+                          float rad,
+                          float bevel)
 {
   /* WATCH: This is assuming the ModelViewProjectionMatrix is area pixel space.
    * If it has been scaled, then it's no longer valid. */
@@ -102,14 +103,27 @@ void draw_roundbox_4fv_ex(const rctf *rect,
   widget_params.color_outline[3] = outline ? outline[3] : inner1 ? inner1[3] : 0.0f;
   widget_params.shade_dir = shade_dir;
   widget_params.alpha_discard = 1.0f;
+  widget_params.bevel = bevel;
 
   gpu::Batch *batch = batch_roundbox_widget_get();
   GPU_batch_program_set_builtin(batch, GPU_SHADER_2D_WIDGET_BASE);
-  GPU_batch_uniform_4fv_array(batch, "parameters", 11, (const float (*)[4]) & widget_params);
+  /* All 12 rows, the last one holds the bevel, which would be left from the previous widget. */
+  GPU_batch_uniform_4fv_array(batch, "parameters", 12, (const float (*)[4]) & widget_params);
   const GPUBlend old_blend = GPU_blend_get();
   GPU_blend(GPU_BLEND_ALPHA);
   GPU_batch_draw(batch);
   GPU_blend(old_blend);
+}
+
+void draw_roundbox_4fv_ex(const rctf *rect,
+                          const float inner1[4],
+                          const float inner2[4],
+                          float shade_dir,
+                          const float outline[4],
+                          float outline_width,
+                          float rad)
+{
+  roundbox_draw(rect, inner1, inner2, shade_dir, outline, outline_width, rad, 0.0f);
 }
 
 void draw_roundbox_3ub_alpha(
@@ -147,6 +161,11 @@ void draw_roundbox_4fv(const rctf *rect, bool filled, float rad, const float col
 {
   /* Exactly the same as draw_roundbox_aa but does not do the legacy transparency. */
   draw_roundbox_4fv_ex(rect, (filled) ? col : nullptr, nullptr, 1.0f, col, U.pixelsize, rad);
+}
+
+void draw_roundbox_4fv_bevel(const rctf *rect, float rad, const float col[4], int bevel)
+{
+  roundbox_draw(rect, col, nullptr, 1.0f, col, U.pixelsize, rad, float(bevel) / 100.0f);
 }
 
 void draw_rounded_corners_inverted(const rcti &rect, const float rad, const float4 color)

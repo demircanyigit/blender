@@ -14,9 +14,13 @@
 
 #include "BLF_api.hh"
 
+#include "BLI_array.hh"
 #include "BLI_math_color.h"
+#include "BLI_fileops.h"
 #include "BLI_math_vector.h"
+#include "BLI_path_utils.hh"
 #include "BLI_string.h"
+#include "BLI_vector.hh"
 
 #include "BLT_translation.hh"
 
@@ -31,6 +35,7 @@
 #include "RNA_access.hh"
 #include "RNA_prototypes.hh"
 
+#include "BKE_appdir.hh"
 #include "BKE_context.hh"
 #include "BKE_global.hh"
 #include "BKE_icons.hh"
@@ -119,6 +124,161 @@ struct IconType {
   int type;
   int theme_color;
 };
+
+/* Colored icons drawn in place of an SVG icon, from the `icons_classic` data-files folder. Each
+ * file is named after its icon, and holds a #CLASSIC_ICON_HEADER_SIZE header starting with the
+ * icon's width and height, and RGBA pixels. */
+static constexpr int CLASSIC_ICON_MAX_SIZE = 256;
+static constexpr size_t CLASSIC_ICON_HEADER_SIZE = 24;
+static uint8_t *classic_icons[BIFICONID_LAST_STATIC] = {nullptr};
+
+static void classic_icons_load()
+{
+  const std::optional<std::string> dir = BKE_appdir_folder_id(BLENDER_DATAFILES, "icons_classic");
+  if (!dir) {
+    return;
+  }
+
+  static const char *icon_names[] = {
+#define DEF_ICON(name) #name,
+#define DEF_ICON_VECTOR(name) #name,
+#define DEF_ICON_COLOR(name) #name,
+#define DEF_ICON_BLANK(name) "",
+#include "UI_icons.hh"
+  };
+
+  for (int icon_id = 0; icon_id < BIFICONID_LAST_STATIC; icon_id++) {
+    if (icon_names[icon_id][0] == '\0') {
+      continue;
+    }
+    char filename[FILE_MAXFILE];
+    SNPRINTF(filename, "%s.dat", icon_names[icon_id]);
+    BLI_str_tolower_ascii(filename, sizeof(filename));
+    char filepath[FILE_MAX];
+    BLI_path_join(filepath, sizeof(filepath), dir->c_str(), filename);
+    if (!BLI_is_file(filepath)) {
+      continue;
+    }
+
+    size_t size = 0;
+    uint8_t *data = static_cast<uint8_t *>(BLI_file_read_binary_as_mem(filepath, 0, &size));
+    if (data == nullptr) {
+      continue;
+    }
+    int icon_size[2] = {0, 0};
+    if (size >= CLASSIC_ICON_HEADER_SIZE) {
+      memcpy(icon_size, data, sizeof(icon_size));
+    }
+    if (icon_size[0] <= 0 || icon_size[0] > CLASSIC_ICON_MAX_SIZE || icon_size[1] != icon_size[0] ||
+        size != CLASSIC_ICON_HEADER_SIZE + size_t(icon_size[0]) * icon_size[1] * 4)
+    {
+      MEM_delete(data);
+      continue;
+    }
+    /* Icons are drawn with pre-multiplied alpha. */
+    uint8_t *rect = data + CLASSIC_ICON_HEADER_SIZE;
+    for (int i = 0; i < icon_size[0] * icon_size[1]; i++, rect += 4) {
+      for (int c = 0; c < 3; c++) {
+        rect[c] = uint8_t((int(rect[c]) * int(rect[3]) + 127) / 255);
+      }
+    }
+    classic_icons[icon_id] = data;
+  }
+}
+
+static void classic_icons_free()
+{
+  for (uint8_t *&data : classic_icons) {
+    if (data != nullptr) {
+      MEM_delete(data);
+      data = nullptr;
+    }
+  }
+}
+
+/* Icons shrunk to the size they are drawn at, the GPU's bilinear filtering blurs them when they
+ * are scaled down by an uneven factor (32 to 19 pixels for example). */
+struct ClassicIconScaled {
+  int size;
+  blender::Array<uint8_t> rect;
+};
+static constexpr int CLASSIC_ICON_MAX_SCALED = 4;
+static blender::Vector<ClassicIconScaled> classic_icons_scaled[BIFICONID_LAST_STATIC];
+
+/* Shrink a square pre-multiplied RGBA image by averaging the area each new pixel covers. */
+static void classic_icon_shrink(const uint8_t *src, const int src_size, uint8_t *dst, const int size)
+{
+  const float step = float(src_size) / float(size);
+  blender::Array<float> weights(size * src_size, 0.0f);
+  for (int i = 0; i < size; i++) {
+    const float start = i * step;
+    const float end = start + step;
+    for (int s = int(start); s < src_size && s < end; s++) {
+      weights[i * src_size + s] = (std::min(end, float(s + 1)) - std::max(start, float(s))) / step;
+    }
+  }
+  for (int y = 0; y < size; y++) {
+    for (int x = 0; x < size; x++) {
+      float sum[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+      for (int sy = 0; sy < src_size; sy++) {
+        const float wy = weights[y * src_size + sy];
+        if (wy == 0.0f) {
+          continue;
+        }
+        for (int sx = 0; sx < src_size; sx++) {
+          const float w = wy * weights[x * src_size + sx];
+          if (w == 0.0f) {
+            continue;
+          }
+          const uint8_t *px = src + (sy * src_size + sx) * 4;
+          for (int c = 0; c < 4; c++) {
+            sum[c] += w * px[c];
+          }
+        }
+      }
+      uint8_t *out = dst + (y * size + x) * 4;
+      for (int c = 0; c < 4; c++) {
+        out[c] = uint8_t(std::min(255.0f, sum[c] + 0.5f));
+      }
+    }
+  }
+}
+
+static void classic_icons_scaled_free()
+{
+  for (blender::Vector<ClassicIconScaled> &scaled : classic_icons_scaled) {
+    scaled.clear_and_shrink();
+  }
+}
+
+/* Return the icon's pixels, shrunk to `draw_size` when it is drawn smaller than it is stored. */
+static const uint8_t *classic_icon_rect(const int icon_id, const int draw_size, int *r_size)
+{
+  if (icon_id < 0 || icon_id >= BIFICONID_LAST_STATIC || classic_icons[icon_id] == nullptr) {
+    return nullptr;
+  }
+  memcpy(r_size, classic_icons[icon_id], sizeof(int));
+  const uint8_t *rect = classic_icons[icon_id] + CLASSIC_ICON_HEADER_SIZE;
+  if (draw_size <= 0 || draw_size >= *r_size) {
+    return rect;
+  }
+
+  blender::Vector<ClassicIconScaled> &scaled = classic_icons_scaled[icon_id];
+  for (const ClassicIconScaled &item : scaled) {
+    if (item.size == draw_size) {
+      *r_size = draw_size;
+      return item.rect.data();
+    }
+  }
+  if (scaled.size() >= CLASSIC_ICON_MAX_SCALED) {
+    scaled.remove(0);
+  }
+  ClassicIconScaled item{draw_size, blender::Array<uint8_t>(draw_size * draw_size * 4)};
+  classic_icon_shrink(rect, *r_size, item.rect.data(), draw_size);
+  scaled.append(std::move(item));
+  *r_size = draw_size;
+  return scaled.last().rect.data();
+}
 
 #ifndef WITH_HEADLESS
 
@@ -1021,6 +1181,8 @@ void icons_free()
 {
   BKE_icons_free();
   BKE_preview_images_free();
+  classic_icons_scaled_free();
+  classic_icons_free();
 }
 
 void icons_free_drawinfo(void *drawinfo)
@@ -1106,6 +1268,7 @@ void icons_init()
 #ifndef WITH_HEADLESS
   init_internal_icons();
   init_event_icons();
+  classic_icons_load();
 #endif
 }
 
@@ -1751,7 +1914,13 @@ static void icon_draw_size(float x,
 
     color[3] *= alpha;
 
-    if (di->type == ICON_TYPE_SVG_COLOR) {
+    int classic_size = 0;
+    if (const uint8_t *classic_rect = classic_icon_rect(icon_id, std::min(w, h), &classic_size)) {
+      GPU_blend(GPU_BLEND_ALPHA_PREMULT);
+      icon_draw_rect(x, y, w, h, classic_size, classic_size, classic_rect, alpha, desaturate);
+      GPU_blend(GPU_BLEND_ALPHA);
+    }
+    else if (di->type == ICON_TYPE_SVG_COLOR) {
       BLF_draw_svg_icon(uint(icon_id),
                         x,
                         y,

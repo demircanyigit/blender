@@ -26,7 +26,11 @@ Material::Material(blender::Object &ob, bool random)
     if (ob.id.lib) {
       hash = (hash * 13) ^ BLI_ghashutil_strhash_p_murmur(ob.id.lib->filepath);
     }
-    float3 hsv = float3(BLI_hash_int_01(hash), 0.5f, 0.8f);
+    /* Strong colors like 3ds Max object colors, saturation and value vary widely so neighbors
+     * with close hues still differ. */
+    float3 hsv = float3(BLI_hash_int_01(hash),
+                        0.60f + 0.40f * BLI_hash_int_01(hash ^ 0x9e3779b9u),
+                        0.50f + 0.40f * BLI_hash_int_01(hash ^ 0x85ebca6bu));
     hsv_to_rgb_v(hsv, base_color);
     IMB_colormanagement_rec709_to_scene_linear(base_color, base_color);
   }

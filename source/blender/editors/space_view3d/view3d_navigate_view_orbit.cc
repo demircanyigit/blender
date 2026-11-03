@@ -16,6 +16,8 @@
 #include "RNA_access.hh"
 #include "RNA_define.hh"
 
+#include "UI_resources.hh"
+
 #include "view3d_intern.hh"
 
 #include "view3d_navigate.hh" /* own include */
@@ -36,10 +38,10 @@ enum {
 };
 
 static const EnumPropertyItem prop_view_orbit_items[] = {
-    {V3D_VIEW_STEPLEFT, "ORBITLEFT", 0, "Orbit Left", "Orbit the view around to the left"},
-    {V3D_VIEW_STEPRIGHT, "ORBITRIGHT", 0, "Orbit Right", "Orbit the view around to the right"},
-    {V3D_VIEW_STEPUP, "ORBITUP", 0, "Orbit Up", "Orbit the view up"},
-    {V3D_VIEW_STEPDOWN, "ORBITDOWN", 0, "Orbit Down", "Orbit the view down"},
+    {V3D_VIEW_STEPLEFT, "ORBITLEFT", ICON_OP_ORBIT_LEFT, "Orbit Left", "Orbit the view around to the left"},
+    {V3D_VIEW_STEPRIGHT, "ORBITRIGHT", ICON_OP_ORBIT_RIGHT, "Orbit Right", "Orbit the view around to the right"},
+    {V3D_VIEW_STEPUP, "ORBITUP", ICON_OP_ORBIT_UP, "Orbit Up", "Orbit the view up"},
+    {V3D_VIEW_STEPDOWN, "ORBITDOWN", ICON_OP_ORBIT_DOWN, "Orbit Down", "Orbit the view down"},
     {0, nullptr, 0, nullptr, nullptr},
 };
 

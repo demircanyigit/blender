@@ -110,6 +110,63 @@ def add_closure_zone(layout, label):
     return props
 
 
+# Icons of the Add menu's categories, by menu path. Nodes without an icon of their own use their
+# category's, see `NodeMenu.path_icon_for_nodes`.
+menu_path_icons = {
+    "Input": 'FORWARD',
+    "Input/Constant": 'LINENUMBERS_ON',
+    "Input/Gizmo": 'GIZMO',
+    "Input/Group": 'NODETREE',
+    "Input/Import": 'IMPORT',
+    "Input/Scene": 'SCENE_DATA',
+    "Output": 'EXPORT',
+    "Attribute": 'SPREADSHEET',
+    "Geometry": 'GEOMETRY_NODES',
+    "Geometry/Material": 'MATERIAL',
+    "Curve": 'CURVE_DATA',
+    "Curve/Primitives": 'CURVE_BEZCIRCLE',
+    "Grease Pencil": 'OUTLINER_DATA_GREASEPENCIL',
+    "Instances": 'OUTLINER_OB_GROUP_INSTANCE',
+    "Mesh": 'MESH_DATA',
+    "Mesh/Primitives": 'MESH_CUBE',
+    "Mesh/UV": 'UV',
+    "Point": 'POINTCLOUD_DATA',
+    "Volume": 'VOLUME_DATA',
+    "Volume/Primitives": 'MESH_ICOSPHERE',
+    "Simulation": 'PHYSICS',
+    "Color": 'COLOR',
+    "Texture": 'TEXTURE',
+    "Utilities": 'MODIFIER',
+    "Utilities/Text": 'FONT_DATA',
+    "Utilities/Deprecated": 'ERROR',
+    "Utilities/Field": 'FORCE_FORCE',
+    "Utilities/Rotation": 'ORIENTATION_GIMBAL',
+    "Utilities/Matrix": 'MESH_GRID',
+    "Utilities/Bundle": 'PACKAGE',
+    "Utilities/Closure": 'SCRIPT',
+    "Utilities/List": 'LONGDISPLAY',
+    "Utilities/Math": 'DRIVER_DISTANCE',
+    "Utilities/Vector": 'EMPTY_ARROWS',
+    "Group": 'NODETREE',
+    "Layout": 'OPTIONS',
+}
+# Sub-menus found in several categories, shown with the same icon in each.
+menu_name_icons = {
+    "Read": 'HIDE_OFF',
+    "Write": 'GREASEPENCIL',
+    "Sample": 'EYEDROPPER',
+    "Operations": 'MODIFIER',
+    "Topology": 'MOD_TRIANGULATE',
+}
+
+
+def menu_path_icon(path):
+    icon = menu_path_icons.get(path)
+    if icon is None:
+        icon = menu_name_icons.get(path.rpartition("/")[2], 'NONE')
+    return icon
+
+
 class NodeMenu(Menu):
     """A base-class defining the shared methods for AddNodeMenu and SwapNodeMenu."""
     draw_assets: bool
@@ -137,12 +194,18 @@ class NodeMenu(Menu):
 
         if poll is True or poll is None:
             translation_context = bl_rna.translation_context if bl_rna else i18n_contexts.default
+            # Geometry nodes that do a modeling operation share its (recolored) icon.
+            # Not every result of `bl_rna_get_subclass` is a struct definition with an `icon`.
+            icon = getattr(bl_rna, "icon", "")
+            if not (isinstance(icon, str) and icon.startswith("GEO_")):
+                icon = cls.path_icon_for_nodes()
             props = layout.operator(
                 cls.main_operator_id,
                 text=label,
                 text_ctxt=translation_context,
                 translate=translate,
                 search_weight=search_weight,
+                icon=icon,
             )
             props.type = node_type
 
@@ -357,7 +420,17 @@ class NodeMenu(Menu):
         if cls.pathing_dict is None:
             raise ValueError("`pathing_dict` was not set for {!s}".format(cls))
 
-        layout.menu(cls.pathing_dict[path])
+        layout.menu(cls.pathing_dict[path], icon=menu_path_icon(path))
+
+    @classmethod
+    def path_icon_for_nodes(cls):
+        """Icon for the nodes of this menu that have none of their own."""
+        path = getattr(cls, "menu_path", None) or getattr(cls, "bl_label", "")
+        category, _, name = path.partition("/")
+        # Nodes reading or writing curves show the curve icon, not the one for reading.
+        if name in menu_name_icons:
+            path = category
+        return menu_path_icon(path)
 
     @classmethod
     def simulation_zone(cls, layout, label):

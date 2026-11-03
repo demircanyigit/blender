@@ -1341,7 +1341,9 @@ static void panel_draw_aligned_backdrop(const ARegion *region,
     box_rect.xmax = rect->xmax;
     box_rect.ymin = header_rect->ymin;
     box_rect.ymax = header_rect->ymax;
-    draw_roundbox_4fv(&box_rect, true, radius, panel_headercolor);
+    /* Raised like a box widget, with that widget's bevel. */
+    draw_roundbox_4fv_bevel(
+        &box_rect, radius, panel_headercolor, theme::theme_get()->tui.wcol_box.bevel);
   }
 
   GPU_blend(GPU_BLEND_NONE);
@@ -1599,10 +1601,10 @@ void panel_category_tabs_draw_all(ARegion *region, const char *category_id_activ
       box_rect.ymin = rct->ymin;
       box_rect.ymax = rct->ymax;
 
-      draw_roundbox_4fv(&box_rect,
-                        true,
-                        tab_curve_radius,
-                        is_active ? theme_col_tab_active : theme_col_tab_inactive);
+      draw_roundbox_4fv_bevel(&box_rect,
+                              tab_curve_radius,
+                              is_active ? theme_col_tab_active : theme_col_tab_inactive,
+                              btheme->tui.wcol_tab.bevel);
       draw_roundbox_4fv(&box_rect,
                         false,
                         tab_curve_radius,

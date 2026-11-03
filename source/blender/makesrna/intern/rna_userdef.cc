@@ -1753,6 +1753,14 @@ static void rna_def_userdef_theme_ui_wcol(BlenderRNA *brna)
   RNA_def_property_ui_text(prop, "Shade Down", "");
   RNA_def_property_update(prop, 0, "rna_userdef_theme_update");
 
+  prop = RNA_def_property(srna, "bevel", PROP_INT, PROP_PERCENTAGE);
+  RNA_def_property_range(prop, 0, 100);
+  RNA_def_property_ui_text(prop,
+                           "Bevel",
+                           "Highlight and shadow inside the edges, raised or sunken following the "
+                           "shading (sunken when Shade Top is darker than Shade Down)");
+  RNA_def_property_update(prop, 0, "rna_userdef_theme_update");
+
   prop = RNA_def_property(srna, "roundness", PROP_FLOAT, PROP_FACTOR);
   RNA_def_property_float_funcs(
       prop, "rna_ThemeUI_roundness_get", "rna_ThemeUI_roundness_set", nullptr);

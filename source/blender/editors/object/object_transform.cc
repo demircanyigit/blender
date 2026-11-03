@@ -61,6 +61,7 @@
 #include "RNA_define.hh"
 
 #include "UI_interface_icons.hh"
+#include "UI_resources.hh"
 
 #include "WM_api.hh"
 #include "WM_types.hh"
@@ -1875,29 +1876,29 @@ void OBJECT_OT_origin_set(wmOperatorType *ot)
   static const EnumPropertyItem prop_set_center_types[] = {
       {GEOMETRY_TO_ORIGIN,
        "GEOMETRY_ORIGIN",
-       0,
+       ICON_OP_GEOMETRY_TO_ORIGIN,
        "Geometry to Origin",
        "Move object geometry to object origin"},
       {ORIGIN_TO_GEOMETRY,
        "ORIGIN_GEOMETRY",
-       0,
+       ICON_OP_SET_ORIGIN,
        "Origin to Geometry",
        "Calculate the center of geometry based on the current pivot point (median, otherwise "
        "bounding box)"},
       {ORIGIN_TO_CURSOR,
        "ORIGIN_CURSOR",
-       0,
+       ICON_OP_ORIGIN_TO_CURSOR,
        "Origin to 3D Cursor",
        "Move object origin to position of the 3D cursor"},
       /* Intentional naming mismatch since some scripts refer to this. */
       {ORIGIN_TO_CENTER_OF_MASS_SURFACE,
        "ORIGIN_CENTER_OF_MASS",
-       0,
+       ICON_OP_COM_SURFACE,
        "Origin to Center of Mass (Surface)",
        "Calculate the center of mass from the surface area"},
       {ORIGIN_TO_CENTER_OF_MASS_VOLUME,
        "ORIGIN_CENTER_OF_VOLUME",
-       0,
+       ICON_OP_COM_VOLUME,
        "Origin to Center of Mass (Volume)",
        "Calculate the center of mass from the volume (must be manifold geometry with consistent "
        "normals)"},

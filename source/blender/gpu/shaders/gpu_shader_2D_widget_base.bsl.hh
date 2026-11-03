@@ -21,6 +21,7 @@ namespace builtin::widget {
 struct VertOut {
   [[flat]] float discard_fac;
   [[flat]] float line_width;
+  [[flat]] float bevel;
   [[flat]] float2 out_rect_size;
   [[flat]] float4 border_color;
   [[flat]] float4 emboss_color;
@@ -58,7 +59,8 @@ struct [[host_shared]] Widget {
   float alpha_discard;
 
   float tria_type;
-  float _pad0;
+  /* Highlight and shadow strength inside the edges, negative for a sunken look. */
+  float bevel;
   float _pad1;
   float _pad2;
 
@@ -119,6 +121,7 @@ struct [[host_shared]] Widget {
     /* We need premultiplied color for transparency. */
     v_out.border_color = color_edge * float4(color_edge.aaa, 1.0f);
     v_out.emboss_color = color_emboss * float4(color_emboss.aaa, 1.0f);
+    v_out.bevel = bevel;
 
     return v_out;
   }
@@ -228,6 +231,7 @@ struct [[host_shared]] Widget {
     v_out.line_width = 0.0f;
     v_out.border_color = float4(0.0f);
     v_out.emboss_color = float4(0.0f);
+    v_out.bevel = 0.0f;
 
     v_out.but_co = -2.0f;
 
@@ -303,6 +307,7 @@ struct Resources {
    * Current implementation doesn't allow to assign the output struct at once. */
   v_out.discard_fac = widget.discard_factor();
   v_out.line_width = vert_out.line_width;
+  v_out.bevel = vert_out.bevel;
   v_out.out_rect_size = vert_out.out_rect_size;
   v_out.border_color = vert_out.border_color;
   v_out.emboss_color = vert_out.emboss_color;
@@ -390,6 +395,21 @@ struct FragOut {
     frag_out.color = v_out.inner_color * float4(v_out.inner_color.aaa, 1.0f);
   }
   frag_out.color *= masks.y;
+
+  if (v_out.bevel != 0.0f) {
+    /* Classic bevel: a band inside the outline, lighter along the top edge and darker along the
+     * bottom one (the other way around when sunken), fading out halfway down the sides. */
+    float bevel_width = max(line_width, 1.0f);
+    float band = masks.y - smoothstep(-aa_radius, aa_radius, sdf - line_width - bevel_width);
+    float side = clamp((uv.y / v_out.out_rect_size.y * 2.0f - 1.0f) * 2.0f, -1.0f, 1.0f);
+    side *= sign(v_out.bevel);
+    float amount = band * abs(v_out.bevel);
+    /* The color is pre-multiplied, so white is its alpha. */
+    frag_out.color.rgb = mix(
+        frag_out.color.rgb, frag_out.color.aaa, amount * max(side, 0.0f));
+    frag_out.color.rgb *= 1.0f - amount * max(-side, 0.0f);
+  }
+
   frag_out.color += masks.x * v_out.border_color;
   frag_out.color += masks.z * v_out.emboss_color;
 

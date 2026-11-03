@@ -431,6 +431,67 @@ static void do_versions_theme(const UserDef *userdef, bTheme *btheme)
     FROM_DEFAULT_V4_UCHAR(space_view3d.gp_wire_edit);
   }
 
+  /* Classic beveled widgets, applied once per theme instead of with a version check so a custom
+   * build does not have to change the file sub-version. */
+  {
+    uiWidgetColors *wcols[] = {&btheme->tui.wcol_regular,
+                               &btheme->tui.wcol_tool,
+                               &btheme->tui.wcol_toolbar_item,
+                               &btheme->tui.wcol_text,
+                               &btheme->tui.wcol_radio,
+                               &btheme->tui.wcol_option,
+                               &btheme->tui.wcol_toggle,
+                               &btheme->tui.wcol_num,
+                               &btheme->tui.wcol_numslider,
+                               &btheme->tui.wcol_tab,
+                               &btheme->tui.wcol_curve,
+                               &btheme->tui.wcol_menu,
+                               &btheme->tui.wcol_pulldown,
+                               &btheme->tui.wcol_menu_back,
+                               &btheme->tui.wcol_menu_item,
+                               &btheme->tui.wcol_tooltip,
+                               &btheme->tui.wcol_box,
+                               &btheme->tui.wcol_scroll,
+                               &btheme->tui.wcol_progress,
+                               &btheme->tui.wcol_list_item,
+                               &btheme->tui.wcol_pie_menu};
+    const uiWidgetColors *wcols_default[] = {&U_theme_default.tui.wcol_regular,
+                                             &U_theme_default.tui.wcol_tool,
+                                             &U_theme_default.tui.wcol_toolbar_item,
+                                             &U_theme_default.tui.wcol_text,
+                                             &U_theme_default.tui.wcol_radio,
+                                             &U_theme_default.tui.wcol_option,
+                                             &U_theme_default.tui.wcol_toggle,
+                                             &U_theme_default.tui.wcol_num,
+                                             &U_theme_default.tui.wcol_numslider,
+                                             &U_theme_default.tui.wcol_tab,
+                                             &U_theme_default.tui.wcol_curve,
+                                             &U_theme_default.tui.wcol_menu,
+                                             &U_theme_default.tui.wcol_pulldown,
+                                             &U_theme_default.tui.wcol_menu_back,
+                                             &U_theme_default.tui.wcol_menu_item,
+                                             &U_theme_default.tui.wcol_tooltip,
+                                             &U_theme_default.tui.wcol_box,
+                                             &U_theme_default.tui.wcol_scroll,
+                                             &U_theme_default.tui.wcol_progress,
+                                             &U_theme_default.tui.wcol_list_item,
+                                             &U_theme_default.tui.wcol_pie_menu};
+    for (int i = 0; i < ARRAY_SIZE(wcols); i++) {
+      uiWidgetColors *wcol = wcols[i];
+      if (wcol->bevel_init) {
+        continue;
+      }
+      const uiWidgetColors *wcol_default = wcols_default[i];
+      wcol->bevel = wcol_default->bevel;
+      if (wcol_default->shaded) {
+        wcol->shaded = wcol_default->shaded;
+        wcol->shadetop = wcol_default->shadetop;
+        wcol->shadedown = wcol_default->shadedown;
+      }
+      wcol->bevel_init = 1;
+    }
+  }
+
   /**
    * Always bump subversion in BKE_blender_version.h when adding versioning
    * code here, and wrap it inside a USER_VERSION_ATLEAST check.
