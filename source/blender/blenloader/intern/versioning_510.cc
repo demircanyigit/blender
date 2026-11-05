@@ -22,6 +22,7 @@
 #include "DNA_node_types.h"
 #include "DNA_screen_types.h"
 #include "DNA_sequence_types.h"
+#include "DNA_space_types.h"
 #include "DNA_windowmanager_types.h"
 #include "DNA_workspace_types.h"
 
@@ -935,6 +936,26 @@ void blo_do_versions_510(FileData *fd, Library * /*lib*/, Main *bmain)
   if (!DNA_struct_member_exists(fd->filesdna, "Material", "char", "viewport_color_channel")) {
     for (Material &material : bmain->materials) {
       copy_v3_fl(material.viewport_color_b, 1.0f);
+    }
+  }
+
+  /* The shelf strip of the 3D Viewport, missing from files of official builds and of earlier
+   * builds of this one. It's above the header, first in the list. */
+  for (bScreen &screen : bmain->screens) {
+    for (ScrArea &area : screen.areabase) {
+      for (SpaceLink &sl : area.spacedata) {
+        if (sl.spacetype != SPACE_VIEW3D) {
+          continue;
+        }
+        ListBaseT<ARegion> *regionbase = (&sl == area.spacedata.first) ? &area.regionbase :
+                                                                         &sl.regionbase;
+        ARegion *shelf = do_versions_add_region_if_not_found(
+            regionbase, RGN_TYPE_SHELF, "shelf for 3D Viewport", RGN_TYPE_ANY);
+        if (shelf) {
+          shelf->alignment = RGN_ALIGN_TOP;
+          shelf->flag = RGN_FLAG_DYNAMIC_SIZE | RGN_FLAG_NO_USER_RESIZE;
+        }
+      }
     }
   }
 

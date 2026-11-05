@@ -3518,11 +3518,11 @@ static wmOperatorStatus edbm_merge_exec(bContext *C, wmOperator *op)
 }
 
 static const EnumPropertyItem merge_type_items[] = {
-    {MESH_MERGE_CENTER, "CENTER", 0, "At Center", ""},
-    {MESH_MERGE_CURSOR, "CURSOR", 0, "At Cursor", ""},
-    {MESH_MERGE_COLLAPSE, "COLLAPSE", 0, "Collapse", ""},
-    {MESH_MERGE_FIRST, "FIRST", 0, "At First", ""},
-    {MESH_MERGE_LAST, "LAST", 0, "At Last", ""},
+    {MESH_MERGE_CENTER, "CENTER", ICON_OP_MERGE_CENTER, "At Center", ""},
+    {MESH_MERGE_CURSOR, "CURSOR", ICON_OP_MERGE_CURSOR, "At Cursor", ""},
+    {MESH_MERGE_COLLAPSE, "COLLAPSE", ICON_OP_MERGE_COLLAPSE, "Collapse", ""},
+    {MESH_MERGE_FIRST, "FIRST", ICON_OP_MERGE_FIRST, "At First", ""},
+    {MESH_MERGE_LAST, "LAST", ICON_OP_MERGE_LAST, "At Last", ""},
     {0, nullptr, 0, nullptr, nullptr},
 };
 
@@ -4604,9 +4604,9 @@ static wmOperatorStatus edbm_separate_exec(bContext *C, wmOperator *op)
 void MESH_OT_separate(wmOperatorType *ot)
 {
   static const EnumPropertyItem prop_separate_types[] = {
-      {MESH_SEPARATE_SELECTED, "SELECTED", 0, "Selection", ""},
-      {MESH_SEPARATE_MATERIAL, "MATERIAL", 0, "By Material", ""},
-      {MESH_SEPARATE_LOOSE, "LOOSE", 0, "By Loose Parts", ""},
+      {MESH_SEPARATE_SELECTED, "SELECTED", ICON_OP_SEPARATE_SELECTED, "Selection", ""},
+      {MESH_SEPARATE_MATERIAL, "MATERIAL", ICON_OP_SEPARATE_MATERIAL, "By Material", ""},
+      {MESH_SEPARATE_LOOSE, "LOOSE", ICON_OP_SEPARATE_LOOSE, "By Loose Parts", ""},
       {0, nullptr, 0, nullptr, nullptr},
   };
 

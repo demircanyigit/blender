@@ -125,6 +125,51 @@ enum ModifierType {
   eModifierType_GreasePencilBuild = 84,
   eModifierType_GreasePencilSimplify = 85,
   eModifierType_GreasePencilTexture = 86,
+  eModifierType_IsotropicRemesh = 87,
+  eModifierType_QuadriflowRemesh = 88,
+  eModifierType_Slice = 89,
+  eModifierType_CapHoles = 90,
+  eModifierType_UVWMap = 91,
+  eModifierType_Bend = 92,
+  eModifierType_Twist = 93,
+  eModifierType_Taper = 94,
+  eModifierType_Stretch = 95,
+  eModifierType_Tension = 96,
+  eModifierType_RadialArray = 97,
+  eModifierType_VolumeSelect = 98,
+  eModifierType_MaterialByElement = 99,
+  eModifierType_DataChannel = 100,
+  eModifierType_FaceExtrude = 101,
+  eModifierType_DeleteMesh = 102,
+  eModifierType_NormalizeSpline = 103,
+  eModifierType_RelaxSpline = 104,
+  eModifierType_ChamferSpline = 105,
+  eModifierType_SplineMorph = 106,
+  eModifierType_ShapeKeyInbetween = 107,
+  eModifierType_PolySelect = 108,
+  eModifierType_Quadrangulate = 109,
+  eModifierType_RandomizeElements = 110,
+  eModifierType_MarkByAngle = 111,
+  eModifierType_ExplodedView = 112,
+  eModifierType_Noise = 113,
+  eModifierType_FFD2 = 114,
+  eModifierType_FFD3 = 115,
+  eModifierType_FFD4 = 116,
+  eModifierType_Panelize = 117,
+  eModifierType_ElementOrder = 118,
+  eModifierType_ElementPivot = 119,
+  eModifierType_Inset = 120,
+  eModifierType_Poke = 121,
+  eModifierType_BeautifyFaces = 122,
+  eModifierType_RotateEdges = 123,
+  eModifierType_Symmetrize = 124,
+  eModifierType_Push = 125,
+  eModifierType_Melt = 126,
+  eModifierType_Sweep = 127,
+  eModifierType_SmartUVProject = 128,
+  eModifierType_VoronoiFracture = 129,
+  eModifierType_Relax = 130,
+  eModifierType_PolyEdit = 131,
   NUM_MODIFIER_TYPES,
 };
 
@@ -1882,6 +1927,874 @@ struct RemeshModifierData {
   /* OpenVDB Voxel remesh properties. */
   float voxel_size = 0.1f;
   float adaptivity = 0.0f;
+};
+
+/** #IsotropicRemeshModifierData.flag */
+enum IsotropicRemeshModifierFlag {
+  MOD_ISOTROPIC_REMESH_PRESERVE_BOUNDARY = (1 << 0),
+  MOD_ISOTROPIC_REMESH_PRESERVE_SHARP = (1 << 1),
+  /** Keep the edges marked sharp too. */
+  MOD_ISOTROPIC_REMESH_KEEP_MARKED_SHARP = (1 << 2),
+  MOD_ISOTROPIC_REMESH_SMOOTH_SHADING = (1 << 3),
+};
+
+/** Isotropic Remesh modifier, see #geometry::isotropic_remesh. */
+struct IsotropicRemeshModifierData {
+  ModifierData modifier;
+
+  /** #geometry::IsotropicRemeshMode. */
+  char mode = 0;
+  /** #IsotropicRemeshModifierFlag. */
+  char flag = MOD_ISOTROPIC_REMESH_PRESERVE_BOUNDARY;
+  char _pad[2] = {};
+  int iterations = 10;
+  float target_edge_length = 0.1f;
+  float min_edge_length = 0.02f;
+  float max_edge_length = 0.2f;
+  float tolerance = 0.002f;
+  /** In radians, 30 degrees. */
+  float sharp_angle = 0.5235988f;
+  char _pad1[4] = {};
+};
+
+/** #QuadriflowRemeshModifierData.flag */
+enum QuadriflowRemeshModifierFlag {
+  MOD_QUADRIFLOW_REMESH_PRESERVE_SHARP = (1 << 0),
+  MOD_QUADRIFLOW_REMESH_PRESERVE_BOUNDARY = (1 << 1),
+  MOD_QUADRIFLOW_REMESH_SMOOTH_SHADING = (1 << 2),
+};
+
+/** QuadriFlow Remesh modifier, see #geometry::quadriflow_remesh. */
+struct QuadriflowRemeshModifierData {
+  ModifierData modifier;
+
+  /** #geometry::QuadriflowTarget. */
+  char target = 0;
+  /** #QuadriflowRemeshModifierFlag. */
+  char flag = 0;
+  char _pad[2] = {};
+  int face_count = 1000;
+  float ratio = 1.0f;
+  float edge_length = 0.1f;
+  int seed = 0;
+  char _pad1[4] = {};
+};
+
+/** #SliceModifierData.flag */
+enum SliceModifierFlag {
+  MOD_SLICE_FILL = (1 << 0),
+};
+
+/** Slice modifier. */
+struct SliceModifierData {
+  ModifierData modifier;
+
+  /** The plane, in object space. Its normal is the Z axis of the rotation. */
+  float location[3] = {0.0f, 0.0f, 0.0f};
+  float rotation[3] = {0.0f, 0.0f, 0.0f};
+  /** Move the plane along its normal. */
+  float distance = 0.0f;
+  /** #geometry::BMeshClipKeep. */
+  char keep = 1;
+  /** #SliceModifierFlag. */
+  char flag = MOD_SLICE_FILL;
+  char _pad[2] = {};
+};
+
+/** #CapHolesModifierData.flag */
+enum CapHolesModifierFlag {
+  MOD_CAP_HOLES_TRIANGULATE = (1 << 0),
+};
+
+/** Cap Holes modifier. */
+struct CapHolesModifierData {
+  ModifierData modifier;
+
+  /** Only fill holes with at most this many sides. Zero fills all holes. */
+  int max_sides = 0;
+  /** #CapHolesModifierFlag. */
+  char flag = 0;
+  char _pad[3] = {};
+};
+
+/** #QuadrangulateModifierData.flag */
+enum QuadrangulateModifierFlag {
+  MOD_QUADRANGULATE_COMPARE_UVS = (1 << 0),
+  MOD_QUADRANGULATE_COMPARE_VCOLS = (1 << 1),
+  MOD_QUADRANGULATE_COMPARE_SEAM = (1 << 2),
+  MOD_QUADRANGULATE_COMPARE_SHARP = (1 << 3),
+  MOD_QUADRANGULATE_COMPARE_MATERIALS = (1 << 4),
+  MOD_QUADRANGULATE_INVERT_VGROUP = (1 << 5),
+};
+
+/** Quadrangulate modifier: join triangles into quads, like Triangles to Quads in edit mode. */
+struct QuadrangulateModifierData {
+  ModifierData modifier;
+
+  /** Largest angle between the normals of two triangles that can be joined. */
+  float face_threshold = DEG2RADF(40.0f);
+  /** Largest difference from a square corner of the joined quad. */
+  float shape_threshold = DEG2RADF(40.0f);
+  /** How much to prefer regular grids of quads. */
+  float topology_influence = 0.0f;
+  /** #QuadrangulateModifierFlag. */
+  int flag = 0;
+  /** Only join faces whose vertices are all in this group. MAX_VGROUP_NAME. */
+  char vertex_group[64] = "";
+};
+
+/** #RandomizeElementsModifierData.flag */
+enum RandomizeElementsModifierFlag {
+  MOD_RANDOMIZE_ELEMENTS_GEOMETRY = (1 << 0),
+  MOD_RANDOMIZE_ELEMENTS_UVS = (1 << 1),
+  MOD_RANDOMIZE_ELEMENTS_COLOR = (1 << 2),
+  MOD_RANDOMIZE_ELEMENTS_UNIFORM_SCALE = (1 << 3),
+  MOD_RANDOMIZE_ELEMENTS_INVERT_VGROUP = (1 << 4),
+};
+
+/** Randomize Elements modifier. */
+struct RandomizeElementsModifierData {
+  ModifierData modifier;
+
+  int seed = 0;
+  /** #RandomizeElementsModifierFlag. */
+  int flag = MOD_RANDOMIZE_ELEMENTS_GEOMETRY | MOD_RANDOMIZE_ELEMENTS_UNIFORM_SCALE;
+  float rotation[3] = {0.0f, 0.0f, 0.0f};
+  float normal_rotation = 0.0f;
+  float scale_min = 1.0f;
+  float scale_max = 1.0f;
+  float offset[3] = {0.0f, 0.0f, 0.0f};
+  float normal_offset = 0.0f;
+  float uv_rotation = 0.0f;
+  float uv_scale_min = 1.0f;
+  float uv_scale_max = 1.0f;
+  float uv_offset[2] = {0.0f, 0.0f};
+  float saturation = 0.8f;
+  float value_min = 0.5f;
+  float value_max = 1.0f;
+  float color_blend = 1.0f;
+  /** #geometry::MeshElement. */
+  char element = 1;
+  /** #geometry::ElementPivot. */
+  char pivot = 0;
+  /** #geometry::ElementColorMode. */
+  char color_mode = 0;
+  char _pad[1] = {};
+  /** MAX_CUSTOMDATA_LAYER_NAME. */
+  char uv_map[68] = "";
+  char color_attribute[68] = "Color";
+  /** MAX_VGROUP_NAME. */
+  char vertex_group[64] = "";
+};
+
+/** #MarkByAngleModifierData.flag */
+enum MarkByAngleModifierFlag {
+  MOD_MARK_BY_ANGLE_SHARP = (1 << 0),
+  MOD_MARK_BY_ANGLE_SEAM = (1 << 1),
+  MOD_MARK_BY_ANGLE_CREASE = (1 << 2),
+  MOD_MARK_BY_ANGLE_BEVEL_WEIGHT = (1 << 3),
+  MOD_MARK_BY_ANGLE_BOUNDARY = (1 << 4),
+  MOD_MARK_BY_ANGLE_CLEAR = (1 << 5),
+  MOD_MARK_BY_ANGLE_FLAT_FACES = (1 << 6),
+  MOD_MARK_BY_ANGLE_INVERT_VGROUP = (1 << 7),
+};
+
+/** Mark by Angle modifier. */
+struct MarkByAngleModifierData {
+  ModifierData modifier;
+
+  /** 30 degrees. */
+  float angle = 0.5235988f;
+  float value = 1.0f;
+  /** #MarkByAngleModifierFlag. */
+  int flag = MOD_MARK_BY_ANGLE_SHARP | MOD_MARK_BY_ANGLE_CLEAR;
+  /** #geometry::MarkAngleSide. */
+  char side = 0;
+  char _pad[3] = {};
+  /** MAX_VGROUP_NAME. */
+  char vertex_group[64] = "";
+};
+
+/** #ExplodedViewModifierData.flag */
+enum ExplodedViewModifierFlag {
+  MOD_EXPLODED_VIEW_INVERT_VGROUP = (1 << 0),
+};
+
+/** Exploded View modifier. */
+struct ExplodedViewModifierData {
+  ModifierData modifier;
+
+  /** #geometry::MeshElement. */
+  char element = 1;
+  /** #geometry::ExplodeDirection. */
+  char direction = 0;
+  /** #ExplodedViewModifierFlag. */
+  char flag = 0;
+  char _pad[1] = {};
+  int seed = 0;
+  float center[3] = {0.0f, 0.0f, 0.0f};
+  float factor = 1.0f;
+  float distance = 1.0f;
+  float randomness = 0.0f;
+  float tumble = 0.0f;
+  /** MAX_CUSTOMDATA_LAYER_NAME. */
+  char uv_map[68] = "";
+  /** MAX_VGROUP_NAME. */
+  char vertex_group[64] = "";
+};
+
+/** #NoiseModifierData.flag */
+enum NoiseModifierFlag {
+  MOD_NOISE_FRACTAL = (1 << 0),
+  MOD_NOISE_INVERT_VGROUP = (1 << 1),
+};
+
+/** Noise modifier. */
+struct NoiseModifierData {
+  ModifierData modifier;
+
+  float strength[3] = {0.0f, 0.0f, 0.2f};
+  float scale = 1.0f;
+  float phase = 0.0f;
+  float detail = 2.0f;
+  float roughness = 0.5f;
+  float lacunarity = 2.0f;
+  int seed = 0;
+  /** #NoiseModifierFlag. */
+  int flag = 0;
+  /** MAX_VGROUP_NAME. */
+  char vertex_group[64] = "";
+};
+
+/** #FFDModifierData.flag */
+enum FFDModifierFlag {
+  MOD_FFD_CUSTOM_BOUNDS = (1 << 0),
+  MOD_FFD_INSIDE_ONLY = (1 << 1),
+  MOD_FFD_INVERT_VGROUP = (1 << 2),
+};
+
+/** FFD 2x2x2, 3x3x3 and 4x4x4 modifier. */
+struct FFDModifierData {
+  ModifierData modifier;
+
+  /** Offset of each control point from its rest place, X fastest. Up to 4x4x4. */
+  float control_points[64][3] = {};
+  /** The box the lattice fills, in object space. */
+  float bounds_min[3] = {-1.0f, -1.0f, -1.0f};
+  float bounds_max[3] = {1.0f, 1.0f, 1.0f};
+  /** #FFDModifierFlag. */
+  int flag = 0;
+  /** MAX_VGROUP_NAME. */
+  char vertex_group[64] = "";
+  char _pad[4] = {};
+};
+
+/** #PanelizeModifierData.flag */
+enum PanelizeModifierFlag {
+  MOD_PANELIZE_EVEN = (1 << 0),
+  MOD_PANELIZE_RELATIVE = (1 << 1),
+  MOD_PANELIZE_INVERT_VGROUP = (1 << 2),
+};
+
+/** Panelize modifier. */
+struct PanelizeModifierData {
+  ModifierData modifier;
+
+  float gap = 0.02f;
+  float bevel = 0.01f;
+  float height = 0.01f;
+  int material_offset = 0;
+  /** #PanelizeModifierFlag. */
+  int flag = MOD_PANELIZE_EVEN;
+  /** MAX_VGROUP_NAME. */
+  char vertex_group[64] = "";
+  char _pad[4] = {};
+};
+
+/** #ElementOrderModifierData.flag */
+enum ElementOrderModifierFlag {
+  MOD_ELEMENT_ORDER_REVERSE = (1 << 0),
+};
+
+/** Element Order modifier. */
+struct ElementOrderModifierData {
+  ModifierData modifier;
+
+  /** #geometry::MeshElement. */
+  char element = 0;
+  /** #geometry::ElementOrderMode. */
+  char mode = 0;
+  char axis = 2;
+  /** #ElementOrderModifierFlag. */
+  char flag = 0;
+  int seed = 0;
+  float point[3] = {0.0f, 0.0f, 0.0f};
+  /** MAX_CUSTOMDATA_LAYER_NAME. */
+  char uv_map[68] = "";
+};
+
+/** Store Element Pivot modifier. */
+struct ElementPivotModifierData {
+  ModifierData modifier;
+
+  /** #geometry::MeshElement. */
+  char element = 1;
+  /** #geometry::ElementPivot. */
+  char pivot = 0;
+  char _pad[2] = {};
+  /** MAX_CUSTOMDATA_LAYER_NAME. */
+  char uv_map[68] = "";
+  char center_name[68] = "pivot";
+  char x_axis_name[68] = "pivot_x";
+  char z_axis_name[68] = "pivot_z";
+  char index_name[68] = "";
+};
+
+/** #InsetModifierData.flag */
+enum InsetModifierFlag {
+  MOD_INSET_INDIVIDUAL = (1 << 0),
+  MOD_INSET_EVEN = (1 << 1),
+  MOD_INSET_RELATIVE = (1 << 2),
+  MOD_INSET_BOUNDARY = (1 << 3),
+  MOD_INSET_EDGE_RAIL = (1 << 4),
+  MOD_INSET_OUTSET = (1 << 5),
+  MOD_INSET_INVERT_VGROUP = (1 << 6),
+};
+
+/** Inset modifier. */
+struct InsetModifierData {
+  ModifierData modifier;
+
+  float thickness = 0.1f;
+  float depth = 0.0f;
+  int material_offset = 0;
+  /** #InsetModifierFlag. */
+  int flag = MOD_INSET_EVEN | MOD_INSET_BOUNDARY;
+  /** MAX_VGROUP_NAME. */
+  char vertex_group[64] = "";
+  /** MAX_CUSTOMDATA_LAYER_NAME. */
+  char top_name[68] = "";
+  char side_name[68] = "";
+};
+
+/** #PokeModifierData.flag */
+enum PokeModifierFlag {
+  MOD_POKE_RELATIVE = (1 << 0),
+  MOD_POKE_INVERT_VGROUP = (1 << 1),
+};
+
+/** Poke modifier. */
+struct PokeModifierData {
+  ModifierData modifier;
+
+  float offset = 0.0f;
+  /** #geometry::PokeCenter. */
+  char center = 0;
+  /** #PokeModifierFlag. */
+  char flag = 0;
+  char _pad[2] = {};
+  /** MAX_VGROUP_NAME. */
+  char vertex_group[64] = "";
+};
+
+/** #BeautifyFacesModifierData.flag */
+enum BeautifyFacesModifierFlag {
+  MOD_BEAUTIFY_FACES_TRIANGULATE = (1 << 0),
+  MOD_BEAUTIFY_FACES_INVERT_VGROUP = (1 << 1),
+};
+
+/** Beautify Faces modifier. */
+struct BeautifyFacesModifierData {
+  ModifierData modifier;
+
+  /** #geometry::BeautifyMethod. */
+  char method = 0;
+  /** #BeautifyFacesModifierFlag. */
+  char flag = 0;
+  char _pad[6] = {};
+  /** MAX_VGROUP_NAME. */
+  char vertex_group[64] = "";
+};
+
+/** #RotateEdgesModifierData.flag */
+enum RotateEdgesModifierFlag {
+  MOD_ROTATE_EDGES_CCW = (1 << 0),
+  MOD_ROTATE_EDGES_INVERT_VGROUP = (1 << 1),
+};
+
+/** Rotate Edges modifier. */
+struct RotateEdgesModifierData {
+  ModifierData modifier;
+
+  int steps = 1;
+  /** #RotateEdgesModifierFlag. */
+  char flag = 0;
+  char _pad[3] = {};
+  /** MAX_VGROUP_NAME. */
+  char vertex_group[64] = "";
+};
+
+/** Symmetrize modifier. */
+struct SymmetrizeModifierData {
+  ModifierData modifier;
+
+  float merge_distance = 0.0001f;
+  /** #geometry::SymmetrizeDirection. */
+  char direction = 0;
+  char _pad[3] = {};
+};
+
+/** #PushModifierData.flag */
+enum PushModifierFlag {
+  MOD_PUSH_INVERT_VGROUP = (1 << 0),
+};
+
+/** Push modifier. */
+struct PushModifierData {
+  ModifierData modifier;
+
+  float distance = 0.1f;
+  /** #PushModifierFlag. */
+  int flag = 0;
+  /** MAX_VGROUP_NAME. */
+  char vertex_group[64] = "";
+};
+
+/** #RelaxModifierData.flag */
+enum RelaxModifierFlag {
+  MOD_RELAX_KEEP_ON_SURFACE = (1 << 0),
+  MOD_RELAX_PRESERVE_BOUNDARY = (1 << 1),
+  MOD_RELAX_INVERT_VGROUP = (1 << 2),
+  MOD_RELAX_KEEP_SHARP = (1 << 3),
+};
+
+/** Relax modifier. */
+struct RelaxModifierData {
+  ModifierData modifier;
+
+  /** How far each point moves in one iteration. */
+  float factor = 0.5f;
+  int iterations = 10;
+  /** #RelaxModifierFlag. */
+  int flag = MOD_RELAX_KEEP_ON_SURFACE | MOD_RELAX_PRESERVE_BOUNDARY;
+  /** MAX_VGROUP_NAME. */
+  char vertex_group[64] = "";
+  char _pad[4] = {};
+};
+
+/** #MeltModifierData.flag */
+enum MeltModifierFlag {
+  MOD_MELT_FLIP = (1 << 0),
+  MOD_MELT_INVERT_VGROUP = (1 << 1),
+};
+
+/** Melt modifier. */
+struct MeltModifierData {
+  ModifierData modifier;
+
+  float amount = 0.0f;
+  float spread = 0.2f;
+  float solidity = 0.5f;
+  char axis = 2;
+  /** #MeltModifierFlag. */
+  char flag = 0;
+  char _pad[2] = {};
+  /** MAX_VGROUP_NAME. */
+  char vertex_group[64] = "";
+};
+
+/** #SweepModifierData.flag */
+enum SweepModifierFlag {
+  MOD_SWEEP_FILL_CAPS = (1 << 0),
+  MOD_SWEEP_LENGTH_UVS = (1 << 1),
+  MOD_SWEEP_USE_RADIUS = (1 << 2),
+};
+
+/** Sweep modifier. */
+struct SweepModifierData {
+  ModifierData modifier;
+
+  struct Object *profile_object = nullptr;
+  /** #geometry::SweepShape. */
+  char shape = 0;
+  /** #SweepModifierFlag. */
+  char flag = MOD_SWEEP_LENGTH_UVS | MOD_SWEEP_USE_RADIUS;
+  char _pad[2] = {};
+  int columns = 12;
+  float radius = 0.1f;
+  float width = 0.2f;
+  float scale = 1.0f;
+  float roll = 0.0f;
+  float twist = 0.0f;
+  /** MAX_CUSTOMDATA_LAYER_NAME. */
+  char uv_map[68] = "UVMap";
+};
+
+/** #SmartUVProjectModifierData.flag */
+enum SmartUVProjectModifierFlag {
+  MOD_SMART_UV_PROJECT_ROTATE = (1 << 0),
+  MOD_SMART_UV_PROJECT_PACK = (1 << 1),
+  MOD_SMART_UV_PROJECT_INVERT_VGROUP = (1 << 2),
+};
+
+/** Smart UV Project modifier. */
+struct SmartUVProjectModifierData {
+  ModifierData modifier;
+
+  /** 66 degrees. */
+  float angle_limit = 1.1519173f;
+  float margin = 0.001f;
+  /** #SmartUVProjectModifierFlag. */
+  int flag = MOD_SMART_UV_PROJECT_ROTATE | MOD_SMART_UV_PROJECT_PACK;
+  /** MAX_CUSTOMDATA_LAYER_NAME. */
+  char uv_map[68] = "UVMap";
+  /** MAX_VGROUP_NAME. */
+  char vertex_group[64] = "";
+};
+
+/** #VoronoiFractureModifierData.source */
+enum VoronoiFractureSource {
+  MOD_VORONOI_SOURCE_RANDOM = 0,
+  MOD_VORONOI_SOURCE_OBJECT = 1,
+};
+
+/** #VoronoiFractureModifierData.flag */
+enum VoronoiFractureModifierFlag {
+  MOD_VORONOI_SEPARATE_ISLANDS = (1 << 0),
+  MOD_VORONOI_INTERIOR_MATERIAL = (1 << 1),
+};
+
+/** Voronoi Fracture modifier. */
+struct VoronoiFractureModifierData {
+  ModifierData modifier;
+
+  /** #VoronoiFractureSource. */
+  char source = MOD_VORONOI_SOURCE_RANDOM;
+  /** #VoronoiFractureModifierFlag. */
+  char flag = MOD_VORONOI_SEPARATE_ISLANDS;
+  /** Material index of the faces made by the cuts. */
+  short interior_material = 0;
+  /** Number of random points. */
+  int count = 20;
+  int seed = 0;
+  /** Distance between the inside faces of neighboring pieces. */
+  float cut_gap = 0.0f;
+  /** Its points, vertices, curve points or instances are the cell points. */
+  struct Object *points_object = nullptr;
+};
+
+/** #UVWMapModifierData.flag */
+enum UVWMapModifierFlag {
+  MOD_UVW_MAP_CAP = (1 << 0),
+  MOD_UVW_MAP_FLIP_U = (1 << 1),
+  MOD_UVW_MAP_FLIP_V = (1 << 2),
+};
+
+/** UVW Map modifier. */
+struct UVWMapModifierData {
+  ModifierData modifier;
+
+  /** #geometry::UVWMapType. */
+  char map_type = 0;
+  /** #UVWMapModifierFlag. */
+  char flag = 0;
+  char _pad[2] = {};
+  /** Gizmo, in object space. */
+  float center[3] = {0.0f, 0.0f, 0.0f};
+  float rotation[3] = {0.0f, 0.0f, 0.0f};
+  float size[3] = {2.0f, 2.0f, 2.0f};
+  float tile[2] = {1.0f, 1.0f};
+  float offset[2] = {0.0f, 0.0f};
+  /** MAX_CUSTOMDATA_LAYER_NAME. */
+  char uv_map[68] = "UVMap";
+  char _pad1[4] = {};
+};
+
+/** #AxisDeformModifierData.flag */
+enum AxisDeformModifierFlag {
+  MOD_AXIS_DEFORM_USE_LIMITS = (1 << 0),
+  MOD_AXIS_DEFORM_INVERT_VGROUP = (1 << 1),
+};
+
+/** Bend, Twist, Taper and Stretch modifier. */
+struct AxisDeformModifierData {
+  ModifierData modifier;
+
+  /** Gizmo, in object space. */
+  float center[3] = {0.0f, 0.0f, 0.0f};
+  float rotation[3] = {0.0f, 0.0f, 0.0f};
+  /** Bend and twist. 90 degrees. */
+  float angle = 1.5707964f;
+  /** Bend: side to bend toward, around the axis. */
+  float direction = 0.0f;
+  /** Taper and stretch. */
+  float amount = 0.5f;
+  /** Taper curve and stretch amplify. */
+  float curve = 0.0f;
+  float lower = -1.0f;
+  float upper = 1.0f;
+  char axis = 2;
+  /** #AxisDeformModifierFlag. */
+  char flag = 0;
+  char _pad[2] = {};
+  /** MAX_VGROUP_NAME. */
+  char vertex_group[64] = "";
+  char _pad1[4] = {};
+};
+
+/** Tension modifier. */
+struct TensionModifierData {
+  ModifierData modifier;
+
+  float strength = 1.0f;
+  char _pad[4] = {};
+  /** MAX_CUSTOMDATA_LAYER_NAME. */
+  char attribute_name[68] = "tension";
+  char _pad1[4] = {};
+};
+
+/** #RadialArrayModifierData.flag */
+enum RadialArrayModifierFlag {
+  MOD_RADIAL_ARRAY_ROTATE = (1 << 0),
+  MOD_RADIAL_ARRAY_MERGE = (1 << 1),
+};
+
+/** Radial Array modifier. */
+struct RadialArrayModifierData {
+  ModifierData modifier;
+
+  int count = 6;
+  /** 360 degrees. */
+  float angle = 6.2831855f;
+  float center[3] = {0.0f, 0.0f, 0.0f};
+  float radius = 0.0f;
+  float step = 0.0f;
+  float merge_distance = 0.001f;
+  char axis = 2;
+  /** #RadialArrayModifierFlag. */
+  char flag = MOD_RADIAL_ARRAY_ROTATE;
+  char _pad[6] = {};
+};
+
+/** #VolumeSelectModifierData.flag */
+enum VolumeSelectModifierFlag {
+  MOD_VOLUME_SELECT_INVERT = (1 << 0),
+};
+
+/** Volume Select modifier. */
+struct VolumeSelectModifierData {
+  ModifierData modifier;
+
+  /** Gizmo, in object space. */
+  float center[3] = {0.0f, 0.0f, 0.0f};
+  float rotation[3] = {0.0f, 0.0f, 0.0f};
+  float size[3] = {2.0f, 2.0f, 2.0f};
+  float falloff = 0.0f;
+  /** #geometry::VolumeSelectShape. */
+  char shape = 0;
+  /** #VolumeSelectModifierFlag. */
+  char flag = 0;
+  char _pad[2] = {};
+  /** MAX_VGROUP_NAME. */
+  char vertex_group[64] = "Selection";
+  char _pad1[4] = {};
+};
+
+/** Material By Element modifier. */
+struct MaterialByElementModifierData {
+  ModifierData modifier;
+
+  int min_index = 0;
+  int max_index = 1;
+  int seed = 0;
+  /** #geometry::MaterialByElementMode. */
+  char mode = 0;
+  char _pad[3] = {};
+};
+
+/** #DataChannelModifierData.flag */
+enum DataChannelModifierFlag {
+  MOD_DATA_CHANNEL_NORMALIZE = (1 << 0),
+  MOD_DATA_CHANNEL_INVERT = (1 << 1),
+  MOD_DATA_CHANNEL_CLAMP = (1 << 2),
+};
+
+/** Data Channel modifier. */
+struct DataChannelModifierData {
+  ModifierData modifier;
+
+  int seed = 0;
+  float power = 1.0f;
+  float multiply = 1.0f;
+  float add = 0.0f;
+  /** #geometry::DataChannelSource. */
+  char source = 6;
+  /** #DataChannelModifierFlag. */
+  char flag = MOD_DATA_CHANNEL_NORMALIZE;
+  /** 0: attribute, 1: vertex group, 2: move the points along their normals. */
+  char output = 0;
+  char _pad = 0;
+  /** MAX_CUSTOMDATA_LAYER_NAME. */
+  char name[68] = "channel";
+};
+
+/** #FaceExtrudeModifierData.flag */
+enum FaceExtrudeModifierFlag {
+  MOD_FACE_EXTRUDE_INDIVIDUAL = (1 << 0),
+  MOD_FACE_EXTRUDE_INVERT = (1 << 1),
+};
+
+/** Face Extrude modifier. */
+struct FaceExtrudeModifierData {
+  ModifierData modifier;
+
+  float amount = 0.1f;
+  float scale = 1.0f;
+  /** #FaceExtrudeModifierFlag. */
+  char flag = 0;
+  char _pad[3] = {};
+  /** Vertex group or attribute that selects the faces. MAX_CUSTOMDATA_LAYER_NAME. */
+  char selection[68] = "";
+};
+
+/** #DeleteMeshModifierData.flag */
+enum DeleteMeshModifierFlag {
+  MOD_DELETE_MESH_INVERT = (1 << 0),
+};
+
+/** Delete Mesh modifier. */
+struct DeleteMeshModifierData {
+  ModifierData modifier;
+
+  float threshold = 0.5f;
+  /** 0: points, 1: edges, 2: faces, 3: only faces. */
+  char domain = 2;
+  /** #DeleteMeshModifierFlag. */
+  char flag = 0;
+  char _pad[2] = {};
+  /** Vertex group or attribute that selects what to delete. MAX_CUSTOMDATA_LAYER_NAME. */
+  char selection[68] = "selection";
+  char _pad1[4] = {};
+};
+
+/** Normalize Spline modifier. */
+struct NormalizeSplineModifierData {
+  ModifierData modifier;
+
+  float length = 0.1f;
+  int count = 10;
+  /** #geometry::NormalizeCurvesMode. */
+  char mode = 0;
+  char _pad[7] = {};
+};
+
+/** #RelaxSplineModifierData.flag */
+enum RelaxSplineModifierFlag {
+  MOD_RELAX_SPLINE_KEEP_ENDS = (1 << 0),
+  MOD_RELAX_SPLINE_KEEP_SHAPE = (1 << 1),
+};
+
+/** Relax Spline modifier. */
+struct RelaxSplineModifierData {
+  ModifierData modifier;
+
+  float factor = 0.5f;
+  int iterations = 5;
+  /** #RelaxSplineModifierFlag. */
+  char flag = MOD_RELAX_SPLINE_KEEP_ENDS;
+  char _pad[7] = {};
+};
+
+/** #ChamferSplineModifierData.flag */
+enum ChamferSplineModifierFlag {
+  MOD_CHAMFER_SPLINE_LIMIT = (1 << 0),
+};
+
+/** Chamfer Spline modifier. */
+struct ChamferSplineModifierData {
+  ModifierData modifier;
+
+  float radius = 0.1f;
+  int segments = 0;
+  /** #ChamferSplineModifierFlag. */
+  char flag = MOD_CHAMFER_SPLINE_LIMIT;
+  char _pad[7] = {};
+};
+
+/** Spline Morph modifier. */
+struct SplineMorphModifierData {
+  ModifierData modifier;
+
+  struct Object *target = nullptr;
+  float factor = 0.5f;
+  char _pad[4] = {};
+};
+
+/** Shape Key In-between modifier. */
+struct ShapeKeyInbetweenModifierData {
+  ModifierData modifier;
+
+  float value = 0.0f;
+  /** First and last shape key of the sequence. A last key of zero means the last shape key. */
+  int start_key = 1;
+  int end_key = 0;
+  char _pad[4] = {};
+};
+
+/** #PolySelectModifierData.flag */
+enum PolySelectModifierFlag {
+  MOD_POLY_SELECT_INVERT = (1 << 0),
+};
+
+/** Poly Select modifier. */
+struct PolySelectModifierData {
+  ModifierData modifier;
+
+  /** 0: points, 1: edges, 2: faces. */
+  char domain = 2;
+  /** #PolySelectModifierFlag. */
+  char flag = 0;
+  char _pad[2] = {};
+  /** Hidden attribute of the mesh that holds the stored selection. MAX_CUSTOMDATA_LAYER_NAME. */
+  char stored_attribute[68] = "";
+  /** Attribute to write the selection to. MAX_CUSTOMDATA_LAYER_NAME. */
+  char output_attribute[68] = "selection";
+  char _pad1[4] = {};
+};
+
+/** #PolyEditModifierData.operation */
+enum PolyEditOperation {
+  MOD_POLY_EDIT_MOVE = 0,
+  MOD_POLY_EDIT_EXTRUDE = 1,
+  MOD_POLY_EDIT_INSET = 2,
+  MOD_POLY_EDIT_POKE = 3,
+  MOD_POLY_EDIT_DELETE = 4,
+};
+
+/** #PolyEditModifierData.flag */
+enum PolyEditModifierFlag {
+  MOD_POLY_EDIT_SELECT_NEW = (1 << 0),
+  MOD_POLY_EDIT_INDIVIDUAL = (1 << 1),
+};
+
+/** Poly Edit modifier. */
+struct PolyEditModifierData {
+  ModifierData modifier;
+
+  /** #PolyEditOperation. */
+  char operation = MOD_POLY_EDIT_EXTRUDE;
+  /** #PolyEditModifierFlag. */
+  char flag = MOD_POLY_EDIT_SELECT_NEW;
+  char _pad[2] = {};
+  /** Extrude height, inset thickness or poke offset. */
+  float amount = 0.1f;
+  /** Inset depth. */
+  float depth = 0.0f;
+  /** Scale of moved points or extruded faces. */
+  float scale = 1.0f;
+  float offset[3] = {0.0f, 0.0f, 0.0f};
+  /** Boolean attribute with the selection. MAX_CUSTOMDATA_LAYER_NAME. */
+  char selection_attribute[68] = "selection";
 };
 
 /** #SkinModifierData.symmetry_axes */

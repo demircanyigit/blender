@@ -1,0 +1,3103 @@
+{
+ "blender_toolbox": 1,
+ "tabs": [
+  {
+   "name": "View",
+   "sections": [
+    {
+     "name": "Navigate",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "view3d.view_all",
+       "name": "Frame All",
+       "icon": "OP_FRAME_ALL",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "view3d.view_selected",
+       "name": "Frame Selected",
+       "icon": "OP_FRAME_SELECTED",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "view3d.localview",
+       "name": "Local View",
+       "icon": "OP_LOCAL_VIEW",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "view3d.view_center_cursor",
+       "name": "Center View to Cursor",
+       "icon": "OP_VIEW_CENTER_CURSOR",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "view3d.zoom_border",
+       "name": "Zoom Region",
+       "icon": "OP_ZOOM_REGION",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "view3d.view_persportho",
+       "name": "Perspective/Orthographic",
+       "icon": "OP_PERSP_ORTHO",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "view3d.walk",
+       "name": "Walk Navigation",
+       "icon": "OP_WALK",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "view3d.fly",
+       "name": "Fly Navigation",
+       "icon": "OP_FLY",
+       "editor": "VIEW_3D"
+      }
+     ]
+    },
+    {
+     "name": "Viewpoint",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "view3d.view_axis",
+       "name": "Top",
+       "icon": "OP_VIEW_TOP",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "TOP"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "view3d.view_axis",
+       "name": "Bottom",
+       "icon": "OP_VIEW_BOTTOM",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "BOTTOM"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "view3d.view_axis",
+       "name": "Front",
+       "icon": "OP_VIEW_FRONT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "FRONT"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "view3d.view_axis",
+       "name": "Back",
+       "icon": "OP_VIEW_BACK",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "BACK"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "view3d.view_axis",
+       "name": "Left",
+       "icon": "OP_VIEW_LEFT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "LEFT"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "view3d.view_axis",
+       "name": "Right",
+       "icon": "OP_VIEW_RIGHT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "RIGHT"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "view3d.view_camera",
+       "name": "Camera",
+       "icon": "VIEW_CAMERA",
+       "editor": "VIEW_3D"
+      }
+     ]
+    },
+    {
+     "name": "Layout",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "screen.screen_full_area",
+       "name": "Toggle Maximize Area",
+       "icon": "OP_TOGGLE_MAXIMIZE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "screen.region_quadview",
+       "name": "Toggle Quad View",
+       "icon": "OP_TOGGLE_QUAD_VIEW",
+       "editor": "VIEW_3D"
+      }
+     ]
+    },
+    {
+     "name": "Display",
+     "style": "LIST",
+     "items": [
+      {
+       "type": "PROPERTY",
+       "root": "view3d",
+       "path": "shading",
+       "property": "show_xray",
+       "name": "X-Ray",
+       "icon": "NONE"
+      },
+      {
+       "type": "PROPERTY",
+       "root": "view3d",
+       "path": "overlay",
+       "property": "show_wireframes",
+       "name": "Wireframe",
+       "icon": "NONE"
+      },
+      {
+       "type": "PROPERTY",
+       "root": "view3d",
+       "path": "overlay",
+       "property": "show_face_orientation",
+       "name": "Face Orientation",
+       "icon": "NONE"
+      },
+      {
+       "type": "PROPERTY",
+       "root": "view3d",
+       "path": "overlay",
+       "property": "show_stats",
+       "name": "Statistics",
+       "icon": "NONE"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Select",
+   "sections": [
+    {
+     "name": "Basic",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.select_all",
+       "name": "Select All",
+       "icon": "OP_SELECT_ALL",
+       "editor": "VIEW_3D",
+       "properties": {
+        "action": "SELECT"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.select_all",
+       "name": "Select None",
+       "icon": "OP_SELECT_NONE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "action": "DESELECT"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.select_all",
+       "name": "Invert Selection",
+       "icon": "OP_SELECT_INVERT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "action": "INVERT"
+       }
+      },
+      {
+       "type": "SEPARATOR"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.select_mode",
+       "name": "Vertex Select",
+       "icon": "VERTEXSEL",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "VERT"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.select_mode",
+       "name": "Edge Select",
+       "icon": "EDGESEL",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "EDGE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.select_mode",
+       "name": "Face Select",
+       "icon": "FACESEL",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "FACE"
+       }
+      }
+     ]
+    },
+    {
+     "name": "Grow",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.select_more",
+       "name": "Select More",
+       "icon": "OP_SELECT_MORE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.select_less",
+       "name": "Select Less",
+       "icon": "OP_SELECT_LESS",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.select_linked",
+       "name": "Select Linked",
+       "icon": "OP_SELECT_LINKED",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.select_mirror",
+       "name": "Select Mirror",
+       "icon": "OP_SELECT_MIRROR",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.select_random",
+       "name": "Select Random",
+       "icon": "OP_SELECT_RANDOM",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.select_nth",
+       "name": "Checker Deselect",
+       "icon": "OP_CHECKER_DESELECT",
+       "editor": "VIEW_3D"
+      }
+     ]
+    },
+    {
+     "name": "Loops",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.select_edge_loop_multi",
+       "name": "Edge Loops",
+       "icon": "OP_SELECT_EDGE_LOOPS",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.select_edge_ring_multi",
+       "name": "Edge Rings",
+       "icon": "OP_SELECT_EDGE_RINGS",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.loop_to_region",
+       "name": "Loop Inner Region",
+       "icon": "OP_LOOP_TO_REGION",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.region_to_loop",
+       "name": "Boundary Loop",
+       "icon": "OP_REGION_TO_LOOP",
+       "editor": "VIEW_3D"
+      }
+     ]
+    },
+    {
+     "name": "Special",
+     "style": "LIST",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.select_similar",
+       "name": "Select Similar...",
+       "icon": "OP_SELECT_SIMILAR",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.select_non_manifold",
+       "name": "Non Manifold",
+       "icon": "OP_NON_MANIFOLD",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.select_loose",
+       "name": "Loose Geometry",
+       "icon": "OP_SELECT_LOOSE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.select_interior_faces",
+       "name": "Interior Faces",
+       "icon": "OP_INTERIOR_FACES",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.select_face_by_sides",
+       "name": "Faces by Sides",
+       "icon": "OP_FACES_BY_SIDES",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.edges_select_sharp",
+       "name": "Sharp Edges",
+       "icon": "OP_SELECT_SHARP_EDGES",
+       "editor": "VIEW_3D"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Add",
+   "sections": [
+    {
+     "name": "Mesh",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.primitive_plane_add",
+       "name": "Plane",
+       "icon": "MESH_PLANE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.primitive_cube_add",
+       "name": "Cube",
+       "icon": "MESH_CUBE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.primitive_circle_add",
+       "name": "Circle",
+       "icon": "MESH_CIRCLE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.primitive_uv_sphere_add",
+       "name": "UV Sphere",
+       "icon": "MESH_UVSPHERE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.primitive_ico_sphere_add",
+       "name": "Ico Sphere",
+       "icon": "MESH_ICOSPHERE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.primitive_cylinder_add",
+       "name": "Cylinder",
+       "icon": "MESH_CYLINDER",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.primitive_cone_add",
+       "name": "Cone",
+       "icon": "MESH_CONE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.primitive_torus_add",
+       "name": "Torus",
+       "icon": "MESH_TORUS",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.primitive_grid_add",
+       "name": "Grid",
+       "icon": "MESH_GRID",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.primitive_monkey_add",
+       "name": "Monkey",
+       "icon": "MESH_MONKEY",
+       "editor": "VIEW_3D"
+      }
+     ]
+    },
+    {
+     "name": "Curve",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "curve.primitive_bezier_curve_add",
+       "name": "Bezier",
+       "icon": "CURVE_BEZCURVE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "curve.primitive_bezier_circle_add",
+       "name": "Bezier Circle",
+       "icon": "CURVE_BEZCIRCLE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "curve.primitive_nurbs_curve_add",
+       "name": "Nurbs Curve",
+       "icon": "CURVE_NCURVE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "curve.primitive_nurbs_circle_add",
+       "name": "Nurbs Circle",
+       "icon": "CURVE_NCIRCLE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "curve.primitive_nurbs_path_add",
+       "name": "Path",
+       "icon": "CURVE_PATH",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.curves_empty_hair_add",
+       "name": "Empty Hair",
+       "icon": "OUTLINER_OB_CURVES",
+       "editor": "VIEW_3D"
+      }
+     ]
+    },
+    {
+     "name": "Surface",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "surface.primitive_nurbs_surface_curve_add",
+       "name": "Nurbs Curve",
+       "icon": "SURFACE_NCURVE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "surface.primitive_nurbs_surface_circle_add",
+       "name": "Nurbs Circle",
+       "icon": "SURFACE_NCIRCLE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "surface.primitive_nurbs_surface_surface_add",
+       "name": "Nurbs Surface",
+       "icon": "SURFACE_NSURFACE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "surface.primitive_nurbs_surface_cylinder_add",
+       "name": "Nurbs Cylinder",
+       "icon": "SURFACE_NCYLINDER",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "surface.primitive_nurbs_surface_sphere_add",
+       "name": "Nurbs Sphere",
+       "icon": "SURFACE_NSPHERE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "surface.primitive_nurbs_surface_torus_add",
+       "name": "Nurbs Torus",
+       "icon": "SURFACE_NTORUS",
+       "editor": "VIEW_3D"
+      }
+     ]
+    },
+    {
+     "name": "Metaball",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "object.metaball_add",
+       "name": "Ball",
+       "icon": "META_BALL",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "BALL"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.metaball_add",
+       "name": "Capsule",
+       "icon": "META_CAPSULE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "CAPSULE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.metaball_add",
+       "name": "Plane",
+       "icon": "META_PLANE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "PLANE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.metaball_add",
+       "name": "Ellipsoid",
+       "icon": "META_ELLIPSOID",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "ELLIPSOID"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.metaball_add",
+       "name": "Cube",
+       "icon": "META_CUBE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "CUBE"
+       }
+      }
+     ]
+    },
+    {
+     "name": "Other",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "object.text_add",
+       "name": "Text",
+       "icon": "OUTLINER_OB_FONT",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.volume_add",
+       "name": "Volume",
+       "icon": "OUTLINER_OB_VOLUME",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.grease_pencil_add",
+       "name": "Grease Pencil",
+       "icon": "OUTLINER_OB_GREASEPENCIL",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "STROKE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.armature_add",
+       "name": "Armature",
+       "icon": "OUTLINER_OB_ARMATURE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.add",
+       "name": "Lattice",
+       "icon": "OUTLINER_OB_LATTICE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "LATTICE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.speaker_add",
+       "name": "Speaker",
+       "icon": "OUTLINER_OB_SPEAKER",
+       "editor": "VIEW_3D"
+      }
+     ]
+    },
+    {
+     "name": "Empty",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "object.empty_add",
+       "name": "Plain Axes Empty",
+       "icon": "EMPTY_AXIS",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "PLAIN_AXES"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.empty_add",
+       "name": "Arrows Empty",
+       "icon": "EMPTY_ARROWS",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "ARROWS"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.empty_add",
+       "name": "Single Arrow Empty",
+       "icon": "EMPTY_SINGLE_ARROW",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SINGLE_ARROW"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.empty_add",
+       "name": "Circle Empty",
+       "icon": "MESH_CIRCLE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "CIRCLE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.empty_add",
+       "name": "Cube Empty",
+       "icon": "CUBE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "CUBE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.empty_add",
+       "name": "Sphere Empty",
+       "icon": "SPHERE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SPHERE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.empty_add",
+       "name": "Cone Empty",
+       "icon": "CONE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "CONE"
+       }
+      }
+     ]
+    },
+    {
+     "name": "Light & Camera",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "object.camera_add",
+       "name": "Camera",
+       "icon": "OUTLINER_OB_CAMERA",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "SEPARATOR"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.light_add",
+       "name": "Point Light",
+       "icon": "LIGHT_POINT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "POINT"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.light_add",
+       "name": "Sun Light",
+       "icon": "LIGHT_SUN",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SUN"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.light_add",
+       "name": "Spot Light",
+       "icon": "LIGHT_SPOT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SPOT"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.light_add",
+       "name": "Area Light",
+       "icon": "LIGHT_AREA",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "AREA"
+       }
+      },
+      {
+       "type": "SEPARATOR"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.lightprobe_add",
+       "name": "Sphere Light Probe",
+       "icon": "LIGHTPROBE_SPHERE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SPHERE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.lightprobe_add",
+       "name": "Plane Light Probe",
+       "icon": "LIGHTPROBE_PLANE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "PLANE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.lightprobe_add",
+       "name": "Volume Light Probe",
+       "icon": "LIGHTPROBE_VOLUME",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "VOLUME"
+       }
+      }
+     ]
+    },
+    {
+     "name": "Force Field",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "object.effector_add",
+       "name": "Force",
+       "icon": "FORCE_FORCE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "FORCE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.effector_add",
+       "name": "Wind",
+       "icon": "FORCE_WIND",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "WIND"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.effector_add",
+       "name": "Vortex",
+       "icon": "FORCE_VORTEX",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "VORTEX"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.effector_add",
+       "name": "Magnetic",
+       "icon": "FORCE_MAGNETIC",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "MAGNET"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.effector_add",
+       "name": "Harmonic",
+       "icon": "FORCE_HARMONIC",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "HARMONIC"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.effector_add",
+       "name": "Charge",
+       "icon": "FORCE_CHARGE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "CHARGE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.effector_add",
+       "name": "Lennard-Jones",
+       "icon": "FORCE_LENNARDJONES",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "LENNARDJ"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.effector_add",
+       "name": "Texture",
+       "icon": "FORCE_TEXTURE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "TEXTURE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.effector_add",
+       "name": "Curve Guide",
+       "icon": "FORCE_CURVE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "GUIDE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.effector_add",
+       "name": "Boid",
+       "icon": "FORCE_BOID",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "BOID"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.effector_add",
+       "name": "Turbulence",
+       "icon": "FORCE_TURBULENCE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "TURBULENCE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.effector_add",
+       "name": "Drag",
+       "icon": "FORCE_DRAG",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "DRAG"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.effector_add",
+       "name": "Fluid Flow",
+       "icon": "FORCE_FLUIDFLOW",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "FLUID"
+       }
+      }
+     ]
+    },
+    {
+     "name": "Draw Tools",
+     "style": "LIST",
+     "items": [
+      {
+       "type": "TOOL",
+       "tool": "builtin.primitive_cube_add",
+       "name": "Add Cube",
+       "icon": "TOOL_ADD_CUBE"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.primitive_cone_add",
+       "name": "Add Cone",
+       "icon": "TOOL_ADD_CONE"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.primitive_cylinder_add",
+       "name": "Add Cylinder",
+       "icon": "TOOL_ADD_CYLINDER"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.primitive_uv_sphere_add",
+       "name": "Add UV Sphere",
+       "icon": "TOOL_ADD_SPHERE"
+      }
+     ]
+    },
+    {
+     "name": "Duplicate",
+     "style": "LIST",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "object.duplicate_move",
+       "name": "Duplicate",
+       "icon": "OP_DUPLICATE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.duplicate_move_linked",
+       "name": "Duplicate Linked",
+       "icon": "OP_DUPLICATE_LINKED",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.join",
+       "name": "Join",
+       "icon": "OP_JOIN",
+       "editor": "VIEW_3D"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Modifiers",
+   "sections": [
+    {
+     "name": "Common",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Subdivision Surface",
+       "icon": "MOD_SUBSURF",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SUBSURF"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Mirror",
+       "icon": "MOD_MIRROR",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "MIRROR"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Bevel",
+       "icon": "MOD_BEVEL",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "BEVEL"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Solidify",
+       "icon": "MOD_SOLIDIFY",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SOLIDIFY"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Array",
+       "icon": "MOD_ARRAY",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "ARRAY"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Boolean",
+       "icon": "MOD_BOOLEAN",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "BOOLEAN"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Weld",
+       "icon": "AUTOMERGE_OFF",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "WELD"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Weighted Normal",
+       "icon": "MOD_WEIGHTED_NORMAL",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "WEIGHTED_NORMAL"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Triangulate",
+       "icon": "MOD_TRIANGULATE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "TRIANGULATE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Decimate",
+       "icon": "MOD_DECIM",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "DECIMATE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Shrinkwrap",
+       "icon": "MOD_SHRINKWRAP",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SHRINKWRAP"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Geometry Nodes",
+       "icon": "GEOMETRY_NODES",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "NODES"
+       }
+      }
+     ]
+    },
+    {
+     "name": "Generate",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Array",
+       "icon": "MOD_ARRAY",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "ARRAY"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Bevel",
+       "icon": "MOD_BEVEL",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "BEVEL"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Boolean",
+       "icon": "MOD_BOOLEAN",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "BOOLEAN"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Build",
+       "icon": "MOD_BUILD",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "BUILD"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Decimate",
+       "icon": "MOD_DECIM",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "DECIMATE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Edge Split",
+       "icon": "MOD_EDGESPLIT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "EDGE_SPLIT"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Geometry Nodes",
+       "icon": "GEOMETRY_NODES",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "NODES"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Mask",
+       "icon": "MOD_MASK",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "MASK"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Mirror",
+       "icon": "MOD_MIRROR",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "MIRROR"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Multiresolution",
+       "icon": "MOD_MULTIRES",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "MULTIRES"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Remesh",
+       "icon": "MOD_REMESH",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "REMESH"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Screw",
+       "icon": "MOD_SCREW",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SCREW"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Skin",
+       "icon": "MOD_SKIN",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SKIN"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Solidify",
+       "icon": "MOD_SOLIDIFY",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SOLIDIFY"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Subdivision Surface",
+       "icon": "MOD_SUBSURF",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SUBSURF"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Triangulate",
+       "icon": "MOD_TRIANGULATE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "TRIANGULATE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Volume to Mesh",
+       "icon": "VOLUME_DATA",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "VOLUME_TO_MESH"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Weld",
+       "icon": "AUTOMERGE_OFF",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "WELD"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Wireframe",
+       "icon": "MOD_WIREFRAME",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "WIREFRAME"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Isotropic Remesh",
+       "icon": "MOD_ISOTROPIC_REMESH",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "ISOTROPIC_REMESH"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "QuadriFlow Remesh",
+       "icon": "MOD_QUADIFY",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "QUADRIFLOW_REMESH"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Slice",
+       "icon": "MOD_SLICE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SLICE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Cap Holes",
+       "icon": "MOD_CAP_HOLES",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "CAP_HOLES"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Radial Array",
+       "icon": "MOD_RADIAL_ARRAY",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "RADIAL_ARRAY"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Face Extrude",
+       "icon": "MOD_FACE_EXTRUDE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "FACE_EXTRUDE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Delete Mesh",
+       "icon": "MOD_DELETE_MESH",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "DELETE_MESH"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Quadrangulate",
+       "icon": "MOD_QUADRANGULATE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "QUADRANGULATE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Panelize",
+       "icon": "MOD_PANELIZE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "PANELIZE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Inset",
+       "icon": "MOD_INSET",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "INSET"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Poke",
+       "icon": "MOD_POKE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "POKE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Beautify Faces",
+       "icon": "MOD_BEAUTIFY",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "BEAUTIFY_FACES"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Rotate Edges",
+       "icon": "MOD_ROTATE_EDGES",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "ROTATE_EDGES"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Symmetrize",
+       "icon": "MOD_SYMMETRIZE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SYMMETRIZE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Voronoi Fracture",
+       "icon": "MOD_VORONOI_FRACTURE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "VORONOI_FRACTURE"
+       }
+      }
+     ]
+    },
+    {
+     "name": "Deform",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Armature",
+       "icon": "MOD_ARMATURE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "ARMATURE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Cast",
+       "icon": "MOD_CAST",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "CAST"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Curve",
+       "icon": "MOD_CURVE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "CURVE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Displace",
+       "icon": "MOD_DISPLACE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "DISPLACE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Hook",
+       "icon": "HOOK",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "HOOK"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Laplacian Deform",
+       "icon": "MOD_MESHDEFORM",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "LAPLACIANDEFORM"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Lattice",
+       "icon": "MOD_LATTICE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "LATTICE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Mesh Deform",
+       "icon": "MOD_MESHDEFORM",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "MESH_DEFORM"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Shrinkwrap",
+       "icon": "MOD_SHRINKWRAP",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SHRINKWRAP"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Simple Deform",
+       "icon": "MOD_SIMPLEDEFORM",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SIMPLE_DEFORM"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Smooth",
+       "icon": "MOD_SMOOTH",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SMOOTH"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Smooth Corrective",
+       "icon": "MOD_SMOOTH",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "CORRECTIVE_SMOOTH"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Smooth Laplacian",
+       "icon": "MOD_SMOOTH",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "LAPLACIANSMOOTH"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Relax",
+       "icon": "MOD_RELAX",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "RELAX"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Surface Deform",
+       "icon": "MOD_MESHDEFORM",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SURFACE_DEFORM"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Warp",
+       "icon": "MOD_WARP",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "WARP"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Wave",
+       "icon": "MOD_WAVE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "WAVE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Bend",
+       "icon": "MOD_BEND",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "BEND"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Twist",
+       "icon": "MOD_TWIST",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "TWIST"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Taper",
+       "icon": "MOD_TAPER",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "TAPER"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Stretch",
+       "icon": "MOD_STRETCH",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "STRETCH"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Shape Key In-between",
+       "icon": "MOD_SHAPEKEY_INBETWEEN",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SHAPE_KEY_INBETWEEN"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Noise",
+       "icon": "MOD_NOISE_DEFORM",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "NOISE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "FFD 2x2x2",
+       "icon": "MOD_FFD_2",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "FFD_2"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "FFD 3x3x3",
+       "icon": "MOD_FFD_3",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "FFD_3"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "FFD 4x4x4",
+       "icon": "MOD_FFD_4",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "FFD_4"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Push",
+       "icon": "MOD_PUSH",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "PUSH"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Melt",
+       "icon": "MOD_MELT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "MELT"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Randomize Elements",
+       "icon": "MOD_RANDOMIZE_ELEMENTS",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "RANDOMIZE_ELEMENTS"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Exploded View",
+       "icon": "MOD_EXPLODED_VIEW",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "EXPLODED_VIEW"
+       }
+      }
+     ]
+    },
+    {
+     "name": "Edit",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Data Transfer",
+       "icon": "MOD_DATA_TRANSFER",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "DATA_TRANSFER"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Mesh Cache",
+       "icon": "MOD_MESHDEFORM",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "MESH_CACHE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Mesh Sequence Cache",
+       "icon": "MOD_MESHDEFORM",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "MESH_SEQUENCE_CACHE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "UV Project",
+       "icon": "MOD_UVPROJECT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "UV_PROJECT"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "UV Warp",
+       "icon": "MOD_UVPROJECT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "UV_WARP"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Vertex Weight Edit",
+       "icon": "MOD_VERTEX_WEIGHT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "VERTEX_WEIGHT_EDIT"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Vertex Weight Mix",
+       "icon": "MOD_VERTEX_WEIGHT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "VERTEX_WEIGHT_MIX"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Vertex Weight Proximity",
+       "icon": "MOD_VERTEX_WEIGHT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "VERTEX_WEIGHT_PROXIMITY"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "UVW Map",
+       "icon": "MOD_UVW_MAP",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "UVW_MAP"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Tension",
+       "icon": "MOD_TENSION",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "TENSION"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Volume Select",
+       "icon": "MOD_VOL_SELECT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "VOLUME_SELECT"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Material By Element",
+       "icon": "MOD_MATERIAL_BY_ELEMENT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "MATERIAL_BY_ELEMENT"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Data Channel",
+       "icon": "MOD_DATA_CHANNEL",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "DATA_CHANNEL"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Poly Select",
+       "icon": "MOD_POLY_SELECT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "POLY_SELECT"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Poly Edit",
+       "icon": "MOD_POLY_EDIT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "POLY_EDIT"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Element Order",
+       "icon": "MOD_ELEMENT_ORDER",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "ELEMENT_ORDER"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Store Element Pivot",
+       "icon": "MOD_ELEMENT_PIVOT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "ELEMENT_PIVOT"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Smart UV Project",
+       "icon": "MOD_SMART_UV_PROJECT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SMART_UV_PROJECT"
+       }
+      }
+     ]
+    },
+    {
+     "name": "Normals",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Normal Edit",
+       "icon": "MOD_NORMALEDIT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "NORMAL_EDIT"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Weighted Normal",
+       "icon": "MOD_WEIGHTED_NORMAL",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "WEIGHTED_NORMAL"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Mark by Angle",
+       "icon": "MOD_MARK_BY_ANGLE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "MARK_BY_ANGLE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.shade_auto_smooth",
+       "name": "Smooth by Angle",
+       "icon": "OP_SHADE_AUTO_SMOOTH",
+       "editor": "VIEW_3D"
+      }
+     ]
+    },
+    {
+     "name": "Physics",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Cloth",
+       "icon": "MOD_CLOTH",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "CLOTH"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Collision",
+       "icon": "MOD_PHYSICS",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "COLLISION"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Dynamic Paint",
+       "icon": "MOD_DYNAMICPAINT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "DYNAMIC_PAINT"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Explode",
+       "icon": "MOD_EXPLODE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "EXPLODE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Fluid",
+       "icon": "MOD_FLUIDSIM",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "FLUID"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Ocean",
+       "icon": "MOD_OCEAN",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "OCEAN"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Particle Instance",
+       "icon": "MOD_PARTICLE_INSTANCE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "PARTICLE_INSTANCE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Particle System",
+       "icon": "MOD_PARTICLES",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "PARTICLE_SYSTEM"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Soft Body",
+       "icon": "MOD_SOFT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SOFT_BODY"
+       }
+      }
+     ]
+    },
+    {
+     "name": "Manage",
+     "style": "LIST",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "object.make_links_data",
+       "name": "Copy Modifiers to Selected",
+       "icon": "OP_LINK_MODIFIERS",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "MODIFIERS"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.convert",
+       "name": "Apply All (Convert to Mesh)",
+       "icon": "OP_APPLY_ALL",
+       "editor": "VIEW_3D",
+       "properties": {
+        "target": "MESH"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Mesh",
+   "sections": [
+    {
+     "name": "Tools",
+     "style": "LIST",
+     "items": [
+      {
+       "type": "TOOL",
+       "tool": "builtin.extrude_region",
+       "name": "Extrude",
+       "icon": "OP_EXTRUDE_REGION"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.inset_faces",
+       "name": "Inset",
+       "icon": "OP_INSET"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.bevel",
+       "name": "Bevel",
+       "icon": "OP_BEVEL"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.loop_cut",
+       "name": "Loop Cut",
+       "icon": "OP_LOOPCUT"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.knife",
+       "name": "Knife",
+       "icon": "OP_KNIFE"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.poly_build",
+       "name": "Poly Build",
+       "icon": "TOOL_POLY_BUILD"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.spin",
+       "name": "Spin",
+       "icon": "TOOL_SPIN"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.smooth",
+       "name": "Smooth",
+       "icon": "OP_SMOOTH_VERTICES"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.shrink_fatten",
+       "name": "Shrink/Fatten",
+       "icon": "OP_SHRINK_FATTEN"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.to_sphere",
+       "name": "To Sphere",
+       "icon": "TOOL_TO_SPHERE"
+      }
+     ]
+    },
+    {
+     "name": "Commands",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.subdivide",
+       "name": "Subdivide",
+       "icon": "OP_SUBDIVIDE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.unsubdivide",
+       "name": "Un-Subdivide",
+       "icon": "OP_UNSUBDIVIDE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.bisect",
+       "name": "Bisect",
+       "icon": "OP_BISECT",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.symmetrize",
+       "name": "Symmetrize",
+       "icon": "OP_SYMMETRIZE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.duplicate_move",
+       "name": "Duplicate",
+       "icon": "OP_DUPLICATE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.split",
+       "name": "Split",
+       "icon": "OP_SPLIT",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.separate",
+       "name": "Separate Selection",
+       "icon": "OP_SEPARATE_SELECTED",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SELECTED"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.convex_hull",
+       "name": "Convex Hull",
+       "icon": "OP_CONVEX_HULL",
+       "editor": "VIEW_3D"
+      }
+     ]
+    },
+    {
+     "name": "Clean Up",
+     "style": "LIST",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.remove_doubles",
+       "name": "Merge by Distance",
+       "icon": "OP_MERGE_BY_DISTANCE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.delete_loose",
+       "name": "Delete Loose",
+       "icon": "OP_DELETE_LOOSE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.dissolve_degenerate",
+       "name": "Degenerate Dissolve",
+       "icon": "OP_DEGENERATE_DISSOLVE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.dissolve_limited",
+       "name": "Limited Dissolve",
+       "icon": "OP_LIMITED_DISSOLVE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.fill_holes",
+       "name": "Fill Holes",
+       "icon": "OP_FILL_HOLES",
+       "editor": "VIEW_3D"
+      }
+     ]
+    },
+    {
+     "name": "Normals",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.normals_make_consistent",
+       "name": "Recalculate Outside",
+       "icon": "OP_RECALC_OUTSIDE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "inside": false
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.normals_make_consistent",
+       "name": "Recalculate Inside",
+       "icon": "OP_RECALC_INSIDE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "inside": true
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.flip_normals",
+       "name": "Flip",
+       "icon": "OP_FLIP_NORMALS",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.set_normals_from_faces",
+       "name": "Set from Faces",
+       "icon": "OP_NORMALS_FROM_FACES",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.faces_shade_smooth",
+       "name": "Shade Smooth",
+       "icon": "OP_SHADE_SMOOTH",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.faces_shade_flat",
+       "name": "Shade Flat",
+       "icon": "OP_SHADE_FLAT",
+       "editor": "VIEW_3D"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Vertex",
+   "sections": [
+    {
+     "name": "Tools",
+     "style": "LIST",
+     "items": [
+      {
+       "type": "TOOL",
+       "tool": "builtin.vertex_slide",
+       "name": "Vertex Slide",
+       "icon": "OP_VERT_SLIDE"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.extrude_to_cursor",
+       "name": "Extrude to Cursor",
+       "icon": "TOOL_EXTRUDE_TO_CURSOR"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.rip_region",
+       "name": "Rip Region",
+       "icon": "TOOL_RIP"
+      }
+     ]
+    },
+    {
+     "name": "Commands",
+     "style": "LIST",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.vert_connect_path",
+       "name": "Connect Vertex Path",
+       "icon": "OP_CONNECT_PATH",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.vert_connect",
+       "name": "Connect Vertex Pairs",
+       "icon": "OP_CONNECT_PAIRS",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.extrude_vertices_move",
+       "name": "Extrude Vertices",
+       "icon": "OP_EXTRUDE_VERTICES",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.bevel",
+       "name": "Bevel Vertices",
+       "icon": "OP_BEVEL",
+       "editor": "VIEW_3D",
+       "properties": {
+        "affect": "VERTICES"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.vertices_smooth",
+       "name": "Smooth Vertices",
+       "icon": "OP_SMOOTH_VERTICES",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.vertices_smooth_laplacian",
+       "name": "Smooth Laplacian",
+       "icon": "OP_SMOOTH_LAPLACIAN",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.rip_move",
+       "name": "Rip Vertices",
+       "icon": "TOOL_RIP",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.vertex_parent_set",
+       "name": "Make Vertex Parent",
+       "icon": "OP_VERTEX_PARENT",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "SEPARATOR"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.dissolve_verts",
+       "name": "Dissolve Vertices",
+       "icon": "OP_DISSOLVE_VERTS",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.delete",
+       "name": "Delete Vertices",
+       "icon": "OP_DELETE_VERTS",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "VERT"
+       }
+      }
+     ]
+    },
+    {
+     "name": "Merge",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.merge",
+       "name": "Merge at Center",
+       "icon": "OP_MERGE_CENTER",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "CENTER"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.merge",
+       "name": "Merge at Cursor",
+       "icon": "OP_MERGE_CURSOR",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "CURSOR"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.merge",
+       "name": "Collapse",
+       "icon": "OP_MERGE_COLLAPSE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "COLLAPSE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.merge",
+       "name": "Merge at First",
+       "icon": "OP_MERGE_FIRST",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "FIRST"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.merge",
+       "name": "Merge at Last",
+       "icon": "OP_MERGE_LAST",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "LAST"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.remove_doubles",
+       "name": "Merge by Distance",
+       "icon": "OP_MERGE_BY_DISTANCE",
+       "editor": "VIEW_3D"
+      }
+     ]
+    },
+    {
+     "name": "Options",
+     "style": "LIST",
+     "items": [
+      {
+       "type": "PROPERTY",
+       "root": "scene",
+       "path": "tool_settings",
+       "property": "use_mesh_automerge",
+       "name": "Auto Merge Vertices",
+       "icon": "NONE"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Edge",
+   "sections": [
+    {
+     "name": "Tools",
+     "style": "LIST",
+     "items": [
+      {
+       "type": "TOOL",
+       "tool": "builtin.loop_cut",
+       "name": "Loop Cut",
+       "icon": "OP_LOOPCUT"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.offset_edge_loop_cut",
+       "name": "Offset Edge Loop Cut",
+       "icon": "OP_OFFSET_EDGE_LOOPS"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.edge_slide",
+       "name": "Edge Slide",
+       "icon": "OP_EDGE_SLIDE"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.bevel",
+       "name": "Bevel",
+       "icon": "OP_BEVEL"
+      }
+     ]
+    },
+    {
+     "name": "Commands",
+     "style": "LIST",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.extrude_edges_move",
+       "name": "Extrude Edges",
+       "icon": "OP_EXTRUDE_EDGES",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.bevel",
+       "name": "Bevel Edges",
+       "icon": "OP_BEVEL",
+       "editor": "VIEW_3D",
+       "properties": {
+        "affect": "EDGES"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.bridge_edge_loops",
+       "name": "Bridge Edge Loops",
+       "icon": "OP_BRIDGE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.subdivide_edgering",
+       "name": "Subdivide Edge-Ring",
+       "icon": "OP_SUBDIVIDE_EDGERING",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.edge_rotate",
+       "name": "Rotate Edge CW",
+       "icon": "OP_EDGE_ROTATE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "use_ccw": false
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.edge_rotate",
+       "name": "Rotate Edge CCW",
+       "icon": "OP_EDGE_ROTATE_CCW",
+       "editor": "VIEW_3D",
+       "properties": {
+        "use_ccw": true
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.edge_split",
+       "name": "Edge Split",
+       "icon": "OP_EDGE_SPLIT",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "SEPARATOR"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.dissolve_edges",
+       "name": "Dissolve Edges",
+       "icon": "OP_DISSOLVE_EDGES",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.delete",
+       "name": "Delete Edges",
+       "icon": "OP_DELETE_EDGES",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "EDGE"
+       }
+      }
+     ]
+    },
+    {
+     "name": "Marks",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.mark_seam",
+       "name": "Mark Seam",
+       "icon": "EDGE_SEAM",
+       "editor": "VIEW_3D",
+       "properties": {
+        "clear": false
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.mark_seam",
+       "name": "Clear Seam",
+       "icon": "OP_CLEAR_SEAM",
+       "editor": "VIEW_3D",
+       "properties": {
+        "clear": true
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.mark_sharp",
+       "name": "Mark Sharp",
+       "icon": "EDGE_SHARP",
+       "editor": "VIEW_3D",
+       "properties": {
+        "clear": false
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.mark_sharp",
+       "name": "Clear Sharp",
+       "icon": "OP_CLEAR_SHARP",
+       "editor": "VIEW_3D",
+       "properties": {
+        "clear": true
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "transform.edge_crease",
+       "name": "Edge Crease",
+       "icon": "OP_EDGE_CREASE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "transform.edge_bevelweight",
+       "name": "Edge Bevel Weight",
+       "icon": "OP_BEVEL_WEIGHT",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.mark_freestyle_edge",
+       "name": "Mark Freestyle Edge",
+       "icon": "OP_FREESTYLE_MARK",
+       "editor": "VIEW_3D",
+       "properties": {
+        "clear": false
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Face",
+   "sections": [
+    {
+     "name": "Tools",
+     "style": "LIST",
+     "items": [
+      {
+       "type": "TOOL",
+       "tool": "builtin.extrude_region",
+       "name": "Extrude Region",
+       "icon": "OP_EXTRUDE_REGION"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.extrude_along_normals",
+       "name": "Extrude Along Normals",
+       "icon": "OP_EXTRUDE_NORMALS"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.extrude_individual",
+       "name": "Extrude Individual",
+       "icon": "OP_EXTRUDE_INDIVIDUAL"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.extrude_manifold",
+       "name": "Extrude Manifold",
+       "icon": "TOOL_EXTRUDE_MANIFOLD"
+      },
+      {
+       "type": "TOOL",
+       "tool": "builtin.inset_faces",
+       "name": "Inset Faces",
+       "icon": "OP_INSET"
+      }
+     ]
+    },
+    {
+     "name": "Create",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.edge_face_add",
+       "name": "New Edge/Face from Vertices",
+       "icon": "OP_NEW_FACE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.fill",
+       "name": "Fill",
+       "icon": "OP_FILL",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.fill_grid",
+       "name": "Grid Fill",
+       "icon": "OP_GRID_FILL",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.beautify_fill",
+       "name": "Beautify Faces",
+       "icon": "OP_BEAUTIFY",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.solidify",
+       "name": "Solidify Faces",
+       "icon": "OP_SOLIDIFY",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.wireframe",
+       "name": "Wireframe",
+       "icon": "OP_WIREFRAME",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.extrude_repeat",
+       "name": "Extrude Repeat",
+       "icon": "OP_EXTRUDE_REPEAT",
+       "editor": "VIEW_3D"
+      }
+     ]
+    },
+    {
+     "name": "Modify",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.poke",
+       "name": "Poke Faces",
+       "icon": "OP_POKE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.quads_convert_to_tris",
+       "name": "Triangulate Faces",
+       "icon": "OP_TRIANGULATE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.tris_convert_to_quads",
+       "name": "Triangles to Quads",
+       "icon": "OP_TRIS_TO_QUADS",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.face_make_planar",
+       "name": "Make Planar Faces",
+       "icon": "OP_MAKE_PLANAR",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.intersect",
+       "name": "Intersect (Knife)",
+       "icon": "OP_INTERSECT_KNIFE",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "SEPARATOR"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.intersect_boolean",
+       "name": "Boolean Union",
+       "icon": "OP_BOOLEAN_UNION",
+       "editor": "VIEW_3D",
+       "properties": {
+        "operation": "UNION"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.intersect_boolean",
+       "name": "Boolean Difference",
+       "icon": "OP_BOOLEAN_DIFFERENCE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "operation": "DIFFERENCE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.intersect_boolean",
+       "name": "Boolean Intersect",
+       "icon": "OP_BOOLEAN_INTERSECT",
+       "editor": "VIEW_3D",
+       "properties": {
+        "operation": "INTERSECT"
+       }
+      },
+      {
+       "type": "SEPARATOR"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.dissolve_faces",
+       "name": "Dissolve Faces",
+       "icon": "OP_DISSOLVE_FACES",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.delete",
+       "name": "Delete Faces",
+       "icon": "OP_DELETE_FACES",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "FACE"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "UV",
+   "sections": [
+    {
+     "name": "Unwrap",
+     "style": "LIST",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "uv.unwrap",
+       "name": "Unwrap",
+       "icon": "OP_UV_UNWRAP",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "uv.smart_project",
+       "name": "Smart UV Project",
+       "icon": "OP_SMART_UV",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "uv.lightmap_pack",
+       "name": "Lightmap Pack",
+       "icon": "OP_LIGHTMAP_PACK",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "uv.follow_active_quads",
+       "name": "Follow Active Quads",
+       "icon": "OP_FOLLOW_QUADS",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "SEPARATOR"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "uv.cube_project",
+       "name": "Cube Projection",
+       "icon": "OP_CUBE_PROJECT",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "uv.cylinder_project",
+       "name": "Cylinder Projection",
+       "icon": "OP_CYLINDER_PROJECT",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "uv.sphere_project",
+       "name": "Sphere Projection",
+       "icon": "OP_SPHERE_PROJECT",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "uv.project_from_view",
+       "name": "Project from View",
+       "icon": "OP_PROJECT_VIEW",
+       "editor": "VIEW_3D"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "uv.project_from_view",
+       "name": "Project from View (Bounds)",
+       "icon": "OP_PROJECT_VIEW_BOUNDS",
+       "editor": "VIEW_3D",
+       "properties": {
+        "scale_to_bounds": true
+       }
+      },
+      {
+       "type": "SEPARATOR"
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "uv.reset",
+       "name": "Reset",
+       "icon": "OP_UV_RESET",
+       "editor": "VIEW_3D"
+      }
+     ]
+    },
+    {
+     "name": "Seams",
+     "style": "ICONS",
+     "items": [
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.mark_seam",
+       "name": "Mark Seam",
+       "icon": "EDGE_SEAM",
+       "editor": "VIEW_3D",
+       "properties": {
+        "clear": false
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "mesh.mark_seam",
+       "name": "Clear Seam",
+       "icon": "OP_CLEAR_SEAM",
+       "editor": "VIEW_3D",
+       "properties": {
+        "clear": true
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

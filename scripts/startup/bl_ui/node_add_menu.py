@@ -77,15 +77,23 @@ def draw_node_group_add_menu(context, layout):
     return AddNodeMenu.draw_group_menu(context, layout)
 
 
+def zone_icon(name):
+    """The icon of a zone in the Add menu, none in builds without it (sharing these scripts)."""
+    icons = bpy.types.UILayout.bl_rna.functions["operator"].parameters["icon"].enum_items
+    return name if name in icons else 'NONE'
+
+
 def add_simulation_zone(layout, label):
     """Add simulation zone to a menu."""
-    props = layout.operator("node.add_simulation_zone", text=label, text_ctxt=i18n_contexts.default)
+    props = layout.operator("node.add_simulation_zone", text=label, text_ctxt=i18n_contexts.default,
+                            icon=zone_icon('GEO_N_SIMULATION_ZONE'))
     props.use_transform = True
     return props
 
 
 def add_repeat_zone(layout, label):
-    props = layout.operator("node.add_repeat_zone", text=label, text_ctxt=i18n_contexts.default)
+    props = layout.operator("node.add_repeat_zone", text=label, text_ctxt=i18n_contexts.default,
+                            icon=zone_icon('GEO_N_REPEAT_ZONE'))
     props.use_transform = True
     return props
 
@@ -95,6 +103,7 @@ def add_foreach_geometry_element_zone(layout, label):
         "node.add_foreach_geometry_element_zone",
         text=label,
         text_ctxt=i18n_contexts.default,
+        icon=zone_icon('GEO_N_FOREACH_ZONE'),
     )
     props.use_transform = True
     return props
@@ -105,6 +114,7 @@ def add_closure_zone(layout, label):
         "node.add_closure_zone",
         text=label,
         text_ctxt=i18n_contexts.default,
+        icon=zone_icon('GEO_N_CLOSURE_ZONE'),
     )
     props.use_transform = True
     return props
@@ -184,6 +194,13 @@ class NodeMenu(Menu):
         return context.space_data.type == 'NODE_EDITOR'
 
     @classmethod
+    def node_operators_if_available(cls, layout, node_types):
+        # Skip node types that this build doesn't have, for builds that share these scripts.
+        for node_type in node_types:
+            if bpy.types.Node.bl_rna_get_subclass(node_type) is not None:
+                cls.node_operator(layout, node_type)
+
+    @classmethod
     def node_operator(cls, layout, node_type, *, label=None, poll=None, search_weight=0.0, translate=True):
         """The main operator defined for the node menu.
         \n(e.g. 'Add Node' for AddNodeMenu, or 'Swap Node' for SwapNodeMenu)."""
@@ -197,7 +214,7 @@ class NodeMenu(Menu):
             # Geometry nodes that do a modeling operation share its (recolored) icon.
             # Not every result of `bl_rna_get_subclass` is a struct definition with an `icon`.
             icon = getattr(bl_rna, "icon", "")
-            if not (isinstance(icon, str) and icon.startswith("GEO_")):
+            if not (isinstance(icon, str) and icon.startswith(("GEO_", "MOD_"))):
                 icon = cls.path_icon_for_nodes()
             props = layout.operator(
                 cls.main_operator_id,
@@ -434,7 +451,8 @@ class NodeMenu(Menu):
 
     @classmethod
     def simulation_zone(cls, layout, label):
-        props = layout.operator(cls.zone_operator_id, text=iface_(label), translate=False)
+        props = layout.operator(cls.zone_operator_id, text=iface_(label), translate=False,
+                                icon=zone_icon('GEO_N_SIMULATION_ZONE'))
         props.input_node_type = "GeometryNodeSimulationInput"
         props.output_node_type = "GeometryNodeSimulationOutput"
         props.add_default_geometry_link = True
@@ -446,7 +464,8 @@ class NodeMenu(Menu):
 
     @classmethod
     def repeat_zone(cls, layout, label):
-        props = layout.operator(cls.zone_operator_id, text=iface_(label), translate=False)
+        props = layout.operator(cls.zone_operator_id, text=iface_(label), translate=False,
+                                icon=zone_icon('GEO_N_REPEAT_ZONE'))
         props.input_node_type = "GeometryNodeRepeatInput"
         props.output_node_type = "GeometryNodeRepeatOutput"
         props.add_default_geometry_link = True
@@ -458,7 +477,8 @@ class NodeMenu(Menu):
 
     @classmethod
     def for_each_element_zone(cls, layout, label):
-        props = layout.operator(cls.zone_operator_id, text=iface_(label), translate=False)
+        props = layout.operator(cls.zone_operator_id, text=iface_(label), translate=False,
+                                icon=zone_icon('GEO_N_FOREACH_ZONE'))
         props.input_node_type = "GeometryNodeForeachGeometryElementInput"
         props.output_node_type = "GeometryNodeForeachGeometryElementOutput"
         props.add_default_geometry_link = False
@@ -470,7 +490,8 @@ class NodeMenu(Menu):
 
     @classmethod
     def closure_zone(cls, layout, label):
-        props = layout.operator(cls.zone_operator_id, text=iface_(label), translate=False)
+        props = layout.operator(cls.zone_operator_id, text=iface_(label), translate=False,
+                                icon=zone_icon('GEO_N_CLOSURE_ZONE'))
         props.input_node_type = "NodeClosureInput"
         props.output_node_type = "NodeClosureOutput"
         props.add_default_geometry_link = False

@@ -1371,6 +1371,15 @@ Vector<PointerRNA> modifier_get_edit_objects(const bContext &C, const wmOperator
   Vector<PointerRNA> objects;
   if (RNA_boolean_get(op.ptr, "use_selected_objects")) {
     CTX_data_selected_editable_objects(&C, &objects);
+    /* The active object shown in the Properties editor may not be selected, it's edited too. */
+    if (Object *active = context_active_object(&C)) {
+      const bool listed = std::any_of(objects.begin(), objects.end(), [&](const PointerRNA &ptr) {
+        return ptr.data == active;
+      });
+      if (!listed && BKE_id_is_editable(CTX_data_main(&C), &active->id)) {
+        objects.append(RNA_id_pointer_create(&active->id));
+      }
+    }
   }
   else {
     if (Object *object = context_active_object(&C)) {
@@ -1419,7 +1428,8 @@ static wmOperatorStatus modifier_add_exec(bContext *C, wmOperator *op)
 
 static wmOperatorStatus modifier_add_invoke(bContext *C, wmOperator *op, const wmEvent *event)
 {
-  if (event->modifier & KM_ALT || CTX_wm_view3d(C)) {
+  /* All selected objects get it, without holding Alt. */
+  if (!RNA_struct_property_is_set(op->ptr, "use_selected_objects")) {
     RNA_boolean_set(op->ptr, "use_selected_objects", true);
   }
   if (!RNA_struct_property_is_set(op->ptr, "type")) {
@@ -1608,9 +1618,10 @@ static bool edit_modifier_invoke_properties_with_hover(bContext *C,
                                                        const wmEvent *event,
                                                        wmOperatorStatus *r_retval)
 {
-  if (RNA_struct_find_property(op->ptr, "use_selected_objects")) {
-    if (event->modifier & KM_ALT) {
-      RNA_boolean_set(op->ptr, "use_selected_objects", true);
+  /* Remove, apply, copy and move act on all selected objects, without holding Alt. */
+  if (PropertyRNA *prop = RNA_struct_find_property(op->ptr, "use_selected_objects")) {
+    if (!RNA_property_is_set(op->ptr, prop)) {
+      RNA_property_boolean_set(op->ptr, prop, true);
     }
   }
 

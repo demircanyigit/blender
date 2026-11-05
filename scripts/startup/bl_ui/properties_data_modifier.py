@@ -40,6 +40,13 @@ class ModifierAddMenu:
         ).type = mod_type
 
     @classmethod
+    def operator_modifier_add_new(cls, layout, mod_types):
+        # Missing from builds without these modifiers, which may share these scripts.
+        for mod_type in mod_types:
+            if mod_type in cls.MODIFIER_TYPES_TO_LABELS:
+                cls.operator_modifier_add(layout, mod_type)
+
+    @classmethod
     def operator_modifier_add_asset(cls, layout, name, icon='NONE'):
         props = layout.operator(
             "object.modifier_add_node_group",
@@ -60,10 +67,21 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         ob = context.object
         return ob
 
-    def draw(self, _context):
+    def draw(self, context):
         layout = self.layout
-        layout.operator("wm.call_menu", text="Add Modifier", icon='ADD').name = "OBJECT_MT_modifier_add"
-        layout.template_modifiers()
+        space = context.space_data
+        if space is None or space.type != 'PROPERTIES':
+            layout.operator("wm.call_menu", text="Add Modifier", icon='ADD').name = "OBJECT_MT_modifier_add"
+            layout.template_modifiers()
+            return
+
+        from bl_ui import properties_data_modifier_list as modifier_list
+        modifier_list.draw_header(layout, context, space)
+        if space.use_modifier_list:
+            modifier_list.draw_list(layout, context, context.object)
+            layout.template_modifiers(active_only=True)
+        else:
+            layout.template_modifiers()
 
 
 class OBJECT_MT_modifier_add(ModifierAddMenu, Menu):
@@ -94,9 +112,9 @@ class OBJECT_MT_modifier_add(ModifierAddMenu, Menu):
 
         if ob_type in {'MESH', 'CURVE', 'CURVES', 'FONT', 'SURFACE', 'LATTICE', 'GREASEPENCIL', 'POINTCLOUD'}:
             layout.menu("OBJECT_MT_modifier_add_edit")
-        if ob_type in {'MESH', 'CURVE', 'FONT', 'SURFACE', 'VOLUME', 'GREASEPENCIL'}:
+        if ob_type in {'MESH', 'CURVE', 'CURVES', 'FONT', 'SURFACE', 'VOLUME', 'GREASEPENCIL'}:
             layout.menu("OBJECT_MT_modifier_add_generate")
-        if ob_type in {'MESH', 'CURVE', 'FONT', 'SURFACE', 'LATTICE', 'VOLUME', 'GREASEPENCIL'}:
+        if ob_type in {'MESH', 'CURVE', 'CURVES', 'FONT', 'SURFACE', 'LATTICE', 'VOLUME', 'GREASEPENCIL'}:
             layout.menu("OBJECT_MT_modifier_add_deform")
         if ob_type in {'MESH'}:
             layout.menu("OBJECT_MT_modifier_add_normals")
@@ -132,6 +150,10 @@ class OBJECT_MT_modifier_add_edit(ModifierAddMenu, Menu):
             self.operator_modifier_add(layout, 'VERTEX_WEIGHT_EDIT')
             self.operator_modifier_add(layout, 'VERTEX_WEIGHT_MIX')
             self.operator_modifier_add(layout, 'VERTEX_WEIGHT_PROXIMITY')
+            self.operator_modifier_add_new(layout, (
+                'UVW_MAP', 'TENSION', 'VOLUME_SELECT', 'MATERIAL_BY_ELEMENT', 'DATA_CHANNEL', 'POLY_SELECT', 'POLY_EDIT',
+                'ELEMENT_ORDER', 'ELEMENT_PIVOT', 'SMART_UV_PROJECT',
+            ))
         if ob_type == 'GREASEPENCIL':
             self.operator_modifier_add(layout, 'GREASE_PENCIL_TEXTURE')
             self.operator_modifier_add(layout, 'GREASE_PENCIL_TIME')
@@ -168,6 +190,19 @@ class OBJECT_MT_modifier_add_generate(ModifierAddMenu, Menu):
             self.operator_modifier_add(layout, 'MULTIRES')
         if ob_type in {'MESH', 'CURVE', 'FONT', 'SURFACE'}:
             self.operator_modifier_add(layout, 'REMESH')
+        if ob_type == 'MESH':
+            # Missing from builds without these modifiers, which may share these scripts.
+            for mod_type in ('ISOTROPIC_REMESH', 'QUADRIFLOW_REMESH'):
+                if mod_type in self.MODIFIER_TYPES_TO_LABELS:
+                    self.operator_modifier_add(layout, mod_type)
+            self.operator_modifier_add_new(layout, (
+                'SLICE', 'CAP_HOLES', 'RADIAL_ARRAY', 'FACE_EXTRUDE', 'DELETE_MESH', 'QUADRANGULATE',
+                'PANELIZE', 'INSET', 'POKE', 'BEAUTIFY_FACES', 'ROTATE_EDGES', 'SYMMETRIZE',
+                'VORONOI_FRACTURE',
+            ))
+        if ob_type == 'CURVES':
+            self.operator_modifier_add_new(layout, ('NORMALIZE_SPLINE', 'CHAMFER_SPLINE', 'SWEEP'))
+        if ob_type in {'MESH', 'CURVE', 'FONT', 'SURFACE'}:
             self.operator_modifier_add_asset(layout, n_('Scatter on Surface'), icon='MOD_SCATTER_ON_SURFACE')
             self.operator_modifier_add(layout, 'SCREW')
         if ob_type == 'MESH':
@@ -219,12 +254,20 @@ class OBJECT_MT_modifier_add_deform(ModifierAddMenu, Menu):
             self.operator_modifier_add(layout, 'MESH_DEFORM')
             self.operator_modifier_add(layout, 'SHRINKWRAP')
             self.operator_modifier_add(layout, 'SIMPLE_DEFORM')
+            self.operator_modifier_add_new(layout, (
+                'BEND', 'TWIST', 'TAPER', 'STRETCH', 'NOISE', 'FFD_2', 'FFD_3', 'FFD_4', 'MELT',
+            ))
         if ob_type in {'MESH', 'CURVE', 'FONT', 'SURFACE'}:
             self.operator_modifier_add(layout, 'SMOOTH')
         if ob_type == 'MESH':
             self.operator_modifier_add(layout, 'CORRECTIVE_SMOOTH')
             self.operator_modifier_add(layout, 'LAPLACIANSMOOTH')
             self.operator_modifier_add(layout, 'SURFACE_DEFORM')
+            self.operator_modifier_add_new(layout, (
+                'RELAX', 'SHAPE_KEY_INBETWEEN', 'RANDOMIZE_ELEMENTS', 'EXPLODED_VIEW', 'PUSH',
+            ))
+        if ob_type == 'CURVES':
+            self.operator_modifier_add_new(layout, ('RELAX_SPLINE', 'SPLINE_MORPH'))
         if ob_type in {'MESH', 'CURVE', 'FONT', 'SURFACE', 'LATTICE'}:
             self.operator_modifier_add(layout, 'WARP')
             self.operator_modifier_add(layout, 'WAVE')
@@ -252,6 +295,7 @@ class OBJECT_MT_modifier_add_normals(ModifierAddMenu, Menu):
         if ob_type == 'MESH':
             self.operator_modifier_add(layout, 'NORMAL_EDIT')
             self.operator_modifier_add(layout, 'WEIGHTED_NORMAL')
+            self.operator_modifier_add_new(layout, ('MARK_BY_ANGLE',))
         layout.template_modifier_asset_menu_items(catalog_path=self.bl_label)
 
 

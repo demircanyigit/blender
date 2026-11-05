@@ -163,9 +163,9 @@ class TOPBAR_MT_file(Menu):
         layout.operator_context = 'INVOKE_AREA'
         layout.menu("TOPBAR_MT_file_new", text="New", text_ctxt=i18n_contexts.id_windowmanager, icon='FILE_NEW')
         layout.operator("wm.open_mainfile", text="Open...", icon='FILE_FOLDER')
-        layout.menu("TOPBAR_MT_file_open_recent")
-        layout.operator("wm.revert_mainfile")
-        layout.menu("TOPBAR_MT_file_recover")
+        layout.menu("TOPBAR_MT_file_open_recent", icon='OP_FILE_OPEN_RECENT')
+        layout.operator("wm.revert_mainfile", icon='OP_FILE_REVERT')
+        layout.menu("TOPBAR_MT_file_recover", icon='RECOVER_LAST')
 
         layout.separator()
 
@@ -173,38 +173,42 @@ class TOPBAR_MT_file(Menu):
         layout.operator("wm.save_mainfile", text="Save", icon='FILE_TICK')
 
         layout.operator_context = 'INVOKE_AREA'
-        layout.operator("wm.save_as_mainfile", text="Save As...")
+        layout.operator("wm.save_as_mainfile", text="Save As...", icon='OP_FILE_SAVE_AS')
         layout.operator_context = 'INVOKE_AREA'
-        layout.operator("wm.save_as_mainfile", text="Save Copy...").copy = True
+        layout.operator(
+            "wm.save_as_mainfile", text="Save Copy...", icon='OP_FILE_SAVE_COPY',
+        ).copy = True
 
         sub = layout.row()
         sub.enabled = context.blend_data.is_saved
         sub.operator_context = 'EXEC_AREA'
-        sub.operator("wm.save_mainfile", text="Save Incremental").incremental = True
+        sub.operator(
+            "wm.save_mainfile", text="Save Incremental", icon='OP_FILE_SAVE_INCREMENTAL',
+        ).incremental = True
 
         layout.separator()
 
         layout.operator_context = 'INVOKE_AREA'
         layout.operator("wm.link", text="Link...", icon='LINK_BLEND')
         layout.operator("wm.append", text="Append...", icon='APPEND_BLEND')
-        layout.menu("TOPBAR_MT_file_previews")
+        layout.menu("TOPBAR_MT_file_previews", icon='IMAGE_DATA')
 
         layout.separator()
 
         layout.menu("TOPBAR_MT_file_import", icon='IMPORT')
         layout.menu("TOPBAR_MT_file_export", icon='EXPORT')
         row = layout.row()
-        row.operator("wm.collection_export_all")
+        row.operator("wm.collection_export_all", icon='OP_EXPORT_ALL_COLLECTIONS')
         row.enabled = context.view_layer.has_export_collections
 
         layout.separator()
 
-        layout.menu("TOPBAR_MT_file_external_data")
-        layout.menu("TOPBAR_MT_file_cleanup")
+        layout.menu("TOPBAR_MT_file_external_data", icon='EXTERNAL_DRIVE')
+        layout.menu("TOPBAR_MT_file_cleanup", icon='OP_FILE_CLEAN_UP')
 
         layout.separator()
 
-        layout.menu("TOPBAR_MT_file_defaults")
+        layout.menu("TOPBAR_MT_file_defaults", icon='OP_FILE_DEFAULTS')
 
         layout.separator()
 
@@ -358,6 +362,16 @@ class TOPBAR_MT_templates_more(Menu):
         bpy.types.TOPBAR_MT_file_new.draw_ex(self.layout, context, use_more=True)
 
 
+def file_format_icon(fmt, kind):
+    """The icon of a format in the Import or Export menu, like ``OP_FILE_OBJ_IMPORT``. Builds
+    without it (sharing these scripts) get the plain format icon or none."""
+    icons = bpy.types.UILayout.bl_rna.functions["operator"].parameters["icon"].enum_items
+    for name in ("OP_FILE_{:s}_{:s}".format(fmt, kind), "OP_FILE_{:s}".format(fmt)):
+        if name in icons:
+            return name
+    return 'NONE'
+
+
 class TOPBAR_MT_file_import(Menu):
     bl_idname = "TOPBAR_MT_file_import"
     bl_label = "Import"
@@ -365,23 +379,30 @@ class TOPBAR_MT_file_import(Menu):
 
     def draw(self, _context):
         if bpy.app.build_options.alembic:
-            self.layout.operator("wm.alembic_import", text="Alembic (.abc)")
+            self.layout.operator("wm.alembic_import", text="Alembic (.abc)",
+                                 icon=file_format_icon('ABC', 'IMPORT'))
         if bpy.app.build_options.usd:
             self.layout.operator(
-                "wm.usd_import", text="Universal Scene Description (.usd*)")
+                "wm.usd_import", text="Universal Scene Description (.usd*)",
+                icon=file_format_icon('USD', 'IMPORT'))
 
         if bpy.app.build_options.io_gpencil:
-            self.layout.operator("wm.grease_pencil_import_svg", text="SVG as Grease Pencil")
+            self.layout.operator("wm.grease_pencil_import_svg", text="SVG as Grease Pencil",
+                                 icon=file_format_icon('SVG', 'IMPORT'))
 
         if bpy.app.build_options.io_wavefront_obj:
-            self.layout.operator("wm.obj_import", text="Wavefront (.obj)")
+            self.layout.operator("wm.obj_import", text="Wavefront (.obj)",
+                                 icon=file_format_icon('OBJ', 'IMPORT'))
         if bpy.app.build_options.io_ply:
-            self.layout.operator("wm.ply_import", text="Stanford PLY (.ply)")
+            self.layout.operator("wm.ply_import", text="Stanford PLY (.ply)",
+                                 icon=file_format_icon('PLY', 'IMPORT'))
         if bpy.app.build_options.io_stl:
-            self.layout.operator("wm.stl_import", text="STL (.stl)")
+            self.layout.operator("wm.stl_import", text="STL (.stl)",
+                                 icon=file_format_icon('STL', 'IMPORT'))
 
         if bpy.app.build_options.io_fbx:
-            self.layout.operator("wm.fbx_import", text="FBX (.fbx)")
+            self.layout.operator("wm.fbx_import", text="FBX (.fbx)",
+                                 icon=file_format_icon('FBX', 'IMPORT'))
 
 
 class TOPBAR_MT_file_export(Menu):
@@ -391,25 +412,32 @@ class TOPBAR_MT_file_export(Menu):
 
     def draw(self, _context):
         if bpy.app.build_options.alembic:
-            self.layout.operator("wm.alembic_export", text="Alembic (.abc)")
+            self.layout.operator("wm.alembic_export", text="Alembic (.abc)",
+                                 icon=file_format_icon('ABC', 'EXPORT'))
         if bpy.app.build_options.usd:
             self.layout.operator(
-                "wm.usd_export", text="Universal Scene Description (.usd*)")
+                "wm.usd_export", text="Universal Scene Description (.usd*)",
+                icon=file_format_icon('USD', 'EXPORT'))
 
         if bpy.app.build_options.io_gpencil:
             # PUGIXML library dependency.
             if bpy.app.build_options.pugixml:
-                self.layout.operator("wm.grease_pencil_export_svg", text="Grease Pencil as SVG")
+                self.layout.operator("wm.grease_pencil_export_svg", text="Grease Pencil as SVG",
+                                     icon=file_format_icon('SVG', 'EXPORT'))
             # HARU library dependency.
             if bpy.app.build_options.haru:
-                self.layout.operator("wm.grease_pencil_export_pdf", text="Grease Pencil as PDF")
+                self.layout.operator("wm.grease_pencil_export_pdf", text="Grease Pencil as PDF",
+                                     icon=file_format_icon('PDF', 'EXPORT'))
 
         if bpy.app.build_options.io_wavefront_obj:
-            self.layout.operator("wm.obj_export", text="Wavefront (.obj)")
+            self.layout.operator("wm.obj_export", text="Wavefront (.obj)",
+                                 icon=file_format_icon('OBJ', 'EXPORT'))
         if bpy.app.build_options.io_ply:
-            self.layout.operator("wm.ply_export", text="Stanford PLY (.ply)")
+            self.layout.operator("wm.ply_export", text="Stanford PLY (.ply)",
+                                 icon=file_format_icon('PLY', 'EXPORT'))
         if bpy.app.build_options.io_stl:
-            self.layout.operator("wm.stl_export", text="STL (.stl)")
+            self.layout.operator("wm.stl_export", text="STL (.stl)",
+                                 icon=file_format_icon('STL', 'EXPORT'))
 
 
 class TOPBAR_MT_file_external_data(Menu):
@@ -514,13 +542,15 @@ class TOPBAR_MT_edit(Menu):
 
         layout.operator("ed.undo", icon='LOOP_BACK')
         layout.operator("ed.redo", icon='LOOP_FORWARDS')
-        layout.menu("TOPBAR_MT_undo_history")
+        layout.menu("TOPBAR_MT_undo_history", icon='OP_UNDO_HISTORY')
 
         layout.separator()
 
-        layout.operator("screen.redo_last", text="Adjust Last Operation...")
-        layout.operator("screen.repeat_last")
-        layout.operator("screen.repeat_history", text="Repeat History...")
+        layout.operator("screen.redo_last", text="Adjust Last Operation...", icon='OP_ADJUST_LAST')
+        layout.operator("screen.repeat_last", icon='OP_REPEAT_LAST')
+        layout.operator(
+            "screen.repeat_history", text="Repeat History...", icon='OP_REPEAT_HISTORY',
+        )
 
         layout.separator()
 
@@ -531,11 +561,13 @@ class TOPBAR_MT_edit(Menu):
         layout.separator()
 
         # Mainly to expose shortcut since this depends on the context.
-        props = layout.operator("wm.call_panel", text="Rename Active Item...")
+        props = layout.operator(
+            "wm.call_panel", text="Rename Active Item...", icon='OP_RENAME_ACTIVE',
+        )
         props.name = "TOPBAR_PT_name"
         props.keep_open = False
 
-        layout.operator("wm.batch_rename", text="Batch Rename...")
+        layout.operator("wm.batch_rename", text="Batch Rename...", icon='OP_BATCH_RENAME')
 
         layout.separator()
 
@@ -634,7 +666,7 @@ class TOPBAR_MT_file_context_menu(Menu):
         layout.operator_context = 'INVOKE_AREA'
         layout.menu("TOPBAR_MT_file_new", text="New", text_ctxt=i18n_contexts.id_windowmanager, icon='FILE_NEW')
         layout.operator("wm.open_mainfile", text="Open...", icon='FILE_FOLDER')
-        layout.menu("TOPBAR_MT_file_open_recent")
+        layout.menu("TOPBAR_MT_file_open_recent", icon='OP_FILE_OPEN_RECENT')
 
         layout.separator()
 

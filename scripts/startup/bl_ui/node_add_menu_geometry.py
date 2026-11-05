@@ -126,6 +126,7 @@ class NODE_MT_gn_curve_operations_base(node_add_menu.NodeMenu):
         self.node_operator(layout, "GeometryNodeSubdivideCurve")
         self.node_operator(layout, "GeometryNodeSweep")
         self.node_operator(layout, "GeometryNodeTrimCurve")
+        self.node_operators_if_available(layout, ("GeometryNodeMorphCurves", "GeometryNodeRelaxCurves"))
 
         self.draw_assets_for_catalog(layout, self.menu_path)
 
@@ -281,6 +282,9 @@ class NODE_MT_gn_geometry_operations_base(node_add_menu.NodeMenu):
         self.node_operator(layout, "GeometryNodeMergeByDistance")
         self.node_operator(layout, "GeometryNodeSortElements")
         self.node_operator(layout, "GeometryNodeTransform", search_weight=1.0)
+        self.node_operators_if_available(layout, (
+            "GeometryNodeBend", "GeometryNodeTwist", "GeometryNodeTaper", "GeometryNodeStretch",
+        ))
         layout.separator()
         self.node_operator(layout, "GeometryNodeSeparateComponents")
         self.node_operator(layout, "GeometryNodeSeparateGeometry")
@@ -478,6 +482,7 @@ class NODE_MT_gn_mesh_read_base(node_add_menu.NodeMenu):
         self.node_operator(layout, "GeometryNodeInputMeshEdgeNeighbors")
         self.node_operator(layout, "GeometryNodeInputMeshEdgeVertices")
         self.node_operator(layout, "GeometryNodeEdgesToFaceGroups")
+        self.node_operators_if_available(layout, ("GeometryNodeVolumeSelect",))
         self.node_operator(layout, "GeometryNodeInputMeshFaceArea")
         self.node_operator(layout, "GeometryNodeMeshFaceSetBoundaries")
         self.node_operator(layout, "GeometryNodeInputMeshFaceNeighbors")
@@ -554,6 +559,55 @@ class NODE_MT_gn_mesh_operations_base(node_add_menu.NodeMenu):
         self.node_operator(layout, "GeometryNodeRelaxMesh")
         self.node_operator(layout, "GeometryNodeQuadriFlowRemesh")
         self.node_operator(layout, "GeometryNodeDisplaceMesh")
+        # Nodes that do the work of a modifier. Missing from builds without them.
+        layout.separator()
+        self.node_operators_if_available(layout, (
+            "GeometryNodeArrayModifier",
+            "GeometryNodeBeautifyFaces",
+            "GeometryNodeBuild",
+            "GeometryNodeCapHoles",
+            "GeometryNodeCast",
+            "GeometryNodeCurveDeform",
+            "GeometryNodeDataChannel",
+            "GeometryNodeEdgeSplitModifier",
+            "GeometryNodeElementOrder",
+            "GeometryNodeElementPivot",
+            "GeometryNodeExplodedView",
+            "GeometryNodeFaceExtrude",
+            "GeometryNodeFFD",
+            "GeometryNodeInset",
+            "GeometryNodeLaplacianSmooth",
+            "GeometryNodeLatticeDeform",
+            "GeometryNodeMarkByAngle",
+            "GeometryNodeMaterialByElement",
+            "GeometryNodeMelt",
+            "GeometryNodeMeshTension",
+            "GeometryNodeMirror",
+            "GeometryNodeNoiseDeform",
+            "GeometryNodeNormalEdit",
+            "GeometryNodePanelize",
+            "GeometryNodePoke",
+            "GeometryNodePush",
+            "GeometryNodeQuadrangulate",
+            "GeometryNodeRadialArray",
+            "GeometryNodeRandomizeElements",
+            "GeometryNodeRemeshModifier",
+            "GeometryNodeRotateEdges",
+            "GeometryNodeScrew",
+            "GeometryNodeShrinkwrap",
+            "GeometryNodeSimpleDeform",
+            "GeometryNodeSkin",
+            "GeometryNodeSmartUVProject",
+            "GeometryNodeSmoothModifier",
+            "GeometryNodeSolidify",
+            "GeometryNodeSymmetrize",
+            "GeometryNodeUVWarp",
+            "GeometryNodeUVWMap",
+            "GeometryNodeWarp",
+            "GeometryNodeWave",
+            "GeometryNodeWeightedNormal",
+            "GeometryNodeWireframe",
+        ))
 
         self.draw_assets_for_catalog(layout, self.menu_path)
 

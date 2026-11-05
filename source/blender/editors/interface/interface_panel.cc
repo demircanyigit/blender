@@ -788,10 +788,20 @@ void panel_header_buttons_end(Panel *panel)
   }
 }
 
+/** The category tabs are on the right of right aligned regions, and of some others. */
+static bool panel_category_tabs_on_right(const ARegion *region)
+{
+  if (RGN_ALIGN_ENUM_FROM_MASK(region->alignment) == RGN_ALIGN_RIGHT) {
+    return true;
+  }
+  return region->runtime->type &&
+         bool(region->runtime->type->flag & ARegionTypeFlag::PanelCategoryTabsRight);
+}
+
 static float panel_region_offset_x_get(const ARegion *region)
 {
   if (panel_category_tabs_is_visible(region)) {
-    if (RGN_ALIGN_ENUM_FROM_MASK(region->alignment) != RGN_ALIGN_RIGHT) {
+    if (!panel_category_tabs_on_right(region)) {
       return UI_PANEL_CATEGORY_MARGIN_WIDTH;
     }
   }
@@ -1424,7 +1434,7 @@ bool panel_should_show_background(const ARegion *region, const PanelType *panel_
 void panel_category_tabs_draw_all(ARegion *region, const char *category_id_active)
 {
   // #define USE_FLAT_INACTIVE
-  const bool is_left = RGN_ALIGN_ENUM_FROM_MASK(region->alignment) != RGN_ALIGN_RIGHT;
+  const bool is_left = !panel_category_tabs_on_right(region);
   View2D *v2d = &region->v2d;
   const uiStyle *style = style_get();
   const uiFontStyle *fstyle = &style->widget;
@@ -2519,7 +2529,7 @@ static int ui_handle_panel_category_cycling(const wmEvent *event,
 
   const bool is_mousewheel = ELEM(event->type, WHEELUPMOUSE, WHEELDOWNMOUSE);
   const bool inside_tabregion =
-      ((RGN_ALIGN_ENUM_FROM_MASK(region->alignment) != RGN_ALIGN_RIGHT) ?
+      (!panel_category_tabs_on_right(region) ?
            (event->mval[0] <
             (static_cast<PanelCategoryDyn *>(region->runtime->panels_category.first))->rect.xmax) :
            (event->mval[0] >

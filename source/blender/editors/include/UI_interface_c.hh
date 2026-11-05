@@ -1041,6 +1041,10 @@ void block_bounds_set_menu(Block *block, int addval, const int bounds_offset[2])
  */
 void block_bounds_set_centered(Block *block, int addval);
 void block_bounds_set_explicit(Block *block, int minx, int miny, int maxx, int maxy);
+/** Draw the icons of the block's buttons \a scale times larger, the text keeps its size. */
+void block_icon_scale_set(Block *block, float scale);
+/** Put the text of the block's plain buttons (operators) on the left, like in menus. */
+void block_buttons_text_left_set(Block *block);
 
 int blocklist_min_y_get(ListBaseT<ui::Block> *lb);
 
@@ -2394,7 +2398,7 @@ void template_path_builder(Layout *layout,
                            StringRefNull propname,
                            PointerRNA *root_ptr,
                            std::optional<StringRefNull> text);
-void template_modifiers(Layout *layout, bContext *C);
+void template_modifiers(Layout *layout, bContext *C, bool active_only = false);
 void template_strip_modifiers(Layout *layout, bContext *C);
 /**
  * Check if the shader effect panels don't match the data and rebuild the panels if so.

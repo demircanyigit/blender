@@ -641,6 +641,8 @@ struct Block {
 
   rctf rect = {};
   float aspect = 0.0f;
+  /** How much larger than usual the icons of the buttons are drawn, see #block_icon_scale_set. */
+  float icon_scale = 1.0f;
 
   BlockAlertLevel alert_level = BlockAlertLevel::None;
 

@@ -6,12 +6,14 @@
  * \ingroup spview3d
  */
 
+#include <algorithm>
 #include <cfloat>
 #include <cstring>
 
 #include "MEM_guardedalloc.h"
 
 #include "BLI_listbase.h"
+#include "BLI_string.h"
 #include "BLI_string_utf8.h"
 #include "BLI_utildefines.h"
 
@@ -85,6 +87,126 @@ bUserMenu *ED_screen_user_menu_ensure(bContext *C)
   SpaceLink *sl = CTX_wm_space_data(C);
   const char *context = screen_menu_context_string(C, sl);
   return BKE_blender_user_menu_ensure(&U.user_menus, sl->spacetype, context);
+}
+
+/* No mode is called this, so Quick Favorites never shows the shelf items. */
+static const char *shelf_context = "SHELF";
+
+/** Tabs added later are called "SHELF:<name>", the first one is just "SHELF". */
+static bool shelf_is_tab(const bUserMenu &um)
+{
+  return um.space_type == SPACE_SHELF && STRPREFIX(um.context, shelf_context);
+}
+
+int ED_screen_shelf_tabs_num()
+{
+  int num = 0;
+  for (const bUserMenu &um : U.user_menus) {
+    num += shelf_is_tab(um);
+  }
+  return num;
+}
+
+bUserMenu *ED_screen_shelf_tab_get(const int index)
+{
+  int i = 0;
+  for (bUserMenu &um : U.user_menus) {
+    if (shelf_is_tab(um)) {
+      if (i == index) {
+        return &um;
+      }
+      i++;
+    }
+  }
+  return nullptr;
+}
+
+int ED_screen_shelf_active_tab_index()
+{
+  const int num = ED_screen_shelf_tabs_num();
+  return num ? std::clamp(int(U.shelf_active_tab), 0, num - 1) : 0;
+}
+
+bUserMenu *ED_screen_shelf_find()
+{
+  return ED_screen_shelf_tab_get(ED_screen_shelf_active_tab_index());
+}
+
+bUserMenu *ED_screen_shelf_ensure()
+{
+  if (bUserMenu *um = ED_screen_shelf_find()) {
+    return um;
+  }
+  U.shelf_active_tab = 0;
+  return BKE_blender_user_menu_ensure(&U.user_menus, SPACE_SHELF, shelf_context);
+}
+
+bUserMenu *ED_screen_shelf_tab_add(const char *name)
+{
+  bUserMenu *um = MEM_new<bUserMenu>(__func__);
+  um->space_type = SPACE_SHELF;
+  ED_screen_shelf_tab_name_set(um, name);
+  /* After the last tab, so it's also the last one shown. */
+  bUserMenu *last = nullptr;
+  for (bUserMenu &um_iter : U.user_menus) {
+    if (shelf_is_tab(um_iter)) {
+      last = &um_iter;
+    }
+  }
+  if (last) {
+    BLI_insertlinkafter(&U.user_menus, last, um);
+  }
+  else {
+    BLI_addtail(&U.user_menus, um);
+  }
+  return um;
+}
+
+void ED_screen_shelf_tab_remove(bUserMenu *um)
+{
+  BKE_blender_user_menu_item_free_list(&um->items);
+  BLI_remlink(&U.user_menus, um);
+  MEM_delete(um);
+}
+
+bool ED_screen_shelf_tab_move(bUserMenu *um, const int offset)
+{
+  bUserMenu *other = nullptr;
+  if (offset < 0) {
+    for (bUserMenu *iter = um->prev; iter; iter = iter->prev) {
+      if (shelf_is_tab(*iter)) {
+        other = iter;
+        break;
+      }
+    }
+  }
+  else {
+    for (bUserMenu *iter = um->next; iter; iter = iter->next) {
+      if (shelf_is_tab(*iter)) {
+        other = iter;
+        break;
+      }
+    }
+  }
+  if (other == nullptr) {
+    return false;
+  }
+  BLI_listbase_swaplinks(&U.user_menus, um, other);
+  return true;
+}
+
+std::string ED_screen_shelf_tab_name(const bUserMenu *um)
+{
+  const char *name = um->context + strlen(shelf_context);
+  if (name[0] == ':') {
+    name++;
+  }
+  return name[0] ? name : IFACE_("Main");
+}
+
+void ED_screen_shelf_tab_name_set(bUserMenu *um, const char *name)
+{
+  SNPRINTF(um->context, "%s:%s", shelf_context, name);
 }
 
 /** \} */
@@ -219,6 +341,8 @@ static void screen_user_menu_draw(const bContext *C, Menu *menu)
       continue;
     }
     for (bUserMenuItem &umi : um->items) {
+      /* The icon of the button the item was added from, if it had one. */
+      const int icon = ED_screen_user_menu_item_icon(C, umi);
       std::optional<StringRefNull> ui_name = umi.ui_name[0] ?
                                                  std::make_optional<StringRefNull>(umi.ui_name) :
                                                  std::nullopt;
@@ -230,7 +354,7 @@ static void screen_user_menu_draw(const bContext *C, Menu *menu)
           }
           if (umi_op->op_prop_enum[0] == '\0') {
             PointerRNA ptr = menu->layout->op(
-                ot, ui_name, ICON_NONE, wm::OpCallContext(umi_op->opcontext), UI_ITEM_NONE);
+                ot, ui_name, icon, wm::OpCallContext(umi_op->opcontext), UI_ITEM_NONE);
             if (umi_op->prop) {
               IDP_CopyPropertyContent(ptr.data_as<IDProperty>(), umi_op->prop);
             }
@@ -238,7 +362,7 @@ static void screen_user_menu_draw(const bContext *C, Menu *menu)
           else {
             /* umi_op->prop could be used to set other properties but it's currently unsupported.
              */
-            menu->layout->op_menu_enum(C, ot, umi_op->op_prop_enum, ui_name, ICON_NONE);
+            menu->layout->op_menu_enum(C, ot, umi_op->op_prop_enum, ui_name, icon);
           }
           is_empty = false;
         }
@@ -253,7 +377,7 @@ static void screen_user_menu_draw(const bContext *C, Menu *menu)
         bUserMenuItem_Menu *umi_mt = reinterpret_cast<bUserMenuItem_Menu *>(&umi);
         MenuType *mt = WM_menutype_find(umi_mt->mt_idname, false);
         if (mt != nullptr) {
-          menu->layout->menu(mt, ui_name, ICON_NONE);
+          menu->layout->menu(mt, ui_name, icon);
           is_empty = false;
         }
         else {
@@ -294,7 +418,7 @@ static void screen_user_menu_draw(const bContext *C, Menu *menu)
             if (prop) {
               ok = true;
               menu->layout->prop(
-                  &prop_ptr, prop, umi_pr->prop_index, 0, UI_ITEM_NONE, ui_name, ICON_NONE);
+                  &prop_ptr, prop, umi_pr->prop_index, 0, UI_ITEM_NONE, ui_name, icon);
               is_empty = false;
             }
           }

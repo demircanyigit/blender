@@ -1084,6 +1084,55 @@ struct SpaceStatusBar {
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Shelf
+ * \{ */
+
+/** A compact bar of operator icons the user picked, see #ED_screen_shelf_ensure. */
+struct SpaceShelf {
+  SpaceLink *next = nullptr, *prev = nullptr;
+  /** Storage of regions for inactive spaces. */
+  ListBaseT<ARegion> regionbase = {nullptr, nullptr};
+  char spacetype = 0;
+  char link_flag = 0;
+  char _pad0[6] = {};
+  /* End 'SpaceLink' header. */
+
+  /** #eSpaceShelf_IconSize. */
+  char icon_size = 0;
+  char _pad1[3] = {};
+  /** How many times larger than usual the icons are with #SHELF_ICON_SIZE_CUSTOM. */
+  float icon_scale = 1.25f;
+};
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name Toolbox
+ * \{ */
+
+/**
+ * A column of tool buttons in sections, with vertical tabs on the right. The panels and their
+ * contents are defined in Python, see `space_toolbox.py`.
+ */
+struct SpaceToolbox {
+  SpaceLink *next = nullptr, *prev = nullptr;
+  /** Storage of regions for inactive spaces. */
+  ListBaseT<ARegion> regionbase = {nullptr, nullptr};
+  char spacetype = 0;
+  char link_flag = 0;
+  char _pad0[6] = {};
+  /* End 'SpaceLink' header. */
+
+  /** #eSpaceToolbox_Flag. */
+  char flag = 0;
+  char _pad1[3] = {};
+  /** How many times larger than usual the icons of the large buttons are. */
+  float icon_scale = 1.5f;
+};
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Spreadsheet
  * \{ */
 

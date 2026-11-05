@@ -130,6 +130,9 @@ enum ModifierTypeFlag {
 
   /** Accepts #GreasePencil data input. */
   eModifierTypeFlag_AcceptsGreasePencil = (1 << 12),
+
+  /** Accepts #Curves objects, through #ModifierTypeInfo::modify_geometry_set. */
+  eModifierTypeFlag_AcceptsCurves = (1 << 13),
 };
 ENUM_OPERATORS(ModifierTypeFlag)
 

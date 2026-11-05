@@ -712,12 +712,19 @@ def export_panel_animation(layout, operator):
         body.prop(operator, "bake_anim_simplify_factor")
 
 
+
+def _format_icon(kind):
+    """The menu icon, falling back for builds without the import and export icons."""
+    from bl_ui.space_topbar import file_format_icon
+    return file_format_icon("FBX", kind)
+
+
 def menu_func_import(self, context):
-    self.layout.operator(ImportFBX.bl_idname, text="FBX (.fbx) (Legacy)")
+    self.layout.operator(ImportFBX.bl_idname, text="FBX (.fbx) (Legacy)", icon=_format_icon('IMPORT'))
 
 
 def menu_func_export(self, context):
-    self.layout.operator(ExportFBX.bl_idname, text="FBX (.fbx)")
+    self.layout.operator(ExportFBX.bl_idname, text="FBX (.fbx)", icon=_format_icon('EXPORT'))
 
 
 classes = (

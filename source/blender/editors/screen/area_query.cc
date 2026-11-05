@@ -77,15 +77,19 @@ bool ED_region_panel_category_gutter_calc_rect(const ARegion *region, rcti *r_re
     const int category_tabs_width = round_fl_to_int(ui::view2d_scale_get_x(&region->v2d) *
                                                     UI_PANEL_CATEGORY_MARGIN_WIDTH);
     const int alignment = RGN_ALIGN_ENUM_FROM_MASK(region->alignment);
+    /* Regions that aren't aligned (like the Toolbox main region) have the tabs on the side their
+     * type asks for, otherwise the whole region would count as the gutter and scrolling it would
+     * only scroll the tabs. */
+    const bool tabs_on_right = (alignment == RGN_ALIGN_RIGHT) ||
+                               (alignment != RGN_ALIGN_LEFT && region->runtime->type &&
+                                bool(region->runtime->type->flag &
+                                     ARegionTypeFlag::PanelCategoryTabsRight));
 
-    if (alignment == RGN_ALIGN_LEFT) {
-      r_region_gutter->xmax = r_region_gutter->xmin + category_tabs_width;
-    }
-    else if (alignment == RGN_ALIGN_RIGHT) {
+    if (tabs_on_right) {
       r_region_gutter->xmin = r_region_gutter->xmax - category_tabs_width;
     }
     else {
-      BLI_assert_msg(0, "Unsupported alignment");
+      r_region_gutter->xmax = r_region_gutter->xmin + category_tabs_width;
     }
     return true;
   }

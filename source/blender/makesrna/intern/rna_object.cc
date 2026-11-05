@@ -1747,6 +1747,30 @@ static PointerRNA rna_Object_active_modifier_get(PointerRNA *ptr)
   return RNA_pointer_create_with_parent(*ptr, RNA_Modifier, md);
 }
 
+static int rna_Object_modifiers_active_index_get(PointerRNA *ptr)
+{
+  Object *ob = reinterpret_cast<Object *>(ptr->owner_id);
+  ModifierData *md = BKE_object_active_modifier(ob);
+  return md ? BLI_findindex(&ob->modifiers, md) : -1;
+}
+
+static void rna_Object_modifiers_active_index_set(PointerRNA *ptr, int value)
+{
+  Object *ob = reinterpret_cast<Object *>(ptr->owner_id);
+  ModifierData *md = static_cast<ModifierData *>(BLI_findlink(&ob->modifiers, value));
+  if (md != nullptr) {
+    BKE_object_modifier_set_active(ob, md);
+  }
+}
+
+static void rna_Object_modifiers_active_index_range(
+    PointerRNA *ptr, int *min, int *max, int * /*softmin*/, int * /*softmax*/)
+{
+  Object *ob = reinterpret_cast<Object *>(ptr->owner_id);
+  *min = 0;
+  *max = max_ii(0, BLI_listbase_count(&ob->modifiers) - 1);
+}
+
 static void rna_Object_active_modifier_set(PointerRNA *ptr, PointerRNA value, ReportList *reports)
 {
   Object *ob = reinterpret_cast<Object *>(ptr->owner_id);
@@ -2571,6 +2595,16 @@ static void rna_def_object_modifiers(BlenderRNA *brna, PropertyRNA *cprop)
   RNA_def_property_flag(prop, PROP_NO_DEG_UPDATE);
   RNA_def_property_override_flag(prop, PROPOVERRIDE_OVERRIDABLE_LIBRARY);
   RNA_def_property_ui_text(prop, "Active Modifier", "The active modifier in the list");
+  RNA_def_property_update(prop, NC_OBJECT | ND_MODIFIER, nullptr);
+
+  prop = RNA_def_property(srna, "active_index", PROP_INT, PROP_UNSIGNED);
+  RNA_def_property_int_funcs(prop,
+                             "rna_Object_modifiers_active_index_get",
+                             "rna_Object_modifiers_active_index_set",
+                             "rna_Object_modifiers_active_index_range");
+  RNA_def_property_flag(prop, PROP_NO_DEG_UPDATE);
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_ui_text(prop, "Active Modifier Index", "Index of the active modifier");
   RNA_def_property_update(prop, NC_OBJECT | ND_MODIFIER, nullptr);
 }
 
@@ -3454,6 +3488,16 @@ static void rna_def_object(BlenderRNA *brna)
                            "Add a \"rest_position\" attribute that is a copy of the position "
                            "attribute before shape keys and modifiers are evaluated");
   RNA_def_property_update(prop, NC_OBJECT | ND_DRAW, "rna_Object_internal_update_data");
+
+  prop = RNA_def_property(srna, "show_modifier_end_result", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_negative_sdna(
+      prop, nullptr, "modifier_flag", OB_MODIFIER_FLAG_STOP_AT_ACTIVE);
+  RNA_def_property_ui_text(prop,
+                           "Show End Result",
+                           "Show the result of the whole modifier stack. When off, the stack "
+                           "stops after the active modifier");
+  RNA_def_property_ui_icon(prop, ICON_MODLIST_END_RESULT, 0);
+  RNA_def_property_update(prop, NC_OBJECT | ND_MODIFIER, "rna_Object_internal_update_data");
 
   /* render */
   prop = RNA_def_property(srna, "pass_index", PROP_INT, PROP_UNSIGNED);

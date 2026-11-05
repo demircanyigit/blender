@@ -603,7 +603,7 @@ ModifierTypeInfo modifierType_WeightedNormal = {
     /*type*/ ModifierTypeType::Constructive,
     /*flags*/ eModifierTypeFlag_AcceptsMesh | eModifierTypeFlag_SupportsMapping |
         eModifierTypeFlag_SupportsEditmode | eModifierTypeFlag_EnableInEditmode,
-    /*icon*/ ICON_MOD_NORMALEDIT,
+    /*icon*/ ICON_MOD_WEIGHTED_NORMAL,
 
     /*copy_data*/ BKE_modifier_copydata_generic,
 

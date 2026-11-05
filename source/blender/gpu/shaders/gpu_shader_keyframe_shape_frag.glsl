@@ -78,7 +78,17 @@ void main()
       alpha = max(alpha, minmax_step * minmax_alpha);
     }
 
-    fragColor = mix(finalColor, finalOutlineColor, alpha);
+    /* Classic 2.79 style shading: lit from the top left, lighter above and darker below, with a
+     * small highlight. The point coordinate goes down, so flip it to have Y up. */
+    float2 shade_uv = clamp(float2(pos.x, -pos.y) / 0.4f, float2(-1.0f), float2(1.0f));
+    float light = 0.3f * shade_uv.y;
+    float4 inner_color = finalColor;
+    inner_color.rgb = (light > 0.0f) ? mix(inner_color.rgb, float3(1.0f), light) :
+                                       inner_color.rgb * (1.0f + light);
+    float highlight = 1.0f - smoothstep(0.0f, 0.45f, length(shade_uv - float2(-0.3f, 0.4f)));
+    inner_color.rgb = mix(inner_color.rgb, float3(1.0f), 0.4f * highlight);
+
+    fragColor = mix(inner_color, finalOutlineColor, alpha);
   }
   /* Outside the outline. */
   else {

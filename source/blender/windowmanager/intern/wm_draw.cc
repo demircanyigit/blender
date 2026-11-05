@@ -612,6 +612,8 @@ static const char *wm_area_name(const ScrArea *area)
     SPACE_NAME(SPACE_TOPBAR);
     SPACE_NAME(SPACE_STATUSBAR);
     SPACE_NAME(SPACE_SPREADSHEET);
+    SPACE_NAME(SPACE_SHELF);
+    SPACE_NAME(SPACE_TOOLBOX);
   }
 #undef SPACE_NAME
 

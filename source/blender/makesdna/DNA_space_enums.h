@@ -126,6 +126,10 @@ enum eSpaceButtons_Flag {
   /** Do not add materials, particles, etc. in TemplateTextureUser list. */
   SB_TEX_USER_LIMITED = (1 << 3),
   SB_SHADING_CONTEXT = (1 << 4),
+  /** Modifiers tab shows the stack as a list with only the active modifier's settings. */
+  SB_MODIFIER_LIST = (1 << 5),
+  /** Modifier list shows the last modifier at the top. */
+  SB_MODIFIER_LIST_LAST_ON_TOP = (1 << 6),
 };
 
 /** #SpaceProperties.outliner_sync */
@@ -1121,9 +1125,25 @@ enum eSpace_Type {
   SPACE_CLIP = 20,
   SPACE_TOPBAR = 21,
   SPACE_STATUSBAR = 22,
-  SPACE_SPREADSHEET = 23
+  SPACE_SPREADSHEET = 23,
+  SPACE_SHELF = 24,
+  SPACE_TOOLBOX = 25
 
-#define SPACE_TYPE_NUM (SPACE_SPREADSHEET + 1)
+#define SPACE_TYPE_NUM (SPACE_TOOLBOX + 1)
+};
+
+/** #SpaceShelf.icon_size */
+enum eSpaceShelf_IconSize {
+  SHELF_ICON_SIZE_SMALL = 0,
+  SHELF_ICON_SIZE_MEDIUM = 1,
+  SHELF_ICON_SIZE_LARGE = 2,
+  SHELF_ICON_SIZE_CUSTOM = 3,
+};
+
+/** #SpaceToolbox.flag */
+enum eSpaceToolbox_Flag {
+  /** Show the buttons to rename, move and remove the sections. */
+  TOOLBOX_FLAG_EDIT = 1 << 0,
 };
 
 /* use for function args */

@@ -33,7 +33,11 @@ def generate():
         for cls in ToolSelectPanelHelper.__subclasses__():
             cls.register_ensure()
 
-    return list(_km_hierarchy_iter_recursive(_km_hierarchy))
+    items = list(_km_hierarchy_iter_recursive(_km_hierarchy))
+    # The Toolbox editor is missing from older builds, which may share these scripts.
+    if 'TOOLBOX' not in bpy.types.Space.bl_rna.properties["type"].enum_items.keys():
+        items = [item for item in items if item[1] != 'TOOLBOX']
+    return items
 
 
 # bpy.type.KeyMap: (km.name, km.space_type, km.region_type, [...])
@@ -193,6 +197,8 @@ _km_hierarchy = [
     ]),
 
     ('Info', 'INFO', 'WINDOW', []),
+    ('Shelf', 'SHELF', 'WINDOW', []),
+    ('Toolbox', 'TOOLBOX', 'WINDOW', []),
 
     ('Property Editor', 'PROPERTIES', 'WINDOW', []),  # align context menu
 

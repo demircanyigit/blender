@@ -4,14 +4,8 @@
 
 #include "DNA_mesh_types.h"
 
-#include "BLI_math_geom.h"
-#include "BLI_math_vector.hh"
-
-#include "BKE_mesh.hh"
-#include "BKE_mesh_remesh_voxel.hh"
-
 #include "GEO_foreach_geometry.hh"
-#include "GEO_randomize.hh"
+#include "GEO_quadriflow_remesh.hh"
 
 #include "UI_resources.hh"
 
@@ -19,6 +13,7 @@
 
 namespace blender::nodes::node_geo_quadriflow_remesh_cc {
 
+/** Same values as #geometry::QuadriflowTarget. */
 enum class Target {
   FaceCount = 0,
   Ratio = 1,
@@ -85,58 +80,6 @@ static void node_declare(NodeDeclarationBuilder &b)
       .description("Try to follow the open boundaries of the mesh");
 }
 
-/** QuadriFlow can crash on anything but a consistent manifold, so it's checked first. */
-static bool mesh_is_supported(const Mesh &mesh)
-{
-  const Span<float3> positions = mesh.vert_positions();
-  const Span<int2> edges = mesh.edges();
-  const Span<int> corner_verts = mesh.corner_verts();
-  const Span<int> corner_edges = mesh.corner_edges();
-
-  Array<int8_t> edge_face_counts(mesh.edges_num, 0);
-  Array<int> edge_first_verts(mesh.edges_num, -1);
-  for (const int corner : corner_verts.index_range()) {
-    const int edge = corner_edges[corner];
-    edge_face_counts[edge]++;
-    if (edge_face_counts[edge] > 2) {
-      return false;
-    }
-    /* Neighboring faces have to go around in the same direction. */
-    if (edge_first_verts[edge] == corner_verts[corner]) {
-      return false;
-    }
-    edge_first_verts[edge] = corner_verts[corner];
-  }
-  for (const int edge : edges.index_range()) {
-    if (edge_face_counts[edge] == 0) {
-      return false;
-    }
-    if (math::distance_squared(positions[edges[edge][0]], positions[edges[edge][1]]) < 1e-8f) {
-      return false;
-    }
-  }
-  return true;
-}
-
-static float mesh_area(const Mesh &mesh)
-{
-  const Span<float3> positions = mesh.vert_positions();
-  const Span<int> corner_verts = mesh.corner_verts();
-  float area = 0.0f;
-  for (const int3 &tri : mesh.corner_tris()) {
-    area += area_tri_v3(positions[corner_verts[tri[0]]],
-                        positions[corner_verts[tri[1]]],
-                        positions[corner_verts[tri[2]]]);
-  }
-  return area;
-}
-
-/** There's no way to stop the evaluation of a node, but the remesher requires a callback. */
-static void update_callback(void * /*user_data*/, float /*progress*/, int *cancel)
-{
-  *cancel = 0;
-}
-
 static void node_geo_exec(GeoNodeExecParams params)
 {
   GeometrySet geometry_set = params.extract_input<GeometrySet>("Mesh");
@@ -148,41 +91,41 @@ static void node_geo_exec(GeoNodeExecParams params)
   const bool preserve_sharp = params.extract_input<bool>("Preserve Sharp");
   const bool preserve_boundary = params.extract_input<bool>("Preserve Boundary");
 
-#ifdef WITH_QUADRIFLOW
+  geometry::QuadriflowRemeshParams remesh_params;
+  remesh_params.target = geometry::QuadriflowTarget(int(target));
+  remesh_params.face_count = face_count;
+  remesh_params.ratio = ratio;
+  remesh_params.edge_length = edge_length;
+  remesh_params.seed = seed;
+  remesh_params.preserve_sharp = preserve_sharp;
+  remesh_params.preserve_boundary = preserve_boundary;
+
   std::atomic<bool> has_unsupported_mesh = false;
   std::atomic<bool> has_failure = false;
+  std::atomic<bool> is_disabled = false;
   geometry::foreach_real_geometry(geometry_set, [&](GeometrySet &geometry_set) {
     const Mesh *src_mesh = geometry_set.get_mesh();
-    if (src_mesh == nullptr || src_mesh->faces_num == 0) {
+    if (src_mesh == nullptr) {
       return;
     }
-    if (!mesh_is_supported(*src_mesh)) {
-      has_unsupported_mesh = true;
-      return;
+    geometry::QuadriflowRemeshResult result_kind;
+    Mesh *result = geometry::quadriflow_remesh(*src_mesh, remesh_params, result_kind);
+    switch (result_kind) {
+      case geometry::QuadriflowRemeshResult::Success:
+        geometry_set.replace_mesh(result);
+        break;
+      case geometry::QuadriflowRemeshResult::Unsupported:
+        has_unsupported_mesh = true;
+        break;
+      case geometry::QuadriflowRemeshResult::Failed:
+        has_failure = true;
+        break;
+      case geometry::QuadriflowRemeshResult::Disabled:
+        is_disabled = true;
+        break;
+      case geometry::QuadriflowRemeshResult::Skipped:
+        break;
     }
-    int target_faces = face_count;
-    if (target == Target::Ratio) {
-      target_faces = int(float(src_mesh->faces_num) * ratio);
-    }
-    else if (target == Target::EdgeLength) {
-      if (edge_length <= 0.0f) {
-        return;
-      }
-      target_faces = int(std::min(mesh_area(*src_mesh) / (edge_length * edge_length), 1e8f));
-    }
-    /* The remesher can't make a closed mesh with very few quads. */
-    target_faces = std::max(target_faces, 6);
-
-    Mesh *result = BKE_mesh_remesh_quadriflow(
-        src_mesh, target_faces, seed, preserve_sharp, preserve_boundary, false, update_callback, nullptr);
-    if (result == nullptr) {
-      has_failure = true;
-      return;
-    }
-    BKE_mesh_copy_parameters_for_eval(result, src_mesh);
-    bke::mesh_remesh_reproject_attributes(*src_mesh, *result);
-    geometry::debug_randomize_mesh_order(result);
-    geometry_set.replace_mesh(result);
   });
 
   if (has_unsupported_mesh) {
@@ -193,10 +136,9 @@ static void node_geo_exec(GeoNodeExecParams params)
   if (has_failure) {
     params.error_message_add(NodeWarningType::Error, TIP_("The mesh could not be remeshed"));
   }
-#else
-  UNUSED_VARS(target, face_count, ratio, edge_length, seed, preserve_sharp, preserve_boundary);
-  params.error_message_add(NodeWarningType::Error, TIP_("Disabled, built without QuadriFlow"));
-#endif
+  if (is_disabled) {
+    params.error_message_add(NodeWarningType::Error, TIP_("Disabled, built without QuadriFlow"));
+  }
   params.set_output("Mesh", std::move(geometry_set));
 }
 

@@ -663,8 +663,10 @@ enum eRegion_Type {
   RGN_TYPE_XR = 13,
   RGN_TYPE_ASSET_SHELF = 14,
   RGN_TYPE_ASSET_SHELF_HEADER = 15,
+  /** A strip of the buttons the user added to the shelf, at the top of the editor. */
+  RGN_TYPE_SHELF = 16,
 
-#define RGN_TYPE_NUM (RGN_TYPE_ASSET_SHELF_HEADER + 1)
+#define RGN_TYPE_NUM (RGN_TYPE_SHELF + 1)
 };
 
 /** Use for function args. */

@@ -199,8 +199,16 @@ static SpaceLink *view3d_create(const ScrArea * /*area*/, const Scene *scene)
     v3d->camera = scene->camera;
   }
 
-  /* header */
+  /* shelf, first so it's above the header */
   ARegion *region = BKE_area_region_new();
+
+  BLI_addtail(&v3d->regionbase, region);
+  region->regiontype = RGN_TYPE_SHELF;
+  region->alignment = RGN_ALIGN_TOP;
+  region->flag = RGN_FLAG_DYNAMIC_SIZE | RGN_FLAG_NO_USER_RESIZE;
+
+  /* header */
+  region = BKE_area_region_new();
 
   BLI_addtail(&v3d->regionbase, region);
   region->regiontype = RGN_TYPE_HEADER;
@@ -1712,6 +1720,10 @@ void ED_spacetype_view3d()
   art->context = asset::shelf::context;
   BLI_addhead(&st->regiontypes, art);
   asset::shelf::types_register(art, SPACE_VIEW3D);
+
+  /* regions: shelf */
+  art = ED_shelf_region_type_create();
+  BLI_addhead(&st->regiontypes, art);
 
   /* regions: hud */
   art = ui::ED_area_type_hud(st->spaceid);

@@ -377,13 +377,13 @@ class IMAGE_MT_uvs_merge(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("uv.weld", text="At Center")
+        layout.operator("uv.weld", text="At Center", icon='OP_MERGE_CENTER')
         # Mainly to match the mesh menu.
-        layout.operator("uv.snap_selected", text="At Cursor").target = 'CURSOR'
+        layout.operator("uv.snap_selected", text="At Cursor", icon='OP_MERGE_CURSOR').target = 'CURSOR'
 
         layout.separator()
 
-        layout.operator("uv.remove_doubles", text="By Distance")
+        layout.operator("uv.remove_doubles", text="By Distance", icon='OP_MERGE_BY_DISTANCE')
 
 
 class IMAGE_MT_uvs_split(Menu):

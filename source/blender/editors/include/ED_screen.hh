@@ -703,7 +703,35 @@ void ED_screen_user_menu_item_add_prop(ListBaseT<bUserMenuItem> *lb,
                                        int prop_index);
 
 void ED_screen_user_menu_item_remove(ListBaseT<bUserMenuItem> *lb, bUserMenuItem *umi);
+/**
+ * The icon of a Quick Favorites or Shelf item: the name of a built-in icon or the icon of a tool,
+ * stored when the item was added. #ICON_NONE when it has none.
+ */
+int ED_screen_user_menu_item_icon(const bContext *C, const bUserMenuItem &umi);
 void ED_screen_user_menu_register();
+
+/**
+ * The items of the Shelf editor. They are kept with the user menus (so they are saved in the
+ * preferences), in a menu no editor shows as Quick Favorites.
+ */
+bUserMenu *ED_screen_shelf_find();
+bUserMenu *ED_screen_shelf_ensure();
+
+/**
+ * The tabs of the Shelf: each is a user menu of its own, in the order they're stored in.
+ * #ED_screen_shelf_find gives the active one, #UserDef.shelf_active_tab.
+ */
+int ED_screen_shelf_tabs_num();
+bUserMenu *ED_screen_shelf_tab_get(int index);
+int ED_screen_shelf_active_tab_index();
+/** Adds a tab after the others, it doesn't become the active one. */
+bUserMenu *ED_screen_shelf_tab_add(const char *name);
+void ED_screen_shelf_tab_remove(bUserMenu *um);
+/** Swaps the tab with the one  offset places away (-1 or 1). */
+bool ED_screen_shelf_tab_move(bUserMenu *um, int offset);
+/** The name the tab shows, stored in its context after "SHELF:". */
+std::string ED_screen_shelf_tab_name(const bUserMenu *um);
+void ED_screen_shelf_tab_name_set(bUserMenu *um, const char *name);
 
 /* Cache display helpers */
 

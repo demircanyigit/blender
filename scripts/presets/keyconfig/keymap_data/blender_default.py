@@ -1577,7 +1577,9 @@ def km_view3d_generic(params):
             params,
             toolbar_key={"type": 'T', "value": 'PRESS'},
             sidebar_key={"type": 'N', "value": 'PRESS'},
-        )
+        ),
+        ("wm.context_toggle", {"type": 'Y', "value": 'PRESS', "alt": True},
+         {"properties": [("data_path", 'space_data.show_region_shelf')]}),
     ])
 
     return keymap
@@ -2425,6 +2427,39 @@ def km_info(params):
         ("info.report_delete", {"type": 'DEL', "value": 'PRESS'}, None),
         ("info.report_copy", {"type": 'C', "value": 'PRESS', "ctrl": True}, None),
         *_template_items_context_menu("INFO_MT_context_menu", params.context_menu_event),
+    ])
+
+    return keymap
+
+
+# ------------------------------------------------------------------------------
+# Editor (Shelf)
+
+def km_shelf(params):
+    items = []
+    keymap = (
+        "Shelf",
+        {"space_type": 'SHELF', "region_type": 'WINDOW'},
+        {"items": items},
+    )
+
+    items.extend([
+        *_template_items_context_menu("SHELF_MT_context_menu", params.context_menu_event),
+    ])
+
+    return keymap
+
+
+def km_toolbox(params):
+    items = []
+    keymap = (
+        "Toolbox",
+        {"space_type": 'TOOLBOX', "region_type": 'WINDOW'},
+        {"items": items},
+    )
+
+    items.extend([
+        *_template_items_context_menu("TOOLBOX_MT_context_menu", params.context_menu_event),
     ])
 
     return keymap
@@ -8874,10 +8909,19 @@ def km_3d_view_tool_paint_grease_pencil_interpolate(params):
 # ------------------------------------------------------------------------------
 # Full Configuration
 
+def _has_toolbox():
+    # The Toolbox editor is missing from older builds, which may share these scripts.
+    try:
+        import bpy
+    except ImportError:
+        return True
+    return 'TOOLBOX' in bpy.types.Space.bl_rna.properties["type"].enum_items.keys()
+
+
 def generate_keymaps(params=None):
     if params is None:
         params = Params()
-    return [
+    keymaps = [
         # Window, screen, area, region.
         km_window(params),
         km_screen(params),
@@ -8907,6 +8951,7 @@ def generate_keymaps(params=None):
         km_node_editor(params),
         km_spreadsheet_generic(params),
         km_info(params),
+        km_shelf(params),
         km_file_browser(params),
         km_file_browser_main(params),
         km_file_browser_buttons(params),
@@ -9163,6 +9208,9 @@ def generate_keymaps(params=None):
         km_sequencer_preview_tool_rotate(params),
         km_sequencer_preview_tool_scale(params),
     ]
+    if _has_toolbox():
+        keymaps.append(km_toolbox(params))
+    return keymaps
 
 
 # ------------------------------------------------------------------------------

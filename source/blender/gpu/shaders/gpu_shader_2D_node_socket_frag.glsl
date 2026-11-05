@@ -134,6 +134,16 @@ void main()
   float outline_mask = smoothstep(outline_thresholds[0], outline_thresholds[1], distance_squared) +
                        dot_mask;
 
-  fragColor = mix(finalColor, finalOutlineColor, outline_mask);
+  /* Classic 2.79 style shading: lit from the top left, lighter above and darker below, with a
+   * small highlight. The UV is scaled to -1..1 over the socket, multi sockets included. */
+  float2 shade_uv = clamp(uv / (0.5f + extrusion), float2(-1.0f), float2(1.0f));
+  float light = 0.3f * shade_uv.y;
+  float4 inner_color = finalColor;
+  inner_color.rgb = (light > 0.0f) ? mix(inner_color.rgb, float3(1.0f), light) :
+                                     inner_color.rgb * (1.0f + light);
+  float highlight = 1.0f - smoothstep(0.0f, 0.45f, length(shade_uv - float2(-0.3f, 0.4f)));
+  inner_color.rgb = mix(inner_color.rgb, float3(1.0f), 0.4f * highlight);
+
+  fragColor = mix(inner_color, finalOutlineColor, outline_mask);
   fragColor.a *= alpha_mask;
 }

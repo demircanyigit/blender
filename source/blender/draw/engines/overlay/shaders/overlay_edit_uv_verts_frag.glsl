@@ -8,7 +8,9 @@ FRAGMENT_SHADER_CREATE_INFO(overlay_edit_uv_verts)
 
 void main()
 {
-  float dist = length(gl_PointCoord - float2(0.5f));
+  /* Square points like Blender 2.79: the distance is the larger of the two axes. */
+  float2 centered = abs(gl_PointCoord - float2(0.5f));
+  float dist = max(centered.x, centered.y);
 
   /* transparent outside of point
    * --- 0 ---

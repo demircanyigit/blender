@@ -39,6 +39,11 @@ set(SRC
   nodes/node_geo_displace_mesh.cc
   nodes/node_geo_dissolve_mesh.cc
   nodes/node_geo_quadriflow_remesh.cc
+  nodes/node_geo_axis_deform.cc
+  nodes/node_geo_curve_modifier_ops.cc
+  nodes/node_geo_mesh_modifier_ops.cc
+  nodes/node_geo_planned_ops.cc
+  nodes/node_geo_modifier_nodes.cc
   nodes/node_geo_relax_mesh.cc
   nodes/node_geo_smooth_mesh.cc
   nodes/node_geo_blur_attribute.cc

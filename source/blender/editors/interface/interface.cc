@@ -692,6 +692,20 @@ void block_bounds_set_explicit(Block *block, int minx, int miny, int maxx, int m
   block->bounds_type = BLOCK_BOUNDS_NONE;
 }
 
+void block_icon_scale_set(Block *block, const float scale)
+{
+  block->icon_scale = scale;
+}
+
+void block_buttons_text_left_set(Block *block)
+{
+  for (const std::unique_ptr<Button> &but : block->buttons) {
+    if (but->type == ButtonType::But && !but->str.empty()) {
+      but->drawflag |= BUT_TEXT_LEFT;
+    }
+  }
+}
+
 static float ui_but_get_float_precision(Button *but)
 {
   if (but->type == ButtonType::Num) {

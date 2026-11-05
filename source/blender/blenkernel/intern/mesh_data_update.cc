@@ -282,6 +282,17 @@ static void set_rest_position(Mesh &mesh)
   }
 }
 
+/** With "Show End Result" off, evaluation ends after the active modifier. Returns the first
+ * modifier that is not evaluated (null to run the whole stack). */
+static const ModifierData *modifier_stack_end(const Object &ob)
+{
+  if ((ob.modifier_flag & OB_MODIFIER_FLAG_STOP_AT_ACTIVE) == 0) {
+    return nullptr;
+  }
+  const ModifierData *active = BKE_object_active_modifier(&ob);
+  return active ? active->next : nullptr;
+}
+
 static void mesh_calc_modifiers(Depsgraph &depsgraph,
                                 const Scene &scene,
                                 Object &ob,
@@ -333,6 +344,7 @@ static void mesh_calc_modifiers(Depsgraph &depsgraph,
   VirtualModifierData virtual_modifier_data;
   ModifierData *firstmd = BKE_modifiers_get_virtual_modifierlist(&ob, &virtual_modifier_data);
   ModifierData *md = firstmd;
+  const ModifierData *end_md = modifier_stack_end(ob);
 
   /* Compute accumulated datamasks needed by each modifier. It helps to do
    * this fine grained so that for example vertex groups are preserved up to
@@ -358,7 +370,7 @@ static void mesh_calc_modifiers(Depsgraph &depsgraph,
 
   /* Apply all leading deform modifiers. */
   if (use_deform) {
-    for (; md; md = md->next, md_datamask = md_datamask->next) {
+    for (; md != end_md; md = md->next, md_datamask = md_datamask->next) {
       const ModifierTypeInfo *mti = BKE_modifier_get_info(ModifierType(md->type));
 
       if (!BKE_modifier_is_enabled(&scene, md, required_mode)) {
@@ -398,7 +410,7 @@ static void mesh_calc_modifiers(Depsgraph &depsgraph,
 
   /* Apply all remaining constructive and deforming modifiers. */
   bool have_non_onlydeform_modifiers_applied = false;
-  for (; md; md = md->next, md_datamask = md_datamask->next) {
+  for (; md != end_md; md = md->next, md_datamask = md_datamask->next) {
     const ModifierTypeInfo *mti = BKE_modifier_get_info(ModifierType(md->type));
 
     if (!BKE_modifier_is_enabled(&scene, md, required_mode)) {
@@ -819,7 +831,8 @@ static void editbmesh_calc_modifiers(Depsgraph &depsgraph,
   }
 
   bool non_deform_modifier_applied = false;
-  for (int i = 0; md; i++, md = md->next, md_datamask = md_datamask->next) {
+  const ModifierData *end_md = modifier_stack_end(ob);
+  for (int i = 0; md != end_md; i++, md = md->next, md_datamask = md_datamask->next) {
     const ModifierTypeInfo *mti = BKE_modifier_get_info(ModifierType(md->type));
     if (!editbmesh_modifier_is_enabled(&scene, &ob, md, non_deform_modifier_applied)) {
       continue;

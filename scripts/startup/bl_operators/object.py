@@ -1017,6 +1017,104 @@ class OBJECT_OT_assign_property_defaults(Operator):
         return {'FINISHED'}
 
 
+class OBJECT_OT_poly_select_store(Operator):
+    """Store the current selection of the mesh in the Poly Select modifier"""
+    bl_idname = "object.poly_select_store"
+    bl_label = "Store Selection"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    modifier: StringProperty(
+        name="Modifier",
+        description="Name of the Poly Select modifier, the one of the panel when empty",
+    )
+
+    @staticmethod
+    def _modifier(context, name):
+        ob = context.object
+        if name and ob:
+            return ob.modifiers.get(name)
+        return getattr(context, "modifier", None)
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.object
+        md = getattr(context, "modifier", None)
+        return (ob is not None and ob.type == 'MESH' and
+                (md is None or md.type == 'POLY_SELECT'))
+
+    def execute(self, context):
+        ob = context.object
+        md = self._modifier(context, self.modifier)
+        if md is None or md.type != 'POLY_SELECT':
+            self.report({'ERROR'}, "No Poly Select modifier")
+            return {'CANCELLED'}
+
+        # The edit-mode mesh replaces the object data when leaving edit mode, so write outside it.
+        was_edit = ob.mode == 'EDIT'
+        if was_edit:
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+        mesh = ob.data
+        if not md.stored_attribute:
+            index = 0
+            while mesh.attributes.get(".poly_select_{:d}".format(index)) is not None:
+                index += 1
+            md.stored_attribute = ".poly_select_{:d}".format(index)
+        name = md.stored_attribute
+        elements = {'POINT': mesh.vertices, 'EDGE': mesh.edges, 'FACE': mesh.polygons}[md.domain]
+        selection = [False] * len(elements)
+        elements.foreach_get("select", selection)
+
+        attribute = mesh.attributes.get(name)
+        if attribute is not None and (attribute.domain != md.domain or attribute.data_type != 'BOOLEAN'):
+            mesh.attributes.remove(attribute)
+            attribute = None
+        if attribute is None:
+            attribute = mesh.attributes.new(name, 'BOOLEAN', md.domain)
+        attribute.data.foreach_set("value", selection)
+        mesh.update()
+
+        if was_edit:
+            bpy.ops.object.mode_set(mode='EDIT')
+        self.report({'INFO'}, "Stored {:d} selected".format(sum(selection)))
+        return {'FINISHED'}
+
+
+class OBJECT_OT_ffd_reset_points(Operator):
+    """Move every control point of the FFD modifier back to its rest place"""
+    bl_idname = "object.ffd_reset_points"
+    bl_label = "Reset Points"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    modifier: StringProperty(
+        name="Modifier",
+        description="Name of the FFD modifier, the one of the panel or the active one when empty",
+    )
+
+    @staticmethod
+    def _modifier(context, name):
+        ob = context.object
+        if ob is None:
+            return None
+        if name:
+            return ob.modifiers.get(name)
+        return getattr(context, "modifier", None) or ob.modifiers.active
+
+    @classmethod
+    def poll(cls, context):
+        md = cls._modifier(context, "")
+        return md is not None and md.type in {'FFD_2', 'FFD_3', 'FFD_4'}
+
+    def execute(self, context):
+        md = self._modifier(context, self.modifier)
+        if md is None or md.type not in {'FFD_2', 'FFD_3', 'FFD_4'}:
+            self.report({'ERROR'}, "No FFD modifier")
+            return {'CANCELLED'}
+        for index in range(64):
+            md.control_points[index] = (0.0, 0.0, 0.0)
+        return {'FINISHED'}
+
+
 classes = (
     ClearAllRestrictRender,
     DupliOffsetFromCursor,
@@ -1033,4 +1131,6 @@ classes = (
     TransformsToDeltas,
     TransformsToDeltasAnim,
     OBJECT_OT_assign_property_defaults,
+    OBJECT_OT_poly_select_store,
+    OBJECT_OT_ffd_reset_points,
 )

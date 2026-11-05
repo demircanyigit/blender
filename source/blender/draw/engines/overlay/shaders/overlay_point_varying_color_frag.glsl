@@ -10,11 +10,13 @@ FRAGMENT_SHADER_CREATE_INFO(overlay_extra_grid_base)
 
 void main()
 {
-  float2 centered = gl_PointCoord - float2(0.5f);
-  float dist_squared = dot(centered, centered);
+  /* Square points like Blender 2.79: the distance is the larger of the two axes, so the shape
+   * fills the whole point and the crease ring below is square too. */
+  float2 centered = abs(gl_PointCoord - float2(0.5f));
+  float dist = max(centered.x, centered.y);
+  float dist_squared = dist * dist;
   constexpr float rad_squared = 0.25f;
 
-  /* Round point with jagged edges. */
   if (dist_squared > rad_squared) {
     gpu_discard_fragment();
     return;

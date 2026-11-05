@@ -1,0 +1,116 @@
+{
+  "blender_shelf": 1,
+  "items": [
+    {
+      "name": "Subdivision Surface",
+      "icon": "MOD_SUBSURF",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "object.modifier_add",
+      "enum_property": "",
+      "call_context": 0,
+      "properties": [
+        {
+          "name": "type",
+          "type": "IDP_INT",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "Mirror",
+      "icon": "MOD_MIRROR",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "object.modifier_add",
+      "enum_property": "",
+      "call_context": 0,
+      "properties": [
+        {
+          "name": "type",
+          "type": "IDP_INT",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "name": "Bevel",
+      "icon": "MOD_BEVEL",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "object.modifier_add",
+      "enum_property": "",
+      "call_context": 0,
+      "properties": [
+        {
+          "name": "type",
+          "type": "IDP_INT",
+          "value": 24
+        }
+      ]
+    },
+    {
+      "name": "Solidify",
+      "icon": "MOD_SOLIDIFY",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "object.modifier_add",
+      "enum_property": "",
+      "call_context": 0,
+      "properties": [
+        {
+          "name": "type",
+          "type": "IDP_INT",
+          "value": 33
+        }
+      ]
+    },
+    {
+      "type": "SEPARATOR"
+    },
+    {
+      "name": "Array",
+      "icon": "MOD_ARRAY",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "object.modifier_add",
+      "enum_property": "",
+      "call_context": 0,
+      "properties": [
+        {
+          "name": "type",
+          "type": "IDP_INT",
+          "value": 12
+        }
+      ]
+    },
+    {
+      "name": "Boolean",
+      "icon": "MOD_BOOLEAN",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "object.modifier_add",
+      "enum_property": "",
+      "call_context": 0,
+      "properties": [
+        {
+          "name": "type",
+          "type": "IDP_INT",
+          "value": 11
+        }
+      ]
+    }
+  ]
+}

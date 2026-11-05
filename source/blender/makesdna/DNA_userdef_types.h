@@ -573,6 +573,28 @@ enum {
   USER_MENU_TYPE_PROP = 4,
 };
 
+/** #UserDef.shelf_icon_size */
+enum eUserpref_ShelfIconSize {
+  USER_SHELF_ICON_SIZE_SMALL = 0,
+  USER_SHELF_ICON_SIZE_MEDIUM = 1,
+  USER_SHELF_ICON_SIZE_LARGE = 2,
+  USER_SHELF_ICON_SIZE_CUSTOM = 3,
+};
+
+/** #UserDef.shelf_flag */
+enum eUserpref_ShelfFlag {
+  /** Don't draw the tabs, the shelf only shows the active tab's buttons. */
+  USER_SHELF_HIDE_TABS = 1 << 0,
+};
+
+/** #bUserMenuItem.shelf_flag */
+enum eUserMenuItem_ShelfFlag {
+  /** Draw the name to the right of the icon. */
+  USER_MENU_ITEM_SHELF_SHOW_TEXT = 1 << 0,
+  /** Draw only the name, without the icon. */
+  USER_MENU_ITEM_SHELF_HIDE_ICON = 1 << 1,
+};
+
 struct bUserMenu {
   struct bUserMenu *next = nullptr, *prev = nullptr;
   char space_type = 0;
@@ -586,7 +608,13 @@ struct bUserMenuItem {
   struct bUserMenuItem *next = nullptr, *prev = nullptr;
   char ui_name[64] = "";
   char type = 0;
-  char _pad0[7] = {};
+  /** Editor the item was added from, only used by the shelf (#eSpace_Type). */
+  char space_type = 0;
+  /** #eUserMenuItem_ShelfFlag. */
+  char shelf_flag = 0;
+  char _pad0[5] = {};
+  /** Icon the shelf draws the item with, an icon name or a tool icon. */
+  char icon_name[64] = "";
 };
 
 struct bUserMenuItem_Op {
@@ -1035,7 +1063,13 @@ struct UserDef {
   char gizmo_size = 75;
   /** Navigate gizmo size. */
   char gizmo_size_navigate_v3d = 80;
-  char _pad3[5] = {};
+  /** #eUserpref_ShelfIconSize, the size of the buttons on the shelf. */
+  char shelf_icon_size = 0;
+  /** #eUserpref_ShelfFlag. */
+  char shelf_flag = 0;
+  /** Index of the tab the shelf shows, see #ED_screen_shelf_find. */
+  char shelf_active_tab = 0;
+  char _pad3[2] = {};
   short edit_studio_light = 0;
   short lookdev_sphere_size = 150;
   short vbotimeout = 120, vbocollectrate = 60;
@@ -1045,7 +1079,8 @@ struct UserDef {
   int prefetchframes = 0;
   /** Control the rotation step of the view when PAD2, PAD4, PAD6&PAD8 is use. */
   float pad_rot_angle = 15;
-  char _pad12[4] = {};
+  /** How many times larger than usual the shelf icons are with #USER_SHELF_ICON_SIZE_CUSTOM. */
+  float shelf_icon_scale = 1.25f;
   /** Rotating view icon size. */
   short rvisize = 25;
   /** Rotating view icon brightness. */

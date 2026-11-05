@@ -291,7 +291,23 @@ static void ui_selectcontext_apply(bContext *C,
  * with button array pasting, see #108096, but unfortunately wheel events are not part of
  * `win->runtime->eventstate` with modifiers held down. Instead, the conflict is avoided by
  * specifically filtering out CTRL ALT V in #ui_apply_but(). */
-#  define IS_ALLSELECT_EVENT(event) (((event)->modifier & KM_ALT) != 0)
+#  define IS_ALLSELECT_EVENT(event, but) ui_allselect_event(event, but)
+
+/**
+ * Editing a button edits it on everything selected, without holding Alt. Texts (names) and
+ * data-block pointers still need Alt, giving all selected the same name or the same data is
+ * rarely what's wanted.
+ */
+static bool ui_allselect_event(const wmEvent *event, const Button *but)
+{
+  if (event->modifier & KM_ALT) {
+    return true;
+  }
+  if (but == nullptr || but->rnaprop == nullptr) {
+    return false;
+  }
+  return !ELEM(RNA_property_type(but->rnaprop), PROP_STRING, PROP_POINTER);
+}
 
 /** just show a tinted color so users know its activated */
 #  define BUT_IS_SELECT_CONTEXT BUT_NODE_ACTIVE
@@ -2335,7 +2351,7 @@ static void ui_apply_but(
       wmWindow *win = CTX_wm_window(C);
       const wmEvent *event = win->runtime->eventstate;
       /* May have been enabled before activating, don't do for array pasting. */
-      if (data->select_others.is_enabled || IS_ALLSELECT_EVENT(event)) {
+      if (data->select_others.is_enabled || IS_ALLSELECT_EVENT(event, but)) {
         /* See comment for #IS_ALLSELECT_EVENT why this needs to be filtered here. */
         const bool is_array_paste = (event->val == KM_PRESS) &&
                                     (event->modifier & (KM_CTRL | KM_OSKEY)) &&
@@ -3557,7 +3573,7 @@ static void ui_textedit_begin(bContext *C, Button *but, HandleButtonData *data)
 
 #ifdef USE_ALLSELECT
   if (is_num_but) {
-    if (IS_ALLSELECT_EVENT(win->runtime->eventstate)) {
+    if (IS_ALLSELECT_EVENT(win->runtime->eventstate, but)) {
       data->select_others.is_enabled = true;
       data->select_others.is_copy = true;
     }
@@ -4559,7 +4575,7 @@ static void block_open_begin(bContext *C, Button *but, HandleButtonData *data)
 
 #ifdef USE_ALLSELECT
   {
-    if (IS_ALLSELECT_EVENT(data->window->runtime->eventstate)) {
+    if (IS_ALLSELECT_EVENT(data->window->runtime->eventstate, but)) {
       data->select_others.is_enabled = true;
     }
   }

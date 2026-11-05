@@ -42,6 +42,7 @@ const EnumPropertyItem rna_enum_region_type_items[] = {
     {RGN_TYPE_FOOTER, "FOOTER", 0, "Footer", ""},
     {RGN_TYPE_TOOL_HEADER, "TOOL_HEADER", 0, "Tool Header", ""},
     {RGN_TYPE_XR, "XR", 0, "XR", ""},
+    {RGN_TYPE_SHELF, "SHELF", 0, "Shelf", ""},
     {0, nullptr, 0, nullptr, nullptr},
 };
 
@@ -214,6 +215,11 @@ static const EnumPropertyItem *rna_Area_ui_type_itemf(bContext *C,
 
   for (; item_from->identifier; item_from++) {
     if (ELEM(item_from->value, SPACE_TOPBAR, SPACE_STATUSBAR)) {
+      continue;
+    }
+    /* The Shelf is a strip in the 3D Viewport now. The editor is only kept so files that still
+     * have one open load, it's listed for those areas only. */
+    if (item_from->value == SPACE_SHELF && area->spacetype != SPACE_SHELF) {
       continue;
     }
 

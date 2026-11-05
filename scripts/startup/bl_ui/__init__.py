@@ -32,6 +32,7 @@ _modules = [
     "properties_data_mesh",
     "properties_data_metaball",
     "properties_data_modifier",
+    "properties_data_modifier_list",
     "properties_data_pointcloud",
     "properties_data_shaderfx",
     "properties_data_lightprobe",
@@ -82,6 +83,8 @@ _modules = [
     "space_outliner",
     "space_properties",
     "space_sequencer",
+    "space_shelf",
+    "space_toolbox",
     "space_spreadsheet",
     "space_statusbar",
     "space_text",
@@ -89,6 +92,7 @@ _modules = [
     "space_topbar",
     "space_userpref",
     "space_view3d",
+    "space_view3d_modifier_gizmos",
     "space_view3d_sidebar",
     "space_view3d_toolbar",
 
@@ -123,6 +127,8 @@ def register():
             register_class(cls)
 
     space_filebrowser.register_props()
+    space_toolbox.register_tabs()
+    properties_data_modifier_list.register_menus()
 
     from bpy.props import (
         EnumProperty,
@@ -185,9 +191,12 @@ def register():
 
 def unregister():
     from bpy.utils import unregister_class
+    space_toolbox.unregister_tabs()
+    properties_data_modifier_list.unregister_menus()
     for mod in reversed(_modules_loaded):
         for cls in reversed(mod.classes):
-            if cls.is_registered:
+            # Gizmo groups have no `is_registered`.
+            if "bl_rna" in cls.__dict__:
                 unregister_class(cls)
     for cls in reversed(classes):
         if cls.is_registered:

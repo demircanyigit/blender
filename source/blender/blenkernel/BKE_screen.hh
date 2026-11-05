@@ -230,6 +230,8 @@ enum class ARegionTypeFlag {
    * region.
    */
   UsePanelCategoryTabs = (1 << 1),
+  /** Draw the category tabs on the right side of the region, even when it isn't aligned right. */
+  PanelCategoryTabsRight = (1 << 2),
 };
 ENUM_OPERATORS(ARegionTypeFlag)
 

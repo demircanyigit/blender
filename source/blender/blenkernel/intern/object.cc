@@ -1228,6 +1228,13 @@ void BKE_object_modifier_set_active(Object *ob, ModifierData *md)
     BLI_assert(BLI_findindex(&ob->modifiers, md) != -1);
     md->flag |= eModifierFlag_Active;
   }
+
+  /* With "Show End Result" off, the active modifier is where evaluation stops. */
+  if ((ob->modifier_flag & OB_MODIFIER_FLAG_STOP_AT_ACTIVE) &&
+      (ob->id.tag & ID_TAG_COPIED_ON_EVAL) == 0)
+  {
+    DEG_id_tag_update(&ob->id, ID_RECALC_GEOMETRY);
+  }
 }
 
 ModifierData *BKE_object_active_modifier(const Object *ob)
@@ -1276,6 +1283,9 @@ bool BKE_object_support_modifier_type_check(const Object *ob, int modifier_type)
   }
 
   if (ELEM(ob->type, OB_POINTCLOUD, OB_CURVES)) {
+    if (ob->type == OB_CURVES && (mti->flags & eModifierTypeFlag_AcceptsCurves)) {
+      return true;
+    }
     return ELEM(modifier_type, eModifierType_Nodes, eModifierType_MeshSequenceCache);
   }
   if (ob->type == OB_VOLUME) {

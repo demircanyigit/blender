@@ -316,6 +316,8 @@ enum {
 
 enum ObjectModifierFlag {
   OB_MODIFIER_FLAG_ADD_REST_POSITION = 1 << 0,
+  /** Stop evaluating the modifier stack after the active modifier ("Show End Result" off). */
+  OB_MODIFIER_FLAG_STOP_AT_ACTIVE = 1 << 1,
 };
 
 /** Vertex Groups - Name Info */

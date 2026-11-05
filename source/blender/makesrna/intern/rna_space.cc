@@ -108,6 +108,12 @@ const EnumPropertyItem rna_enum_space_type_items[] = {
      "Video Sequencer",
      "Non-linear editor for arranging and mixing scenes, video, audio, and effects"},
     {SPACE_CLIP, "CLIP_EDITOR", ICON_TRACKER, "Movie Clip Editor", "Motion tracking tools"},
+    {SPACE_TOOLBOX,
+     "TOOLBOX",
+     ICON_TOOL_SETTINGS,
+     "Toolbox",
+     "Tool buttons in sections, with tabs on the side, add to it with Add to Toolbox in any "
+     "button's context menu"},
 
     /* Animation. */
     RNA_ENUM_ITEM_HEADING(N_("Animation"), nullptr),
@@ -140,6 +146,11 @@ const EnumPropertyItem rna_enum_space_type_items[] = {
      "Interactive programmatic console for "
      "advanced editing and script development"},
     {SPACE_INFO, "INFO", ICON_INFO, "Info", "Log of operations, warnings and error messages"},
+    {SPACE_SHELF,
+     "SHELF",
+     ICON_SHELF,
+     "Shelf",
+     "Compact bar of operator icons, add to it with Add to Shelf in any button's context menu"},
     /* Special case: Top-bar and Status-bar aren't supposed to be a regular editor for the user. */
     {SPACE_TOPBAR,
      "TOPBAR",
@@ -753,6 +764,10 @@ static StructRNA *rna_Space_refine(PointerRNA *ptr)
       return RNA_SpaceClipEditor;
     case SPACE_SPREADSHEET:
       return RNA_SpaceSpreadsheet;
+    case SPACE_SHELF:
+      return RNA_SpaceShelf;
+    case SPACE_TOOLBOX:
+      return RNA_SpaceToolbox;
 
       /* Currently no type info. */
     case SPACE_SCRIPT:
@@ -1009,6 +1024,20 @@ static void rna_Space_show_region_ui_set(PointerRNA *ptr, bool value)
 static void rna_Space_show_region_ui_update(bContext *C, PointerRNA *ptr)
 {
   rna_Space_bool_from_region_flag_update_by_type(C, ptr, RGN_TYPE_UI, RGN_FLAG_HIDDEN);
+}
+
+/* Shelf Region */
+static bool rna_Space_show_region_shelf_get(PointerRNA *ptr)
+{
+  return !rna_Space_bool_from_region_flag_get_by_type(ptr, RGN_TYPE_SHELF, RGN_FLAG_HIDDEN);
+}
+static void rna_Space_show_region_shelf_set(PointerRNA *ptr, bool value)
+{
+  rna_Space_bool_from_region_flag_set_by_type(ptr, RGN_TYPE_SHELF, RGN_FLAG_HIDDEN, !value);
+}
+static void rna_Space_show_region_shelf_update(bContext *C, PointerRNA *ptr)
+{
+  rna_Space_bool_from_region_flag_update_by_type(C, ptr, RGN_TYPE_SHELF, RGN_FLAG_HIDDEN);
 }
 
 /* Redo (HUD) Region */
@@ -4002,6 +4031,11 @@ static void rna_def_space_generic_show_region_toggles(StructRNA *srna, int regio
     region_type_mask &= ~(1 << RGN_TYPE_UI);
     DEF_SHOW_REGION_PROPERTY(show_region_ui, "Sidebar", "");
   }
+  if (region_type_mask & (1 << RGN_TYPE_SHELF)) {
+    region_type_mask &= ~(1 << RGN_TYPE_SHELF);
+    DEF_SHOW_REGION_PROPERTY(
+        show_region_shelf, "Shelf", "Show the strip of buttons added with Add to Shelf");
+  }
   if (region_type_mask & (1 << RGN_TYPE_HUD)) {
     region_type_mask &= ~(1 << RGN_TYPE_HUD);
     DEF_SHOW_REGION_PROPERTY(show_region_hud, "Adjust Last Operation", "");
@@ -5550,7 +5584,8 @@ static void rna_def_space_view3d(BlenderRNA *brna)
   rna_def_space_generic_show_region_toggles(srna,
                                             ((1 << RGN_TYPE_TOOL_HEADER) | (1 << RGN_TYPE_TOOLS) |
                                              (1 << RGN_TYPE_UI) | (1 << RGN_TYPE_HUD) |
-                                             (1 << RGN_TYPE_ASSET_SHELF)));
+                                             (1 << RGN_TYPE_ASSET_SHELF) |
+                                             (1 << RGN_TYPE_SHELF)));
 
   prop = RNA_def_property(srna, "camera", PROP_POINTER, PROP_NONE);
   RNA_def_property_flag(prop, PROP_EDITABLE);
@@ -6100,6 +6135,20 @@ static void rna_def_space_properties(BlenderRNA *brna)
   prop = RNA_def_property(srna, "use_pin_id", PROP_BOOLEAN, PROP_NONE);
   RNA_def_property_boolean_sdna(prop, nullptr, "flag", SB_PIN_CONTEXT);
   RNA_def_property_ui_text(prop, "Pin ID", "Use the pinned context");
+
+  prop = RNA_def_property(srna, "use_modifier_list", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", SB_MODIFIER_LIST);
+  RNA_def_property_ui_text(prop,
+                           "Modifier List",
+                           "Show the modifiers as a list, with the settings of the active one");
+  RNA_def_property_ui_icon(prop, ICON_MODLIST_VIEW_LIST, 0);
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_PROPERTIES, nullptr);
+
+  prop = RNA_def_property(srna, "modifier_list_last_on_top", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", SB_MODIFIER_LIST_LAST_ON_TOP);
+  RNA_def_property_ui_text(
+      prop, "Last on Top", "Show the last modifier of the stack at the top of the list");
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_PROPERTIES, nullptr);
 
   /* Property search. */
 
@@ -8004,6 +8053,53 @@ static void rna_def_space_filebrowser(BlenderRNA *brna)
   RNA_api_space_filebrowser(srna);
 }
 
+static void rna_def_space_shelf(BlenderRNA *brna)
+{
+  static const EnumPropertyItem icon_size_items[] = {
+      {SHELF_ICON_SIZE_SMALL, "SMALL", 0, "Small", "Icons the size of header buttons"},
+      {SHELF_ICON_SIZE_MEDIUM, "MEDIUM", 0, "Medium", "Icons one and a half times as large"},
+      {SHELF_ICON_SIZE_LARGE, "LARGE", 0, "Large", "Icons twice as large"},
+      {SHELF_ICON_SIZE_CUSTOM, "CUSTOM", 0, "Custom", "Icons scaled by the Icon Scale setting"},
+      {0, nullptr, 0, nullptr, nullptr},
+  };
+
+  StructRNA *srna = RNA_def_struct(brna, "SpaceShelf", "Space");
+  RNA_def_struct_sdna(srna, "SpaceShelf");
+  RNA_def_struct_ui_text(srna, "Space Shelf", "Shelf space data");
+
+  PropertyRNA *prop = RNA_def_property(srna, "icon_size", PROP_ENUM, PROP_NONE);
+  RNA_def_property_enum_items(prop, icon_size_items);
+  RNA_def_property_ui_text(prop, "Icon Size", "Size of the buttons on the shelf");
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_SHELF, nullptr);
+
+  prop = RNA_def_property(srna, "icon_scale", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_range(prop, 0.75f, 4.0f);
+  RNA_def_property_ui_range(prop, 0.75f, 4.0f, 10, 2);
+  RNA_def_property_ui_text(
+      prop, "Icon Scale", "How many times larger than usual the icons are, with the Custom size");
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_SHELF, nullptr);
+}
+
+static void rna_def_space_toolbox(BlenderRNA *brna)
+{
+  StructRNA *srna = RNA_def_struct(brna, "SpaceToolbox", "Space");
+  RNA_def_struct_sdna(srna, "SpaceToolbox");
+  RNA_def_struct_ui_text(srna, "Space Toolbox", "Toolbox space data");
+
+  PropertyRNA *prop = RNA_def_property(srna, "show_edit", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", TOOLBOX_FLAG_EDIT);
+  RNA_def_property_ui_text(
+      prop, "Edit", "Show the buttons to add, rename, move and remove tabs and sections");
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_TOOLBOX, nullptr);
+
+  prop = RNA_def_property(srna, "icon_scale", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_range(prop, 1.0f, 4.0f);
+  RNA_def_property_ui_range(prop, 1.0f, 4.0f, 10, 2);
+  RNA_def_property_ui_text(
+      prop, "Icon Scale", "How many times larger than usual the icons of the large buttons are");
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_TOOLBOX, nullptr);
+}
+
 static void rna_def_space_info(BlenderRNA *brna)
 {
   StructRNA *srna;
@@ -9318,6 +9414,8 @@ void RNA_def_space(BlenderRNA *brna)
   rna_def_space_console(brna);
   rna_def_console_line(brna);
   rna_def_space_info(brna);
+  rna_def_space_shelf(brna);
+  rna_def_space_toolbox(brna);
   rna_def_space_userpref(brna);
   rna_def_node_tree_path(brna);
   rna_def_space_node(brna);

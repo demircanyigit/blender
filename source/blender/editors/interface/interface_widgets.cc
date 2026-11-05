@@ -2481,6 +2481,19 @@ static void widget_draw_text_icon(const uiFontStyle *fstyle,
   else if (but->flag & UI_HAS_ICON || show_menu_icon) {
     const bool is_tool = ((but->icon != ICON_NONE) & but_is_tool(but));
 
+    /* Blocks can ask for larger icons, see #block_icon_scale_set. Buttons of the usual height
+     * keep the usual icon size, only the ones made taller for it get the larger icons. */
+    const float aspect_unscaled = but->block->aspect;
+    if (std::abs(BLI_rctf_size_y(&but->rect) - UI_UNIT_Y) > UI_UNIT_Y * 0.1f) {
+      /* Never larger than the button, so a squeezed button's icon doesn't spill onto its
+       * neighbors. */
+      const float side = std::min(BLI_rctf_size_x(&but->rect), BLI_rctf_size_y(&but->rect));
+      const float scale_fit = (side * 0.8f) / (ICON_DEFAULT_HEIGHT * UI_SCALE_FAC /
+                                                aspect_unscaled);
+      const float scale = std::max(1.0f, std::min(but->block->icon_scale, scale_fit));
+      but->block->aspect /= scale;
+    }
+
     /* XXX add way to draw icons at a different size!
      * Use small icons for popup. */
 #ifdef USE_UI_TOOLBAR_HACK
@@ -2529,6 +2542,7 @@ static void widget_draw_text_icon(const uiFontStyle *fstyle,
 #ifdef USE_UI_TOOLBAR_HACK
     but->block->aspect = aspect_orig;
 #endif
+    but->block->aspect = aspect_unscaled;
 
     rect->xmin += round_fl_to_int(icon_size + icon_padding);
   }

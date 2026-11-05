@@ -179,6 +179,10 @@ const uchar *get_color_ptr(bTheme *btheme, int spacetype, int colorid)
         case SPACE_SPREADSHEET:
           ts = &btheme->space_spreadsheet;
           break;
+        case SPACE_SHELF:
+        case SPACE_TOOLBOX:
+          ts = &btheme->space_properties;
+          break;
         default:
           ts = &btheme->space_view3d;
           break;
@@ -192,7 +196,11 @@ const uchar *get_color_ptr(bTheme *btheme, int spacetype, int colorid)
           else if (g_theme_state.regionid == RGN_TYPE_CHANNELS) {
             cp = btheme->regions.channels.back;
           }
-          else if (ELEM(g_theme_state.regionid, RGN_TYPE_HEADER, RGN_TYPE_FOOTER)) {
+          else if (ELEM(g_theme_state.regionid,
+                        RGN_TYPE_HEADER,
+                        RGN_TYPE_FOOTER,
+                        RGN_TYPE_SHELF))
+          {
             cp = ts->header;
           }
           else if (g_theme_state.regionid == RGN_TYPE_NAV_BAR) {
@@ -234,7 +242,8 @@ const uchar *get_color_ptr(bTheme *btheme, int spacetype, int colorid)
           else if (ELEM(g_theme_state.regionid,
                         RGN_TYPE_HEADER,
                         RGN_TYPE_FOOTER,
-                        RGN_TYPE_ASSET_SHELF_HEADER))
+                        RGN_TYPE_ASSET_SHELF_HEADER,
+                        RGN_TYPE_SHELF))
           {
             cp = ts->header_text;
           }
@@ -249,7 +258,8 @@ const uchar *get_color_ptr(bTheme *btheme, int spacetype, int colorid)
           else if (ELEM(g_theme_state.regionid,
                         RGN_TYPE_HEADER,
                         RGN_TYPE_FOOTER,
-                        RGN_TYPE_ASSET_SHELF_HEADER))
+                        RGN_TYPE_ASSET_SHELF_HEADER,
+                        RGN_TYPE_SHELF))
           {
             cp = ts->header_text_hi;
           }
@@ -266,7 +276,8 @@ const uchar *get_color_ptr(bTheme *btheme, int spacetype, int colorid)
           else if (ELEM(g_theme_state.regionid,
                         RGN_TYPE_HEADER,
                         RGN_TYPE_FOOTER,
-                        RGN_TYPE_ASSET_SHELF_HEADER))
+                        RGN_TYPE_ASSET_SHELF_HEADER,
+                        RGN_TYPE_SHELF))
           {
             cp = ts->header_title;
           }

@@ -1,0 +1,157 @@
+{
+  "blender_shelf": 1,
+  "items": [
+    {
+      "name": "Extrude Region",
+      "icon": "OP_EXTRUDE_REGION",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "mesh.extrude_region_move",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "name": "",
+      "icon": "OP_INSET",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "mesh.inset",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "name": "",
+      "icon": "OP_BEVEL",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "mesh.bevel",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "name": "Loop Cut",
+      "icon": "OP_LOOPCUT",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "mesh.loopcut_slide",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "name": "Knife",
+      "icon": "OP_KNIFE",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "mesh.knife_tool",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "type": "SEPARATOR"
+    },
+    {
+      "name": "",
+      "icon": "OP_SUBDIVIDE",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "mesh.subdivide",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "name": "",
+      "icon": "OP_MERGE",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "mesh.merge",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "name": "Merge by Distance",
+      "icon": "OP_MERGE_BY_DISTANCE",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "mesh.remove_doubles",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "type": "SEPARATOR"
+    },
+    {
+      "name": "",
+      "icon": "OP_BRIDGE",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "mesh.bridge_edge_loops",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "name": "New Edge/Face",
+      "icon": "OP_NEW_FACE",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "mesh.edge_face_add",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "name": "",
+      "icon": "OP_FILL",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "mesh.fill",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "type": "SEPARATOR"
+    },
+    {
+      "name": "Recalculate Normals",
+      "icon": "OP_RECALC_OUTSIDE",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "mesh.normals_make_consistent",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "name": "",
+      "icon": "OP_FLIP_NORMALS",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "mesh.flip_normals",
+      "enum_property": "",
+      "call_context": 0
+    }
+  ]
+}

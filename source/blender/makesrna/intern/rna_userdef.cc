@@ -5324,6 +5324,44 @@ static void rna_def_userdef_view(BlenderRNA *brna)
   RNA_def_property_ui_text(prop, "Navigate Gizmo Size", "The Navigate Gizmo size");
   RNA_def_property_update(prop, 0, "rna_userdef_gizmo_update");
 
+  static const EnumPropertyItem shelf_icon_size_items[] = {
+      {USER_SHELF_ICON_SIZE_SMALL, "SMALL", 0, "Small", "Icons the size of header buttons"},
+      {USER_SHELF_ICON_SIZE_MEDIUM, "MEDIUM", 0, "Medium", "Icons one and a half times as large"},
+      {USER_SHELF_ICON_SIZE_LARGE, "LARGE", 0, "Large", "Icons twice as large"},
+      {USER_SHELF_ICON_SIZE_CUSTOM, "CUSTOM", 0, "Custom", "Icons scaled by the Icon Scale setting"},
+      {0, nullptr, 0, nullptr, nullptr},
+  };
+
+  prop = RNA_def_property(srna, "shelf_icon_size", PROP_ENUM, PROP_NONE);
+  RNA_def_property_enum_sdna(prop, nullptr, "shelf_icon_size");
+  RNA_def_property_enum_items(prop, shelf_icon_size_items);
+  RNA_def_property_ui_text(prop, "Shelf Icon Size", "Size of the buttons on the shelf");
+  RNA_def_property_update(prop, 0, "rna_userdef_update");
+
+  prop = RNA_def_property(srna, "shelf_show_tabs", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_negative_sdna(prop, nullptr, "shelf_flag", USER_SHELF_HIDE_TABS);
+  RNA_def_property_ui_text(prop,
+                           "Show Shelf Tabs",
+                           "Show the tabs of the shelf, without them it only shows the buttons of "
+                           "the active tab");
+  RNA_def_property_update(prop, 0, "rna_userdef_update");
+
+  prop = RNA_def_property(srna, "shelf_active_tab", PROP_INT, PROP_NONE);
+  RNA_def_property_int_sdna(prop, nullptr, "shelf_active_tab");
+  RNA_def_property_range(prop, 0, 255);
+  RNA_def_property_ui_text(prop, "Active Shelf Tab", "Index of the tab the shelf shows");
+  RNA_def_property_update(prop, 0, "rna_userdef_update");
+
+  prop = RNA_def_property(srna, "shelf_icon_scale", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "shelf_icon_scale");
+  RNA_def_property_range(prop, 0.75f, 4.0f);
+  RNA_def_property_ui_range(prop, 0.75f, 4.0f, 10, 2);
+  RNA_def_property_ui_text(prop,
+                           "Shelf Icon Scale",
+                           "How many times larger than usual the shelf icons are, with the "
+                           "Custom size");
+  RNA_def_property_update(prop, 0, "rna_userdef_update");
+
   /* Lookdev */
   prop = RNA_def_property(srna, "lookdev_sphere_size", PROP_INT, PROP_PIXEL);
   RNA_def_property_int_sdna(prop, nullptr, "lookdev_sphere_size");

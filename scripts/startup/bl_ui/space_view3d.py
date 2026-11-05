@@ -1457,6 +1457,7 @@ class VIEW3D_MT_view(Menu):
         layout.prop(view, "show_region_toolbar")
         layout.prop(view, "show_region_ui")
         layout.prop(view, "show_region_tool_header")
+        layout.prop(view, "show_region_shelf")
         layout.prop(view, "show_region_asset_shelf")
         layout.prop(view, "show_region_hud")
 
@@ -1841,7 +1842,7 @@ class VIEW3D_MT_edit_mesh_select_similar(Menu):
 
         layout.separator()
 
-        layout.operator("mesh.select_similar_region", text="Face Regions")
+        layout.operator("mesh.select_similar_region", text="Face Regions", icon='OP_SIMILAR_REGION')
 
 
 class VIEW3D_MT_edit_mesh_select_by_trait(Menu):
@@ -1886,7 +1887,7 @@ class VIEW3D_MT_edit_mesh_select_linked(Menu):
 
         layout.operator("mesh.select_linked", text="Linked", icon='OP_SELECT_LINKED')
         layout.operator("mesh.shortest_path_select", text="Shortest Path", icon='OP_CONNECT_PATH')
-        layout.operator("mesh.faces_select_linked_flat", text="Linked Flat Faces")
+        layout.operator("mesh.faces_select_linked_flat", text="Linked Flat Faces", icon='OP_LINKED_FLAT')
 
 
 class VIEW3D_MT_edit_mesh_select_loops(Menu):
@@ -1895,13 +1896,13 @@ class VIEW3D_MT_edit_mesh_select_loops(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("mesh.select_edge_loop_multi", text="Edge Loops")
-        layout.operator("mesh.select_edge_ring_multi", text="Edge Rings")
+        layout.operator("mesh.select_edge_loop_multi", text="Edge Loops", icon='OP_SELECT_EDGE_LOOPS')
+        layout.operator("mesh.select_edge_ring_multi", text="Edge Rings", icon='OP_SELECT_EDGE_RINGS')
 
         layout.separator()
 
-        layout.operator("mesh.loop_to_region")
-        layout.operator("mesh.region_to_loop")
+        layout.operator("mesh.loop_to_region", icon='OP_LOOP_TO_REGION')
+        layout.operator("mesh.region_to_loop", icon='OP_REGION_TO_LOOP')
 
 
 class VIEW3D_MT_select_edit_mesh(Menu):
@@ -1919,7 +1920,7 @@ class VIEW3D_MT_select_edit_mesh(Menu):
         layout.separator()
         layout.operator("view3d.select_box", icon='TOOL_SELECT_BOX')
         layout.operator("view3d.select_circle", icon='TOOL_SELECT_CIRCLE')
-        layout.operator_menu_enum("view3d.select_lasso", "mode")
+        layout.operator_menu_enum("view3d.select_lasso", "mode", icon='TOOL_SELECT_LASSO')
 
         # numeric
         layout.separator()
@@ -1929,23 +1930,23 @@ class VIEW3D_MT_select_edit_mesh(Menu):
 
         # more/less
         layout.separator()
-        layout.menu("VIEW3D_MT_edit_mesh_select_more_less", text="More/Less")
+        layout.menu("VIEW3D_MT_edit_mesh_select_more_less", text="More/Less", icon='OP_SELECT_MORE')
 
         # grouped
         layout.separator()
-        layout.menu("VIEW3D_MT_edit_mesh_select_similar")
-        layout.menu("VIEW3D_MT_edit_mesh_select_by_trait")
-        layout.menu("VIEW3D_MT_edit_mesh_select_linked")
-        layout.menu("VIEW3D_MT_edit_mesh_select_loops")
+        layout.menu("VIEW3D_MT_edit_mesh_select_similar", icon='OP_SELECT_SIMILAR')
+        layout.menu("VIEW3D_MT_edit_mesh_select_by_trait", icon='OP_SELECT_TRAIT')
+        layout.menu("VIEW3D_MT_edit_mesh_select_linked", icon='OP_SELECT_LINKED')
+        layout.menu("VIEW3D_MT_edit_mesh_select_loops", icon='OP_SELECT_EDGE_LOOPS')
 
         # geometric
         layout.separator()
-        layout.operator("mesh.edges_select_sharp", text="Sharp Edges")
-        layout.operator("mesh.select_axis", text="Side of Active")
+        layout.operator("mesh.edges_select_sharp", text="Sharp Edges", icon='OP_SELECT_SHARP_EDGES')
+        layout.operator("mesh.select_axis", text="Side of Active", icon='OP_SELECT_SIDE')
 
         # attribute
         layout.separator()
-        layout.operator("mesh.select_by_attribute", text="By Attribute")
+        layout.operator("mesh.select_by_attribute", text="By Attribute", icon='OP_SELECT_BY_ATTRIBUTE')
 
         layout.template_node_operator_asset_menu_items(catalog_path=self.bl_label)
 
@@ -3251,7 +3252,7 @@ class VIEW3D_MT_object_parent(Menu):
 
         with operator_context(layout, 'EXEC_REGION_WIN'):
             layout.operator("object.parent_no_inverse_set", icon='OP_PARENT_NO_INVERSE').keep_transform = False
-            props = layout.operator("object.parent_no_inverse_set", text="Make Parent without Inverse (Keep Transform)", icon='OP_PARENT_NO_INVERSE')
+            props = layout.operator("object.parent_no_inverse_set", text="Make Parent without Inverse (Keep Transform)", icon='OP_PARENT_NO_INVERSE_KEEP')
             props.keep_transform = True
 
         layout.separator()
@@ -4962,15 +4963,15 @@ class VIEW3D_MT_edit_mesh_normals_select_strength(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        props = layout.operator("mesh.mod_weighted_strength", text="Weak")
+        props = layout.operator("mesh.mod_weighted_strength", text="Weak", icon='OP_STRENGTH_WEAK')
         props.set = False
         props.face_strength = 'WEAK'
 
-        props = layout.operator("mesh.mod_weighted_strength", text="Medium")
+        props = layout.operator("mesh.mod_weighted_strength", text="Medium", icon='OP_STRENGTH_MEDIUM')
         props.set = False
         props.face_strength = 'MEDIUM'
 
-        props = layout.operator("mesh.mod_weighted_strength", text="Strong")
+        props = layout.operator("mesh.mod_weighted_strength", text="Strong", icon='OP_STRENGTH_STRONG')
         props.set = False
         props.face_strength = 'STRONG'
 
@@ -4981,15 +4982,15 @@ class VIEW3D_MT_edit_mesh_normals_set_strength(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        props = layout.operator("mesh.mod_weighted_strength", text="Weak")
+        props = layout.operator("mesh.mod_weighted_strength", text="Weak", icon='OP_STRENGTH_WEAK')
         props.set = True
         props.face_strength = 'WEAK'
 
-        props = layout.operator("mesh.mod_weighted_strength", text="Medium")
+        props = layout.operator("mesh.mod_weighted_strength", text="Medium", icon='OP_STRENGTH_MEDIUM')
         props.set = True
         props.face_strength = 'MEDIUM'
 
-        props = layout.operator("mesh.mod_weighted_strength", text="Strong")
+        props = layout.operator("mesh.mod_weighted_strength", text="Strong", icon='OP_STRENGTH_STRONG')
         props.set = True
         props.face_strength = 'STRONG'
 
@@ -5000,9 +5001,9 @@ class VIEW3D_MT_edit_mesh_normals_average(Menu):
     def draw(self, _context):
         layout = self.layout
 
-        layout.operator("mesh.average_normals", text="Custom Normal").average_type = 'CUSTOM_NORMAL'
-        layout.operator("mesh.average_normals", text="Face Area").average_type = 'FACE_AREA'
-        layout.operator("mesh.average_normals", text="Corner Angle").average_type = 'CORNER_ANGLE'
+        layout.operator("mesh.average_normals", text="Custom Normal", icon='OP_NORMALS_AVERAGE').average_type = 'CUSTOM_NORMAL'
+        layout.operator("mesh.average_normals", text="Face Area", icon='OP_NORMALS_AVERAGE_AREA').average_type = 'FACE_AREA'
+        layout.operator("mesh.average_normals", text="Corner Angle", icon='OP_NORMALS_AVERAGE_ANGLE').average_type = 'CORNER_ANGLE'
 
 
 class VIEW3D_MT_edit_mesh_normals(Menu):
@@ -5017,29 +5018,30 @@ class VIEW3D_MT_edit_mesh_normals(Menu):
 
         layout.separator()
 
-        layout.operator("mesh.set_normals_from_faces", text="Set from Faces")
+        layout.operator("mesh.set_normals_from_faces", text="Set from Faces", icon='OP_NORMALS_FROM_FACES')
 
         layout.operator_context = 'INVOKE_REGION_WIN'
-        layout.operator("transform.rotate_normal", text="Rotate...")
-        layout.operator("mesh.point_normals", text="Point to Target...")
+        layout.operator("transform.rotate_normal", text="Rotate...", icon='OP_NORMALS_ROTATE')
+        layout.operator("mesh.point_normals", text="Point to Target...", icon='OP_NORMALS_POINT')
         layout.operator_context = 'EXEC_REGION_WIN'
 
-        layout.operator("mesh.merge_normals", text="Merge")
-        layout.operator("mesh.split_normals", text="Split")
-        layout.menu("VIEW3D_MT_edit_mesh_normals_average", text="Average", text_ctxt=i18n_contexts.id_mesh)
+        layout.operator("mesh.merge_normals", text="Merge", icon='OP_NORMALS_MERGE')
+        layout.operator("mesh.split_normals", text="Split", icon='OP_NORMALS_SPLIT')
+        layout.menu("VIEW3D_MT_edit_mesh_normals_average", text="Average", text_ctxt=i18n_contexts.id_mesh,
+                    icon='OP_NORMALS_AVERAGE')
 
         layout.separator()
 
-        layout.operator("mesh.normals_tools", text="Copy Vector").mode = 'COPY'
-        layout.operator("mesh.normals_tools", text="Paste Vector").mode = 'PASTE'
+        layout.operator("mesh.normals_tools", text="Copy Vector", icon='OP_NORMALS_COPY').mode = 'COPY'
+        layout.operator("mesh.normals_tools", text="Paste Vector", icon='OP_NORMALS_PASTE').mode = 'PASTE'
 
-        layout.operator("mesh.smooth_normals", text="Smooth Vectors")
-        layout.operator("mesh.normals_tools", text="Reset Vectors").mode = 'RESET'
+        layout.operator("mesh.smooth_normals", text="Smooth Vectors", icon='OP_NORMALS_SMOOTH')
+        layout.operator("mesh.normals_tools", text="Reset Vectors", icon='OP_NORMALS_RESET').mode = 'RESET'
 
         layout.separator()
 
-        layout.menu("VIEW3D_MT_edit_mesh_normals_select_strength")
-        layout.menu("VIEW3D_MT_edit_mesh_normals_set_strength")
+        layout.menu("VIEW3D_MT_edit_mesh_normals_select_strength", icon='OP_FACE_STRENGTH_SELECT')
+        layout.menu("VIEW3D_MT_edit_mesh_normals_set_strength", icon='OP_FACE_STRENGTH_SET')
         layout.template_node_operator_asset_menu_items(catalog_path="Mesh/Normals")
 
 
@@ -5095,7 +5097,7 @@ class VIEW3D_MT_edit_mesh_clean(Menu):
 
         layout.operator("mesh.vert_connect_nonplanar", icon='OP_SPLIT_NONPLANAR')
         layout.operator("mesh.vert_connect_concave", icon='OP_SPLIT_CONCAVE')
-        layout.operator("mesh.remove_doubles")
+        layout.operator("mesh.remove_doubles", icon='OP_MERGE_BY_DISTANCE')
         layout.operator("mesh.fill_holes", icon='OP_FILL_HOLES')
 
         layout.template_node_operator_asset_menu_items(catalog_path="Mesh/Clean Up")
@@ -5137,7 +5139,7 @@ class VIEW3D_MT_edit_mesh_merge(Menu):
 
         layout.separator()
 
-        layout.operator("mesh.remove_doubles", text="By Distance")
+        layout.operator("mesh.remove_doubles", text="By Distance", icon='OP_MERGE_BY_DISTANCE')
 
         layout.template_node_operator_asset_menu_items(catalog_path="Mesh/Merge")
 

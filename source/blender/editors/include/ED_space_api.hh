@@ -43,6 +43,10 @@ void ED_spacetype_userpref();
 void ED_spacetype_clip();
 void ED_spacetype_statusbar();
 void ED_spacetype_topbar();
+void ED_spacetype_shelf();
+void ED_spacetype_toolbox();
+/** The strip of shelf buttons (#RGN_TYPE_SHELF), for the editors that have one. */
+ARegionType *ED_shelf_region_type_create();
 
 namespace ed::vse {
 void ED_spacetype_sequencer();

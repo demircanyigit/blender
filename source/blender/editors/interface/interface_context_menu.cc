@@ -15,6 +15,7 @@
 #include "DNA_screen_types.h"
 
 #include "BLI_fileops.h"
+#include "BLI_listbase.h"
 #include "BLI_path_utils.hh"
 #include "BLI_string_utf8.h"
 #include "BLI_utildefines.h"
@@ -36,6 +37,7 @@
 #include "interface_intern.hh"
 
 #include "RNA_access.hh"
+#include "RNA_enum_types.hh"
 #include "RNA_path.hh"
 #include "RNA_prototypes.hh"
 
@@ -380,7 +382,22 @@ static bUserMenuItem *ui_but_user_menu_find(bContext *C, Button *but, bUserMenu 
   return nullptr;
 }
 
+static void ui_but_shelf_icon_set(bContext *C, Button *but, bUserMenuItem *umi);
+
+static void ui_but_user_menu_add_items(bContext *C, Button *but, bUserMenu *um);
+
+/** Adds the button to Quick Favorites, with the button's icon so the menu can draw it. */
 static void ui_but_user_menu_add(bContext *C, Button *but, bUserMenu *um)
+{
+  bUserMenuItem *last = static_cast<bUserMenuItem *>(um->items.last);
+  ui_but_user_menu_add_items(C, but, um);
+  bUserMenuItem *added = static_cast<bUserMenuItem *>(um->items.last);
+  if (added != nullptr && added != last) {
+    ui_but_shelf_icon_set(C, but, added);
+  }
+}
+
+static void ui_but_user_menu_add_items(bContext *C, Button *but, bUserMenu *um)
 {
   BLI_assert(ui_but_is_user_menu_compatible(C, but));
 
@@ -463,6 +480,220 @@ static void ui_but_user_menu_add(bContext *C, Button *but, bUserMenu *um)
                                           RNA_property_identifier(prop),
                                           but->opcontext);
   }
+}
+
+/** The Shelf takes operators and toggles. */
+static bool ui_but_is_shelf_compatible(bContext *C, Button *but)
+{
+  if (but->optype) {
+    return true;
+  }
+  if (but->rnaprop && RNA_property_type(but->rnaprop) == PROP_BOOLEAN) {
+    return WM_context_path_resolve_full(C, &but->rnapoin).has_value();
+  }
+  return false;
+}
+
+/** Stores the name of the button's icon, so the shelf can draw it. */
+static void ui_but_shelf_icon_set(bContext *C, Button *but, bUserMenuItem *umi)
+{
+  const char *icon_id = nullptr;
+  if (but->icon != ICON_NONE && RNA_enum_identifier(rna_enum_icon_items, but->icon, &icon_id)) {
+    STRNCPY_UTF8(umi->icon_name, icon_id);
+    return;
+  }
+#ifdef WITH_PYTHON
+  /* Tool icons aren't built-in icons, the tool system loads them from files. */
+  if (but_is_tool(but)) {
+    char idname[64];
+    RNA_string_get(but->opptr, "name", idname);
+    const char *expr_imports[] = {"bpy", "bl_ui", nullptr};
+    char expr[256];
+    SNPRINTF_UTF8(expr,
+                  "getattr(bl_ui.space_toolsystem_common.item_from_id("
+                  "bpy.context, "
+                  "bpy.context.space_data.type, "
+                  "'%s'), 'icon', None) or ''",
+                  idname);
+    char *expr_result = nullptr;
+    if (BPY_run_string_as_string(C, expr_imports, expr, nullptr, &expr_result)) {
+      STRNCPY_UTF8(umi->icon_name, expr_result);
+      MEM_delete(expr_result);
+    }
+  }
+#else
+  UNUSED_VARS(C);
+#endif
+}
+
+static void ui_but_shelf_add(bContext *C, Button *but)
+{
+  bUserMenu *um = ED_screen_shelf_ensure();
+  ui_but_user_menu_add(C, but, um);
+  bUserMenuItem *umi = static_cast<bUserMenuItem *>(um->items.last);
+  /* The shelf runs the item in an editor of this type. */
+  const ScrArea *area = CTX_wm_area(C);
+  umi->space_type = area ? area->spacetype : SPACE_EMPTY;
+  ui_but_shelf_icon_set(C, but, umi);
+  U.runtime.is_dirty = true;
+  WM_event_add_notifier(C, NC_SPACE | ND_SPACE_SHELF, nullptr);
+}
+
+/**
+ * Adds the Shelf entries: "Add to Shelf" (or "Remove from Shelf" when it's on it already) for
+ * buttons anywhere, and moving and removing for the buttons of the Shelf itself.
+ * \return Whether anything was added.
+ */
+static bool ui_but_menu_add_shelf(bContext *C, Button *but, Layout &layout)
+{
+  const std::optional<int64_t> tab_index = but->context ?
+                                               CTX_store_int_lookup(but->context,
+                                                                    "shelf_tab_index") :
+                                               std::nullopt;
+  if (tab_index.has_value()) {
+    PointerRNA ptr = layout.op("SHELF_OT_tab_rename",
+                               CTX_IFACE_(BLT_I18NCONTEXT_OPERATOR_DEFAULT, "Rename Tab..."),
+                               ICON_SMALL_CAPS);
+    RNA_int_set(&ptr, "tab", int(*tab_index));
+    ptr = layout.op("SHELF_OT_tab_move",
+                    CTX_IFACE_(BLT_I18NCONTEXT_OPERATOR_DEFAULT, "Move Tab Left"),
+                    ICON_TRIA_LEFT);
+    RNA_int_set(&ptr, "tab", int(*tab_index));
+    RNA_int_set(&ptr, "offset", -1);
+    ptr = layout.op("SHELF_OT_tab_move",
+                    CTX_IFACE_(BLT_I18NCONTEXT_OPERATOR_DEFAULT, "Move Tab Right"),
+                    ICON_TRIA_RIGHT);
+    RNA_int_set(&ptr, "tab", int(*tab_index));
+    RNA_int_set(&ptr, "offset", 1);
+    ptr = layout.op("SHELF_OT_tab_remove",
+                    CTX_IFACE_(BLT_I18NCONTEXT_OPERATOR_DEFAULT, "Remove Tab"),
+                    ICON_X);
+    RNA_int_set(&ptr, "tab", int(*tab_index));
+    if (MenuType *mt = WM_menutype_find("SHELF_MT_context_menu", true)) {
+      layout.separator();
+      menutype_draw(C, mt, &layout);
+    }
+    return true;
+  }
+
+  const std::optional<int64_t> shelf_index = but->context ?
+                                                 CTX_store_int_lookup(but->context,
+                                                                      "shelf_item_index") :
+                                                 std::nullopt;
+  if (shelf_index.has_value()) {
+    bUserMenu *um = ED_screen_shelf_find();
+    const bUserMenuItem *umi = um ? static_cast<const bUserMenuItem *>(
+                                        BLI_findlink(&um->items, int(*shelf_index))) :
+                                    nullptr;
+    const bool is_separator = umi && umi->type == USER_MENU_TYPE_SEP;
+    if (is_separator) {
+      PointerRNA ptr = layout.op("SHELF_OT_move_item",
+                                 CTX_IFACE_(BLT_I18NCONTEXT_OPERATOR_DEFAULT, "Move Left"),
+                                 ICON_TRIA_LEFT);
+      RNA_int_set(&ptr, "index", int(*shelf_index));
+      RNA_int_set(&ptr, "offset", -1);
+      ptr = layout.op("SHELF_OT_move_item",
+                      CTX_IFACE_(BLT_I18NCONTEXT_OPERATOR_DEFAULT, "Move Right"),
+                      ICON_TRIA_RIGHT);
+      RNA_int_set(&ptr, "index", int(*shelf_index));
+      RNA_int_set(&ptr, "offset", 1);
+      ptr = layout.op("SHELF_OT_remove_item",
+                      CTX_IFACE_(BLT_I18NCONTEXT_OPERATOR_DEFAULT, "Remove Separator"),
+                      ICON_X);
+      RNA_int_set(&ptr, "index", int(*shelf_index));
+      if (MenuType *mt = WM_menutype_find("SHELF_MT_context_menu", true)) {
+        layout.separator();
+        menutype_draw(C, mt, &layout);
+      }
+      return true;
+    }
+    const bool show_text = umi && (umi->shelf_flag & USER_MENU_ITEM_SHELF_SHOW_TEXT);
+    PointerRNA ptr = layout.op("SHELF_OT_toggle_item_text",
+                               CTX_IFACE_(BLT_I18NCONTEXT_OPERATOR_DEFAULT, "Show Text"),
+                               show_text ? ICON_CHECKBOX_HLT : ICON_CHECKBOX_DEHLT);
+    RNA_int_set(&ptr, "index", int(*shelf_index));
+    const bool show_icon = umi && !(umi->shelf_flag & USER_MENU_ITEM_SHELF_HIDE_ICON);
+    ptr = layout.op("SHELF_OT_toggle_item_icon",
+                    CTX_IFACE_(BLT_I18NCONTEXT_OPERATOR_DEFAULT, "Show Icon"),
+                    show_icon ? ICON_CHECKBOX_HLT : ICON_CHECKBOX_DEHLT);
+    RNA_int_set(&ptr, "index", int(*shelf_index));
+    ptr = layout.op("SHELF_OT_pick_icon",
+                    CTX_IFACE_(BLT_I18NCONTEXT_OPERATOR_DEFAULT, "Change Icon..."),
+                    ICON_IMAGE_DATA);
+    RNA_int_set(&ptr, "index", int(*shelf_index));
+    ptr = layout.op("SHELF_OT_rename_item",
+                    CTX_IFACE_(BLT_I18NCONTEXT_OPERATOR_DEFAULT, "Rename..."),
+                    ICON_SMALL_CAPS);
+    RNA_int_set(&ptr, "index", int(*shelf_index));
+    ptr = layout.op("SHELF_OT_add_separator",
+                    CTX_IFACE_(BLT_I18NCONTEXT_OPERATOR_DEFAULT, "Add Separator After"),
+                    ICON_NONE);
+    RNA_int_set(&ptr, "index", int(*shelf_index));
+    layout.separator();
+
+    ptr = layout.op("SHELF_OT_move_item",
+                    CTX_IFACE_(BLT_I18NCONTEXT_OPERATOR_DEFAULT, "Move Left"),
+                    ICON_TRIA_LEFT);
+    RNA_int_set(&ptr, "index", int(*shelf_index));
+    RNA_int_set(&ptr, "offset", -1);
+    ptr = layout.op("SHELF_OT_move_item",
+                    CTX_IFACE_(BLT_I18NCONTEXT_OPERATOR_DEFAULT, "Move Right"),
+                    ICON_TRIA_RIGHT);
+    RNA_int_set(&ptr, "index", int(*shelf_index));
+    RNA_int_set(&ptr, "offset", 1);
+    ptr = layout.op("SHELF_OT_remove_item",
+                    CTX_IFACE_(BLT_I18NCONTEXT_OPERATOR_DEFAULT, "Remove from Shelf"),
+                    ICON_OP_REMOVE_FROM_SHELF);
+    RNA_int_set(&ptr, "index", int(*shelf_index));
+
+    /* The shelf's own options, the same as when right-clicking between its buttons. */
+    if (MenuType *mt = WM_menutype_find("SHELF_MT_context_menu", true)) {
+      layout.separator();
+      menutype_draw(C, mt, &layout);
+    }
+    return true;
+  }
+
+  if (!ui_but_is_shelf_compatible(C, but)) {
+    return false;
+  }
+  Block *block = layout.block();
+  const int w = layout.width();
+  bUserMenu *um = ED_screen_shelf_find();
+  bUserMenuItem *umi = um ? ui_but_user_menu_find(C, but, um) : nullptr;
+  if (umi != nullptr) {
+    Button *but2 = uiDefIconTextBut(
+        block,
+        ButtonType::But,
+        ICON_OP_REMOVE_FROM_SHELF,
+        CTX_IFACE_(BLT_I18NCONTEXT_OPERATOR_DEFAULT, "Remove from Shelf"),
+        0,
+        0,
+        w,
+        UI_UNIT_Y,
+        nullptr,
+        "");
+    button_func_set(but2, [um, umi](bContext &C) {
+      ED_screen_user_menu_item_remove(&um->items, umi);
+      U.runtime.is_dirty = true;
+      WM_event_add_notifier(&C, NC_SPACE | ND_SPACE_SHELF, nullptr);
+    });
+  }
+  else {
+    Button *but2 = uiDefIconTextBut(
+        block,
+        ButtonType::But,
+        ICON_OP_ADD_TO_SHELF,
+        CTX_IFACE_(BLT_I18NCONTEXT_OPERATOR_DEFAULT, "Add to Shelf"),
+        0,
+        0,
+        w,
+        UI_UNIT_Y,
+        nullptr,
+        TIP_("Add an icon for this to the Shelf editor (stored in the user preferences)"));
+    button_func_set(but2, [but](bContext &C) { ui_but_shelf_add(&C, but); });
+  }
+  return true;
 }
 
 static bool ui_but_menu_add_path_operators(Layout &layout, PointerRNA *ptr, PropertyRNA *prop)
@@ -1038,8 +1269,13 @@ bool popup_context_menu_for_button(bContext *C, Button *but, const wmEvent *even
     }
   }
 
+  /* The buttons of the Shelf only run its own items, they don't go in other menus. */
+  const bool is_shelf_item = but->context &&
+                             (CTX_store_int_lookup(but->context, "shelf_item_index").has_value() ||
+                              CTX_store_int_lookup(but->context, "shelf_tab_index").has_value());
+
   /* Favorites Menu */
-  if (ui_but_is_user_menu_compatible(C, but)) {
+  if (ui_but_is_user_menu_compatible(C, but) && !is_shelf_item) {
     Block *block = layout.block();
     const int w = layout.width();
     bool item_found = false;
@@ -1099,7 +1335,7 @@ bool popup_context_menu_for_button(bContext *C, Button *but, const wmEvent *even
 
   /* Shortcut menu */
   IDProperty *prop;
-  const char *idname = shortcut_get_operator_property(C, but, &prop);
+  const char *idname = is_shelf_item ? nullptr : shortcut_get_operator_property(C, but, &prop);
   if (idname != nullptr) {
     Block *block = layout.block();
     const int w = layout.width();
@@ -1189,7 +1425,10 @@ bool popup_context_menu_for_button(bContext *C, Button *but, const wmEvent *even
 
     /* Set the operator pointer for python access */
     layout.context_set_from_but(but);
+  }
 
+  /* Shelf, under the shortcut. */
+  if (ui_but_menu_add_shelf(C, but, layout) || idname != nullptr) {
     layout.separator();
   }
 

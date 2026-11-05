@@ -22,6 +22,21 @@ set(SRC
   intern/foreach_geometry.cc
   intern/interpolate_curves.cc
   intern/isotropic_remesh.cc
+  intern/quadriflow_remesh.cc
+  intern/axis_deform.cc
+  intern/curve_modifiers.cc
+  intern/mesh_cap_holes.cc
+  intern/mesh_quadrangulate.cc
+  intern/mesh_elements.cc
+  intern/mesh_topology_ops.cc
+  intern/deform_ops.cc
+  intern/curve_sweep.cc
+  intern/uv_smart_project.cc
+  intern/mesh_channels.cc
+  intern/mesh_face_extrude.cc
+  intern/radial_array.cc
+  intern/uvw_map.cc
+  intern/volume_select.cc
   intern/join_geometries.cc
   intern/merge_curves.cc
   intern/merge_layers.cc
@@ -73,6 +88,21 @@ set(SRC
   GEO_foreach_geometry.hh
   GEO_interpolate_curves.hh
   GEO_isotropic_remesh.hh
+  GEO_quadriflow_remesh.hh
+  GEO_axis_deform.hh
+  GEO_curve_modifiers.hh
+  GEO_mesh_cap_holes.hh
+  GEO_mesh_quadrangulate.hh
+  GEO_mesh_elements.hh
+  GEO_mesh_topology_ops.hh
+  GEO_deform_ops.hh
+  GEO_curve_sweep.hh
+  GEO_uv_smart_project.hh
+  GEO_mesh_channels.hh
+  GEO_mesh_face_extrude.hh
+  GEO_radial_array.hh
+  GEO_uvw_map.hh
+  GEO_volume_select.hh
   GEO_join_geometries.hh
   GEO_merge_curves.hh
   GEO_merge_layers.hh
@@ -140,6 +170,10 @@ endif()
 
 if(WITH_MANIFOLD)
   add_definitions(-DWITH_MANIFOLD)
+endif()
+
+if(WITH_QUADRIFLOW)
+  add_definitions(-DWITH_QUADRIFLOW)
 endif()
 
 blender_add_lib(bf_geometry "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")

@@ -901,8 +901,8 @@ static void bone_connect_to_new_parent(ListBaseT<EditBone> *edbo,
 }
 
 static const EnumPropertyItem prop_editarm_make_parent_types[] = {
-    {ARM_PAR_CONNECT, "CONNECTED", 0, "Connected", ""},
-    {ARM_PAR_OFFSET, "OFFSET", 0, "Keep Offset", ""},
+    {ARM_PAR_CONNECT, "CONNECTED", ICON_OP_BONE_PARENT_CONNECTED, "Connected", ""},
+    {ARM_PAR_OFFSET, "OFFSET", ICON_OP_BONE_PARENT_OFFSET, "Keep Offset", ""},
     {0, nullptr, 0, nullptr, nullptr},
 };
 
@@ -1032,12 +1032,14 @@ static wmOperatorStatus armature_parent_set_invoke(bContext *C,
 
   ui::Layout &row_offset = layout.row(false);
   row_offset.enabled_set(enable_offset);
-  PointerRNA op_ptr = row_offset.op("ARMATURE_OT_parent_set", IFACE_("Keep Offset"), ICON_NONE);
+  PointerRNA op_ptr = row_offset.op(
+      "ARMATURE_OT_parent_set", IFACE_("Keep Offset"), ICON_OP_BONE_PARENT_OFFSET);
   RNA_enum_set(&op_ptr, "type", ARM_PAR_OFFSET);
 
   ui::Layout &row_connect = layout.row(false);
   row_connect.enabled_set(enable_connect);
-  op_ptr = row_connect.op("ARMATURE_OT_parent_set", IFACE_("Connected"), ICON_NONE);
+  op_ptr = row_connect.op(
+      "ARMATURE_OT_parent_set", IFACE_("Connected"), ICON_OP_BONE_PARENT_CONNECTED);
   RNA_enum_set(&op_ptr, "type", ARM_PAR_CONNECT);
 
   popup_menu_end(C, pup);

@@ -1,0 +1,160 @@
+{
+  "blender_shelf": 1,
+  "items": [
+    {
+      "name": "Cube",
+      "icon": "MESH_CUBE",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "mesh.primitive_cube_add",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "name": "UV Sphere",
+      "icon": "MESH_UVSPHERE",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "mesh.primitive_uv_sphere_add",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "name": "Cylinder",
+      "icon": "MESH_CYLINDER",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "mesh.primitive_cylinder_add",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "name": "Plane",
+      "icon": "MESH_PLANE",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "mesh.primitive_plane_add",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "type": "SEPARATOR"
+    },
+    {
+      "name": "Duplicate",
+      "icon": "OP_DUPLICATE",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "object.duplicate_move",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "name": "",
+      "icon": "OP_JOIN",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "object.join",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "type": "SEPARATOR"
+    },
+    {
+      "name": "Origin to Geometry",
+      "icon": "OP_ORIGIN_TO_GEOMETRY",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "object.origin_set",
+      "enum_property": "",
+      "call_context": 0,
+      "properties": [
+        {
+          "name": "type",
+          "type": "IDP_INT",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "Origin to 3D Cursor",
+      "icon": "OP_ORIGIN_TO_CURSOR",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "object.origin_set",
+      "enum_property": "",
+      "call_context": 0,
+      "properties": [
+        {
+          "name": "type",
+          "type": "IDP_INT",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "name": "Apply Transforms",
+      "icon": "OP_APPLY_TRANSFORM",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "object.transform_apply",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "type": "SEPARATOR"
+    },
+    {
+      "name": "",
+      "icon": "OP_SHADE_SMOOTH",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "object.shade_smooth",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "name": "",
+      "icon": "OP_SHADE_AUTO_SMOOTH",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "object.shade_auto_smooth",
+      "enum_property": "",
+      "call_context": 0
+    },
+    {
+      "name": "",
+      "icon": "OP_SHADE_FLAT",
+      "editor": "VIEW_3D",
+      "show_text": 0,
+      "show_icon": 1,
+      "type": "OPERATOR",
+      "operator": "object.shade_flat",
+      "enum_property": "",
+      "call_context": 0
+    }
+  ]
+}

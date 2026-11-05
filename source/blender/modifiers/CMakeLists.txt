@@ -55,6 +55,7 @@ set(SRC
   intern/MOD_grease_pencil_smooth.cc
   intern/MOD_grease_pencil_subdiv.cc
   intern/MOD_grease_pencil_texture.cc
+  intern/MOD_isotropic_remesh.cc
   intern/MOD_grease_pencil_thickness.cc
   intern/MOD_grease_pencil_time.cc
   intern/MOD_grease_pencil_tint.cc
@@ -105,6 +106,45 @@ set(SRC
   intern/MOD_volume_to_mesh.cc
   intern/MOD_warp.cc
   intern/MOD_wave.cc
+  intern/MOD_quadriflow_remesh.cc
+  intern/MOD_axis_deform.cc
+  intern/MOD_cap_holes.cc
+  intern/MOD_quadrangulate.cc
+  intern/MOD_beautify_faces.cc
+  intern/MOD_element_order.cc
+  intern/MOD_element_pivot.cc
+  intern/MOD_exploded_view.cc
+  intern/MOD_ffd.cc
+  intern/MOD_inset.cc
+  intern/MOD_mark_by_angle.cc
+  intern/MOD_melt.cc
+  intern/MOD_noise.cc
+  intern/MOD_panelize.cc
+  intern/MOD_poke.cc
+  intern/MOD_push.cc
+  intern/MOD_randomize_elements.cc
+  intern/MOD_rotate_edges.cc
+  intern/MOD_smart_uv_project.cc
+  intern/MOD_voronoi_fracture.cc
+  intern/MOD_relax.cc
+  intern/MOD_poly_edit.cc
+  intern/MOD_sweep.cc
+  intern/MOD_symmetrize.cc
+  intern/MOD_chamfer_spline.cc
+  intern/MOD_data_channel.cc
+  intern/MOD_delete_mesh.cc
+  intern/MOD_face_extrude.cc
+  intern/MOD_material_by_element.cc
+  intern/MOD_normalize_spline.cc
+  intern/MOD_poly_select.cc
+  intern/MOD_radial_array.cc
+  intern/MOD_relax_spline.cc
+  intern/MOD_shape_key_inbetween.cc
+  intern/MOD_slice.cc
+  intern/MOD_spline_morph.cc
+  intern/MOD_tension.cc
+  intern/MOD_uvw_map.cc
+  intern/MOD_volume_select.cc
   intern/MOD_weighted_normal.cc
   intern/MOD_weightvg_util.cc
   intern/MOD_weightvgedit.cc

@@ -157,6 +157,82 @@ static Set<StringRef> get_builtin_menus(const int tree_type)
   return {};
 }
 
+
+/** The icon of a node group asset in the Add menu: the bundled ones have their own, the others
+ * show the node group icon. */
+static int asset_menu_icon(const asset_system::AssetRepresentation &asset)
+{
+  static const struct {
+    const char *name;
+    int icon;
+  } asset_icons[] = {
+      {"Array", ICON_GEO_N_ASSET_ARRAY},
+      {"Attach Hair Curves to Surface", ICON_GEO_N_ASSET_ATTACH_HAIR_CURVES_TO_SURFACE},
+      {"Blend Hair Curves", ICON_GEO_N_ASSET_BLEND_HAIR_CURVES},
+      {"Box Selection", ICON_GEO_N_ASSET_BOX_SELECTION},
+      {"Braid Hair Curves", ICON_GEO_N_ASSET_BRAID_HAIR_CURVES},
+      {"Chromatic Aberration", ICON_GEO_N_ASSET_CHROMATIC_ABERRATION},
+      {"Clump Hair Curves", ICON_GEO_N_ASSET_CLUMP_HAIR_CURVES},
+      {"Combine Cylindrical", ICON_GEO_N_ASSET_COMBINE_CYLINDRICAL},
+      {"Combine Spherical", ICON_GEO_N_ASSET_COMBINE_SPHERICAL},
+      {"Create Guide Index Map", ICON_GEO_N_ASSET_CREATE_GUIDE_INDEX_MAP},
+      {"Curl Hair Curves", ICON_GEO_N_ASSET_CURL_HAIR_CURVES},
+      {"Curve Info", ICON_GEO_N_ASSET_CURVE_INFO},
+      {"Curve Root", ICON_GEO_N_ASSET_CURVE_ROOT},
+      {"Curve Segment", ICON_GEO_N_ASSET_CURVE_SEGMENT},
+      {"Curve Tip", ICON_GEO_N_ASSET_CURVE_TIP},
+      {"Curve to Tube", ICON_GEO_N_ASSET_CURVE_TO_TUBE},
+      {"Displace Geometry", ICON_GEO_N_ASSET_DISPLACE_GEOMETRY},
+      {"Displace Hair Curves", ICON_GEO_N_ASSET_DISPLACE_HAIR_CURVES},
+      {"Duplicate Hair Curves", ICON_GEO_N_ASSET_DUPLICATE_HAIR_CURVES},
+      {"Edge Length", ICON_GEO_N_ASSET_EDGE_LENGTH},
+      {"Face Corner Angle", ICON_GEO_N_ASSET_FACE_CORNER_ANGLE},
+      {"Frizz Hair Curves", ICON_GEO_N_ASSET_FRIZZ_HAIR_CURVES},
+      {"Generate Hair Curves", ICON_GEO_N_ASSET_GENERATE_HAIR_CURVES},
+      {"Geometry Input", ICON_GEO_N_ASSET_GEOMETRY_INPUT},
+      {"Hair Attachment Info", ICON_GEO_N_ASSET_HAIR_ATTACHMENT_INFO},
+      {"Hair Curves Noise", ICON_GEO_N_ASSET_HAIR_CURVES_NOISE},
+      {"Instance on Elements", ICON_GEO_N_ASSET_INSTANCE_ON_ELEMENTS},
+      {"Interpolate Hair Curves", ICON_GEO_N_ASSET_INTERPOLATE_HAIR_CURVES},
+      {"Is Edge Boundary", ICON_GEO_N_ASSET_IS_EDGE_BOUNDARY},
+      {"Is Edge Loose", ICON_GEO_N_ASSET_IS_EDGE_LOOSE},
+      {"Is Edge Manifold", ICON_GEO_N_ASSET_IS_EDGE_MANIFOLD},
+      {"Is UV Split", ICON_GEO_N_ASSET_IS_UV_SPLIT},
+      {"Normal Selection", ICON_GEO_N_ASSET_NORMAL_SELECTION},
+      {"Random Rotation", ICON_GEO_N_ASSET_RANDOM_ROTATION},
+      {"Randomize Transforms", ICON_GEO_N_ASSET_RANDOMIZE_TRANSFORMS},
+      {"Redistribute Curve Points", ICON_GEO_N_ASSET_REDISTRIBUTE_CURVE_POINTS},
+      {"Restore Curve Segment Length", ICON_GEO_N_ASSET_RESTORE_CURVE_SEGMENT_LENGTH},
+      {"Retime", ICON_GEO_N_ASSET_RETIME},
+      {"Roll Hair Curves", ICON_GEO_N_ASSET_ROLL_HAIR_CURVES},
+      {"Rotate Hair Curves", ICON_GEO_N_ASSET_ROTATE_HAIR_CURVES},
+      {"Scatter on Surface", ICON_GEO_N_ASSET_SCATTER_ON_SURFACE},
+      {"Sensor Noise", ICON_GEO_N_ASSET_SENSOR_NOISE},
+      {"Separate Cylindrical", ICON_GEO_N_ASSET_SEPARATE_CYLINDRICAL},
+      {"Separate Spherical", ICON_GEO_N_ASSET_SEPARATE_SPHERICAL},
+      {"Sepia", ICON_GEO_N_ASSET_SEPIA},
+      {"Set Hair Curve Profile", ICON_GEO_N_ASSET_SET_HAIR_CURVE_PROFILE},
+      {"Shrinkwrap Hair Curves", ICON_GEO_N_ASSET_SHRINKWRAP_HAIR_CURVES},
+      {"Smooth Geometry", ICON_GEO_N_ASSET_SMOOTH_GEOMETRY},
+      {"Smooth Hair Curves", ICON_GEO_N_ASSET_SMOOTH_HAIR_CURVES},
+      {"Smooth by Angle", ICON_GEO_N_ASSET_SMOOTH_BY_ANGLE},
+      {"Sphere Selection", ICON_GEO_N_ASSET_SPHERE_SELECTION},
+      {"Split Toning", ICON_GEO_N_ASSET_SPLIT_TONING},
+      {"Straighten Hair Curves", ICON_GEO_N_ASSET_STRAIGHTEN_HAIR_CURVES},
+      {"Trim Hair Curves", ICON_GEO_N_ASSET_TRIM_HAIR_CURVES},
+      {"Tune Image", ICON_GEO_N_ASSET_TUNE_IMAGE},
+      {"Unsharp Mask", ICON_GEO_N_ASSET_UNSHARP_MASK},
+      {"Vignette", ICON_GEO_N_ASSET_VIGNETTE},
+  };
+  const StringRefNull name = asset.get_name();
+  for (const auto &item : asset_icons) {
+    if (name == item.name) {
+      return item.icon;
+    }
+  }
+  return ICON_GEO_N_GROUP;
+}
+
 static void node_catalog_assets_draw(const bContext *C, Menu *menu)
 {
   SpaceNode &snode = *CTX_wm_space_node(C);
@@ -201,7 +277,7 @@ static void node_catalog_assets_draw(const bContext *C, Menu *menu)
     }
     PointerRNA op_ptr = layout->op(*operator_id,
                                    IFACE_(asset->get_name()),
-                                   ICON_NONE,
+                                   asset_menu_icon(*asset),
                                    wm::OpCallContext::InvokeRegionWin,
                                    UI_ITEM_NONE);
     asset::operator_asset_reference_props_set(*asset, op_ptr);
@@ -243,7 +319,7 @@ static void node_unassigned_assets_draw(const bContext *C, Menu *menu)
   for (const asset_system::AssetRepresentation *asset : tree.unassigned_assets) {
     PointerRNA op_ptr = menu->layout->op(*operator_id,
                                          IFACE_(asset->get_name()),
-                                         ICON_NONE,
+                                         asset_menu_icon(*asset),
                                          wm::OpCallContext::InvokeRegionWin,
                                          UI_ITEM_NONE);
     asset::operator_asset_reference_props_set(*asset, op_ptr);
