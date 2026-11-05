@@ -22,7 +22,7 @@ Files that use these additions won't work properly in official Blender. See
 | Area | What's new |
 |---|---|
 | [Modifiers](#modifiers) | 45 new modifiers, a Modifier List view of the stack, viewport gizmos |
-| [Geometry Nodes](#geometry-nodes) | 13 new modeling nodes, plus node versions of the new and classic modifiers |
+| [Geometry Nodes](#geometry-nodes) | 65 new nodes: 13 modeling nodes, plus node versions of the new and classic modifiers |
 | [Toolbox and Shelf](#toolbox-and-shelf) | Two new editors for your own buttons, and icons in Quick Favorites |
 | [Classic look](#classic-look) | Colored 2.79-style icons, embossed widgets, square vertices |
 | [Solid shading](#color-attributes-in-solid-shading) | Color attributes mixed into the material color |
@@ -155,29 +155,102 @@ They follow the viewport's Gizmos ▸ Modifier toggle.
 
 ## Geometry Nodes
 
-These are real nodes for the Geometry Nodes editor, not add-ons or node groups.
+65 new nodes for the Geometry Nodes editor. They're real nodes, not add-ons or node groups.
 
-### Node versions of the modifiers
+### Modeling nodes
 
-Most of the new modifiers are also nodes that share the same code, so a node tree and a modifier give the same
-result: Cap Holes, Face Extrude, Inset, Panelize, Poke, Quadrangulate, Beautify Faces, Rotate Edges, Symmetrize,
-Radial Array, Exploded View, Randomize Elements, Element Order, Element Pivot, Bend, Twist, Taper, Stretch, FFD,
-Noise, Push, Melt, UVW Map, Smart UV Project, Mark by Angle, Material By Element, Data Channel, Mesh Tension,
-Volume Select, Morph Curves and Relax Curves.
+Add them with **Add ▸ Mesh ▸ Operations**, or **Add ▸ Curve ▸ Operations** for Sweep. Each one is described in
+more detail [further down](#modeling-nodes-in-detail).
+
+| | Node | What it does |
+|---|---|---|
+| <img src="doc/fork/images/icons/mod_isotropic_remesh.png" width="32" height="32" alt="Isotropic Remesh"> | [Isotropic Remesh](#isotropic-remesh) | Rebuild a mesh out of uniformly sized, near-equilateral triangles that follow the original surface |
+| <img src="doc/fork/images/icons/geo_n_decimate_mesh.png" width="32" height="32" alt="Decimate Mesh"> | [Decimate Mesh](#decimate-mesh) | Reduce the number of triangles of a mesh, removing detail where it changes the surface the least |
+| <img src="doc/fork/images/icons/mod_voronoi_fracture.png" width="32" height="32" alt="Voronoi Fracture"> | [Voronoi Fracture](#voronoi-fracture) | Cut a closed mesh into solid pieces, one for the area around each of the given points |
+| <img src="doc/fork/images/icons/geo_mod_bevel.png" width="32" height="32" alt="Bevel"> | [Bevel](#bevel) | Bevel the edges or vertices of a mesh, like the Bevel modifier |
+| <img src="doc/fork/images/icons/mod_sweep.png" width="32" height="32" alt="Sweep"> | [Sweep](#sweep) | Make a mesh by moving a shape along curves, with control over its scale, roll and twist |
+| <img src="doc/fork/images/icons/geo_resample.png" width="32" height="32" alt="Resample Mesh"> | [Resample Mesh](#resample-mesh) | Add points along the edges of a mesh without changing its shape or its number of faces |
+| <img src="doc/fork/images/icons/geo_n_quadri_flow_remesh.png" width="32" height="32" alt="QuadriFlow Remesh"> | [QuadriFlow Remesh](#quadriflow-remesh) | Rebuild a manifold mesh out of quads that follow the flow of its surface |
+| <img src="doc/fork/images/icons/geo_bisect.png" width="32" height="32" alt="Clip"> | [Clip](#clip) | Cut a mesh with a plane and remove one side, optionally filling the cut |
+| <img src="doc/fork/images/icons/geo_knife.png" width="32" height="32" alt="Dice"> | [Dice](#dice) | Cut a mesh into a grid of pieces along the X, Y and Z axes of its bounding box |
+| <img src="doc/fork/images/icons/geo_mod_decim.png" width="32" height="32" alt="Dissolve"> | [Dissolve](#dissolve) | Remove points, edges or faces and merge the faces around them, without leaving holes |
+| <img src="doc/fork/images/icons/geo_mod_smooth.png" width="32" height="32" alt="Smooth"> | [Smooth](#smooth) | Smooth the surface of a mesh by moving its points |
+| <img src="doc/fork/images/icons/mod_relax.png" width="32" height="32" alt="Relax"> | [Relax](#relax) | Even out the distances between the points of a mesh by sliding them along its surface |
+| <img src="doc/fork/images/icons/geo_mod_displace.png" width="32" height="32" alt="Displace"> | [Displace](#displace) | Move the points of a mesh by a height or vector, like the Displace modifier |
+
+![The thirteen modeling nodes side by side in the Geometry Nodes editor](doc/fork/images/nodes_modeling.png)
+
+### Node versions of the new modifiers
+
+These nodes share their code with the new modifiers, so a node tree and a modifier give the same result.
+
+| | Node | What it does |
+|---|---|---|
+| <img src="doc/fork/images/icons/mod_cap_holes.png" width="32" height="32" alt="Cap Holes"> | Cap Holes | Close the holes of a mesh with new faces |
+| <img src="doc/fork/images/icons/mod_face_extrude.png" width="32" height="32" alt="Face Extrude"> | Face Extrude | Extrude faces along their normals and scale them |
+| <img src="doc/fork/images/icons/mod_inset.png" width="32" height="32" alt="Inset"> | Inset | Inset faces, each on its own or as one region |
+| <img src="doc/fork/images/icons/mod_panelize.png" width="32" height="32" alt="Panelize"> | Panelize | Split faces into panels with a gap and a chamfer between them |
+| <img src="doc/fork/images/icons/mod_poke.png" width="32" height="32" alt="Poke"> | Poke | Split faces into a fan of triangles around their center |
+| <img src="doc/fork/images/icons/mod_quadrangulate.png" width="32" height="32" alt="Quadrangulate"> | Quadrangulate | Join pairs of triangles into quads, the same as Triangles to Quads in edit mode |
+| <img src="doc/fork/images/icons/mod_beautify.png" width="32" height="32" alt="Beautify Faces"> | Beautify Faces | Flip the edges between triangles so they are more even |
+| <img src="doc/fork/images/icons/mod_rotate_edges.png" width="32" height="32" alt="Rotate Edges"> | Rotate Edges | Turn the edges between faces to connect the other corners |
+| <img src="doc/fork/images/icons/mod_symmetrize.png" width="32" height="32" alt="Symmetrize"> | Symmetrize | Make one side of a mesh a mirror of the other |
+| <img src="doc/fork/images/icons/mod_radial_array.png" width="32" height="32" alt="Radial Array"> | Radial Array | Copies of a mesh arranged around an axis |
+| <img src="doc/fork/images/icons/mod_exploded_view.png" width="32" height="32" alt="Exploded View"> | Exploded View | Push faces, islands or other elements apart, with a factor that can be animated |
+| <img src="doc/fork/images/icons/mod_randomize_elements.png" width="32" height="32" alt="Randomize Elements"> | Randomize Elements | Random rotation, scale and offset, UVs or color for each face, island or other element |
+| <img src="doc/fork/images/icons/mod_element_order.png" width="32" height="32" alt="Element Order"> | Element Order | Reorder faces or islands, keeping the faces of each element together |
+| <img src="doc/fork/images/icons/mod_element_pivot.png" width="32" height="32" alt="Element Pivot"> | Element Pivot | The center and axes of the island or other element of each point |
+| <img src="doc/fork/images/icons/mod_bend.png" width="32" height="32" alt="Bend"> | Bend | Bend geometry around a gizmo, with limits |
+| <img src="doc/fork/images/icons/mod_twist.png" width="32" height="32" alt="Twist"> | Twist | Twist geometry around the axis of a gizmo, with limits |
+| <img src="doc/fork/images/icons/mod_taper.png" width="32" height="32" alt="Taper"> | Taper | Scale geometry more along the axis of a gizmo |
+| <img src="doc/fork/images/icons/mod_stretch.png" width="32" height="32" alt="Stretch"> | Stretch | Stretch geometry along the axis of a gizmo and thin it in the middle |
+| <img src="doc/fork/images/icons/mod_ffd_3.png" width="32" height="32" alt="FFD"> | FFD | Bend geometry with a box lattice of 2, 3 or 4 control points per side |
+| <img src="doc/fork/images/icons/mod_noise_deform.png" width="32" height="32" alt="Noise Deform"> | Noise Deform | Move points by a fractal noise on X, Y and Z |
+| <img src="doc/fork/images/icons/mod_push.png" width="32" height="32" alt="Push"> | Push | Inflate or shrink a mesh along its normals |
+| <img src="doc/fork/images/icons/mod_melt.png" width="32" height="32" alt="Melt"> | Melt | Sag geometry and spread it out toward the ground |
+| <img src="doc/fork/images/icons/mod_uvw_map.png" width="32" height="32" alt="UVW Map"> | UVW Map | Project a UV map from a planar, cylindrical, spherical or box gizmo |
+| <img src="doc/fork/images/icons/mod_smart_uv_project.png" width="32" height="32" alt="Smart UV Project"> | Smart UV Project | Unwrap a mesh automatically: faces are projected from a few directions and packed |
+| <img src="doc/fork/images/icons/mod_mark_by_angle.png" width="32" height="32" alt="Mark by Angle"> | Mark by Angle | Mark sharp edges, seams, creases or bevel weights where faces meet at a steep angle |
+| <img src="doc/fork/images/icons/mod_material_by_element.png" width="32" height="32" alt="Material By Element"> | Material By Element | Give faces material indices at random, by piece, in order or by direction |
+| <img src="doc/fork/images/icons/mod_data_channel.png" width="32" height="32" alt="Data Channel"> | Data Channel | Compute a value per point, such as convexity or edge length, and remap it |
+| <img src="doc/fork/images/icons/mod_tension.png" width="32" height="32" alt="Mesh Tension"> | Mesh Tension | How much the edges around each point are stretched or squashed compared to a rest shape |
+| <img src="doc/fork/images/icons/mod_vol_select.png" width="32" height="32" alt="Volume Select"> | Volume Select | Select the points inside a sphere, box or cylinder, with a soft falloff |
+| <img src="doc/fork/images/icons/mod_spline_morph.png" width="32" height="32" alt="Morph Curves"> | Morph Curves | Move curves toward the matching curves of a target |
+| <img src="doc/fork/images/icons/mod_relax_spline.png" width="32" height="32" alt="Relax Curves"> | Relax Curves | Smooth the shape of curves |
 
 ![The 31 node versions of the new modifiers in the Geometry Nodes editor](doc/fork/images/nodes_modifier_ops.png)
 
-The classic modifiers that had no node now have one too: Array, Build, Cast, Curve Deform, Edge Split, Lattice
-Deform, Laplacian Smooth, Mirror, Normal Edit, Remesh, Screw, Shrinkwrap, Simple Deform, Skin, Smooth, Solidify,
-UV Warp, Warp, Wave, Weighted Normal and Wireframe.
+### Classic modifiers as nodes
+
+The classic modifiers that had no node now have one too.
+
+| | Node | What it does |
+|---|---|---|
+| <img src="doc/fork/images/icons/mod_array.png" width="32" height="32" alt="Array"> | Array | Repeat a mesh with offsets and merge the copies, the same as the Array modifier |
+| <img src="doc/fork/images/icons/mod_build.png" width="32" height="32" alt="Build"> | Build | Show the faces of a mesh one by one over time, the same as the Build modifier |
+| <img src="doc/fork/images/icons/mod_cast.png" width="32" height="32" alt="Cast"> | Cast | Push a mesh toward a sphere, cylinder or box, the same as the Cast modifier |
+| <img src="doc/fork/images/icons/mod_curve.png" width="32" height="32" alt="Curve Deform"> | Curve Deform | Bend a mesh along a curve object, the same as the Curve modifier |
+| <img src="doc/fork/images/icons/mod_edgesplit.png" width="32" height="32" alt="Edge Split"> | Edge Split | Split the edges that are sharp or meet at a large angle, the same as the Edge Split modifier |
+| <img src="doc/fork/images/icons/mod_lattice.png" width="32" height="32" alt="Lattice Deform"> | Lattice Deform | Deform a mesh with a lattice object, the same as the Lattice modifier |
+| <img src="doc/fork/images/icons/mod_smooth.png" width="32" height="32" alt="Laplacian Smooth"> | Laplacian Smooth | Smooth a mesh while keeping its volume, the same as the Laplacian Smooth modifier |
+| <img src="doc/fork/images/icons/mod_mirror.png" width="32" height="32" alt="Mirror"> | Mirror | Mirror a mesh along its axes, with optional bisect and merge, the same as the Mirror modifier |
+| <img src="doc/fork/images/icons/mod_normaledit.png" width="32" height="32" alt="Normal Edit"> | Normal Edit | Set custom normals pointing away from a point or along a direction, the same as the Normal Edit modifier |
+| <img src="doc/fork/images/icons/mod_remesh.png" width="32" height="32" alt="Remesh Blocks"> | Remesh Blocks | Rebuild a mesh out of blocks or voxels, the same as the Remesh modifier |
+| <img src="doc/fork/images/icons/mod_screw.png" width="32" height="32" alt="Screw"> | Screw | Sweep a profile around an axis, the same as the Screw modifier |
+| <img src="doc/fork/images/icons/mod_shrinkwrap.png" width="32" height="32" alt="Shrinkwrap"> | Shrinkwrap | Move the points of a mesh onto the surface of another mesh, the same as the Shrinkwrap modifier |
+| <img src="doc/fork/images/icons/mod_simpledeform.png" width="32" height="32" alt="Simple Deform"> | Simple Deform | Twist, bend, taper or stretch a mesh, the same as the Simple Deform modifier |
+| <img src="doc/fork/images/icons/mod_skin.png" width="32" height="32" alt="Skin"> | Skin | Build a skin around the edges of a mesh, the same as the Skin modifier |
+| <img src="doc/fork/images/icons/mod_smooth.png" width="32" height="32" alt="Smooth Points"> | Smooth Points | Smooth the points of a mesh, the same as the Smooth modifier |
+| <img src="doc/fork/images/icons/mod_solidify.png" width="32" height="32" alt="Solidify"> | Solidify | Give the surface of a mesh thickness, the same as the Solidify modifier |
+| <img src="doc/fork/images/icons/mod_uvproject.png" width="32" height="32" alt="UV Warp"> | UV Warp | Move, rotate and scale the UV map, the same as the UV Warp modifier |
+| <img src="doc/fork/images/icons/mod_warp.png" width="32" height="32" alt="Warp"> | Warp | Move a part of a mesh from one object to another, the same as the Warp modifier |
+| <img src="doc/fork/images/icons/mod_wave.png" width="32" height="32" alt="Wave"> | Wave | Move the points of a mesh in ripples, the same as the Wave modifier |
+| <img src="doc/fork/images/icons/mod_weighted_normal.png" width="32" height="32" alt="Weighted Normal"> | Weighted Normal | Set custom normals from the area or angles of the faces, the same as the Weighted Normal modifier |
+| <img src="doc/fork/images/icons/mod_wireframe.png" width="32" height="32" alt="Wireframe"> | Wireframe | Turn the edges of a mesh into thin bars, the same as the Wireframe modifier |
 
 ![The 21 classic modifiers as nodes in the Geometry Nodes editor](doc/fork/images/nodes_classic_modifiers.png)
 
-### The first thirteen nodes
-
-Add them with **Add ▸ Mesh ▸ Operations**, or **Add ▸ Curve ▸ Operations** for Sweep.
-
-![The thirteen modeling nodes side by side in the Geometry Nodes editor](doc/fork/images/nodes_modeling.png)
+### Modeling nodes in detail
 
 #### Isotropic Remesh
 
