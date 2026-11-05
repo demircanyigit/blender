@@ -7,9 +7,9 @@ See 'release/text/readme.html' for the end user read-me.
 About this fork
 ===============
 
-An unofficial fork based on Blender 5.1.0 that adds thirteen new **Geometry Nodes** and more ways to show color
-attributes in Solid shading. It isn't made or supported by the Blender Foundation, so please don't report
-its bugs to the Blender project.
+An unofficial fork of Blender 5.1.0 that adds new modifiers, new Geometry Nodes, two new editors and the classic
+2.79 look. It isn't made or supported by the Blender Foundation, so please don't report its bugs to the Blender
+project.
 
 **[Download for Windows](https://github.com/demircanyigit/blender/releases/latest)**: unzip it and open
 `blender.exe`. No installer is needed, and your official Blender keeps working next to it.
@@ -17,13 +17,148 @@ its bugs to the Blender project.
 Files that use these additions won't work properly in official Blender. See
 [what to know before using it](doc/fork/README.md).
 
-## New Geometry Nodes
+## At a glance
 
-These are real nodes for Blender's Geometry Nodes editor, not add-ons or node groups. Add them with **Add ▸ Mesh ▸ Operations**, or **Add ▸ Curve ▸ Operations** for Sweep.
+| Area | What's new |
+|---|---|
+| [Modifiers](#modifiers) | 45 new modifiers, a Modifier List view of the stack, viewport gizmos |
+| [Geometry Nodes](#geometry-nodes) | 13 new modeling nodes, plus node versions of the new and classic modifiers |
+| [Toolbox and Shelf](#toolbox-and-shelf) | Two new editors for your own buttons, and icons in Quick Favorites |
+| [Classic look](#classic-look) | Colored 2.79-style icons, embossed widgets, square vertices |
+| [Solid shading](#color-attributes-in-solid-shading) | Color attributes mixed into the material color |
+
+## Modifiers
+
+### Modifier List
+
+The Modifiers tab has a second way to show the stack. The button in its header switches between the usual
+**Stack** of panels and a **List**:
+
+- **The list:** one row per modifier, with its icon, name and on/off toggles. Only the active modifier shows its
+  settings, under the list, so long stacks stay short.
+- **Show End Result:** when it's off, the viewport shows the stack only up to the active modifier, so you can
+  see what each step does without turning the others off.
+- **Order:** the list can show the first modifier on top, or the last one.
+- **Right-click menu:** rename, copy and paste, move, enable or disable, collapse up to here, apply all,
+  delete all, and copy the whole stack to the selected objects.
+- **Favorites:** mark the modifiers you use most, and they're listed first when you add one. They're saved in
+  your user settings, so every file has them.
+- **Add menu:** every mesh modifier in one menu of seven columns: Model, Topology and Smooth, Elements and
+  Select and Normals, Deform, Shape, UV and Data, and Physics with Geometry Nodes.
+
+### New modifiers
+
+All 45 work like the built-in ones: they're in the Add Modifier menu with their own icons, they can be applied,
+and most of them also work in Edit Mode.
+
+**Model and topology**
+
+| Modifier | What it does |
+|---|---|
+| Isotropic Remesh | Rebuilds the mesh out of even, near-equilateral triangles that follow its surface |
+| QuadriFlow Remesh | Rebuilds the mesh out of quads that follow its shape |
+| Voronoi Fracture | Cuts a closed mesh into solid pieces, from random points or the points of another object |
+| Slice | Cuts the mesh with a plane and removes one side, optionally filling the cut |
+| Cap Holes | Closes the holes of the mesh with new faces |
+| Face Extrude | Extrudes faces along their normals and scales them |
+| Inset | Insets faces, each on its own or as one region |
+| Panelize | Splits the faces into panels with a gap and a chamfer between them |
+| Poke | Splits each face into a fan of triangles around its center |
+| Quadrangulate | Joins pairs of triangles into quads |
+| Beautify Faces | Flips the edges between triangles so they're more even |
+| Rotate Edges | Turns the edges between faces to connect the other corners |
+| Symmetrize | Makes one side of the mesh a mirror of the other |
+| Sweep | Makes a mesh by moving a shape along curves |
+
+**Selection and editing in the stack**
+
+| Modifier | What it does |
+|---|---|
+| Poly Select | Stores a selection of points, edges or faces in the stack, for the modifiers after it |
+| Poly Edit | Moves, extrudes, insets, pokes or deletes the selected elements |
+| Volume Select | Writes a vertex group with the points inside a sphere, box or cylinder |
+| Delete Mesh | Deletes the points, edges or faces picked by a vertex group or an attribute |
+
+Poly Select and Poly Edit work together. Select faces in Edit Mode, store them with Poly Select, then add Poly
+Edit above it. The faces Poly Edit makes become the new selection, so another Poly Edit can carry on from them.
+Every step stays editable, like a history you can go back and change.
+
+**Elements**
+
+| Modifier | What it does |
+|---|---|
+| Radial Array | Arranges copies of the mesh around an axis |
+| Exploded View | Pushes faces, islands or other elements apart, with a factor you can animate |
+| Randomize Elements | Gives each face, island or other element a random rotation, scale, offset, UVs or color |
+| Element Order | Reorders faces or islands, so Build and other order-based effects run the way you want |
+| Store Element Pivot | Writes the center and axes of each island or other element to point attributes |
+
+**Deform and shape**
+
+| Modifier | What it does |
+|---|---|
+| Bend, Twist, Taper, Stretch | Deform the mesh around a gizmo axis, with limits |
+| FFD 2x2x2, 3x3x3, 4x4x4 | Bend the shape with a box of control points that you move in the viewport |
+| Noise | Moves the points by fractal noise on X, Y and Z, without a texture |
+| Push | Inflates or shrinks the mesh along its normals |
+| Melt | Sags the shape and spreads it out toward the ground |
+| Relax | Evens out the spacing of the points while keeping them on the surface |
+| Shape Key In-between | Morphs through a sequence of shape keys with one value |
+
+**UV, normals and data**
+
+| Modifier | What it does |
+|---|---|
+| UVW Map | Projects a UV map from a planar, cylindrical, spherical or box gizmo |
+| Smart UV Project | Unwraps the mesh automatically and packs the islands |
+| Mark by Angle | Marks sharp edges, seams, creases or bevel weights where faces meet at a steep angle |
+| Material By Element | Gives faces material indices at random, by piece, in order or by direction |
+| Data Channel | Computes a value per point, such as convexity or edge length, remaps it and writes it out |
+| Tension | Stores how much the mesh is stretched or squashed compared to its rest shape |
+
+**Curves**
+
+| Modifier | What it does |
+|---|---|
+| Normalize Spline | Respaces the points of the curves evenly |
+| Relax Spline | Smooths the curves |
+| Chamfer Spline | Cuts the corners of the curves, straight or rounded |
+| Spline Morph | Moves the curves toward the curves of another object |
+
+### Viewport gizmos
+
+The active modifier can be edited in the viewport:
+
+- **Bend, Twist, Taper, Stretch, UVW Map, Volume Select and Radial Array:** a handle moves the center, a dial
+  sets the angle, and arrows set the limits.
+- **Slice:** a handle for the plane and an arrow for its distance.
+- **FFD:** a handle on every control point, with the cage drawn between them.
+
+They follow the viewport's Gizmos ▸ Modifier toggle.
+
+## Geometry Nodes
+
+These are real nodes for the Geometry Nodes editor, not add-ons or node groups.
+
+### Node versions of the modifiers
+
+Most of the new modifiers are also nodes that share the same code, so a node tree and a modifier give the same
+result: Cap Holes, Face Extrude, Inset, Panelize, Poke, Quadrangulate, Beautify Faces, Rotate Edges, Symmetrize,
+Radial Array, Exploded View, Randomize Elements, Element Order, Element Pivot, Bend, Twist, Taper, Stretch, FFD,
+Noise, Push, Melt, UVW Map, Smart UV Project, Mark by Angle, Material By Element, Data Channel, Mesh Tension,
+Volume Select, Morph Curves and Relax Curves.
+
+The classic modifiers that had no node now have one too: Array, Build, Cast, Curve Deform, Edge Split, Lattice
+Deform, Laplacian Smooth, Mirror, Normal Edit, Remesh, Screw, Shrinkwrap, Simple Deform, Skin, Smooth, Solidify,
+UV Warp, Warp, Wave, Weighted Normal and Wireframe.
+
+### The first thirteen nodes
+
+Add them with **Add ▸ Mesh ▸ Operations**, or **Add ▸ Curve ▸ Operations** for Sweep.
 
 ![The thirteen new nodes side by side in the Geometry Nodes editor](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/all_nodes.png)
 
-### Isotropic Remesh
+#### Isotropic Remesh
 
 Rebuilds a mesh out of even, near-equilateral triangles that follow the original surface. Hard Edges keeps the
 edges you choose, like the eye and mouth rims here.
@@ -37,7 +172,7 @@ edges you choose, like the eye and mouth rims here.
 
 ![Suzanne as the original, remeshed, and remeshed with Hard Edges](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/isotropic_remesh.png)
 
-### Decimate Mesh
+#### Decimate Mesh
 
 Reduces triangles where it changes the surface the least, so flat areas lose detail before curved ones. The
 result is triangles.
@@ -50,7 +185,7 @@ result is triangles.
 
 ![Suzanne before and after Decimate Mesh](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/decimate_mesh.png)
 
-### Voronoi Fracture
+#### Voronoi Fracture
 
 Cuts a closed mesh into solid pieces around the points you give it, with the cut faces filled in. More points
 in an area make smaller pieces there.
@@ -64,7 +199,7 @@ in an area make smaller pieces there.
 
 ![A sphere, the same sphere cut into pieces, and the pieces moved apart showing orange inside faces](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/voronoi_fracture.png)
 
-### Bevel
+#### Bevel
 
 The Bevel modifier as a node, using the same code. It gave the same result as the modifier in every setting
 compared. Unlike the modifier, Amount and Weight can differ per edge or vertex, for example from Random Value.
@@ -81,7 +216,7 @@ compared. Unlike the modifier, Amount and Weight can differ per edge or vertex, 
 
 ![Random Value connected to the Amount input of the Bevel node](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/node_editor.png)
 
-### Sweep
+#### Sweep
 
 Sweeps a shape along curves, inspired by Houdini's Sweep. It gives the same surface as Curve to Mesh where the two
 overlap, but needs no extra nodes for the shape and also makes UVs.
@@ -97,7 +232,7 @@ overlap, but needs no extra nodes for the shape and also makes UVs.
 
 ![Three spirals swept with a round tube, a twisted square tube and a star](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/sweep.png)
 
-### Resample Mesh
+#### Resample Mesh
 
 Adds points along edges without changing the shape or the number of faces, inspired by Houdini's Resample.
 
@@ -111,7 +246,7 @@ Adds points along edges without changing the shape or the number of faces, inspi
 
 ![A cube before and after Resample Mesh, with its points shown in orange](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/resample_mesh.png)
 
-### Clip
+#### Clip
 
 Cuts a mesh with a plane and removes one side, inspired by Houdini's Clip. The cut can be filled, and rings keep
 their hole.
@@ -125,7 +260,7 @@ their hole.
 
 ![A sphere, a cube and a torus cut at an angle with orange fill faces](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/clip.png)
 
-### Dice
+#### Dice
 
 Cuts a mesh into a grid of pieces along its bounding box. Pick a count on X, Y and Z, or a cell size, and you're
 done. It doesn't need points like Voronoi Fracture, and it also works on open meshes.
@@ -141,7 +276,7 @@ done. It doesn't need points like Voronoi Fracture, and it also works on open me
 
 ![A sphere cut into 2 x 2 x 2 and 4 x 4 x 4 pieces, and a torus cut into 6 x 6 x 1 pieces](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/dice.png)
 
-### Dissolve
+#### Dissolve
 
 Removes parts of a mesh and merges the faces around them instead of leaving holes, using the same code as
 Dissolve in Edit Mode.
@@ -155,7 +290,7 @@ Dissolve in Edit Mode.
 
 ![A cube going from 96 faces to 6 with Limited, and a sphere with random edges dissolved](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/dissolve.png)
 
-### Smooth
+#### Smooth
 
 Smooths a surface by moving points toward their neighbors. Topology and attributes stay the same.
 
@@ -166,7 +301,7 @@ Smooths a surface by moving points toward their neighbors. Topology and attribut
 
 ![A lumpy sphere, smoothed with Average and with Keep Volume](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/smooth.png)
 
-### Relax
+#### Relax
 
 Evens out the distances between points by sliding them along the surface, so the shape stays the same.
 
@@ -178,7 +313,7 @@ Evens out the distances between points by sliding them along the surface, so the
 
 ![A sphere with uneven points, and the same sphere with even points after Relax](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/relax.png)
 
-### QuadriFlow Remesh
+#### QuadriFlow Remesh
 
 Rebuilds a mesh out of quads that follow the flow of its surface, using the same code as the QuadriFlow option of
 the Remesh operator, but as a node you can keep changing.
@@ -193,7 +328,7 @@ the Remesh operator, but as a node you can keep changing.
 
 ![Suzanne as the original and remeshed with QuadriFlow at two sizes](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/quadriflow_remesh.png)
 
-### Displace
+#### Displace
 
 Moves points by a height or a vector, like the Displace modifier, but you connect any texture or field directly.
 Without a texture it gives the same result as the modifier.
@@ -206,6 +341,53 @@ Without a texture it gives the same result as the modifier.
   Vector are relative to the object.
 
 ![A sphere displaced along its normals and a plane displaced along a direction](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/displace.png)
+
+## Toolbox and Shelf
+
+Two new editors hold buttons you pick yourself. Choose them from any area's Editor Type menu.
+
+### Toolbox
+
+A column of large buttons in sections, with tabs down the right side.
+
+- **Adding buttons:** right-click any button in Blender and choose **Add to Toolbox**.
+- **Arranging:** add, rename, move and remove tabs, sections, separators and buttons from the right-click menu.
+  Each button can have its own name and icon.
+- **Two styles:** a grid of icons, or a list with one named button per row.
+- **Default tabs:** it starts with the modifiers and modeling tools in tabs. **Restore Default Tab** and
+  **Reset Toolbox to Default** bring them back.
+
+The contents are saved in `toolbox.json` in your user settings, so they're the same in every file.
+
+### Shelf
+
+A thin strip of icon buttons. It's an editor of its own, and also a strip at the top of the 3D Viewport that you
+toggle with **Alt Y**.
+
+- **Adding buttons:** right-click any button and choose **Add to Shelf**, or **Remove from Shelf**.
+- **Icon size:** small, medium, large or a custom scale, in the shelf's header.
+- **Starter presets:** Modeling, Modifiers and Objects.
+
+The buttons are saved in your preferences, so every shelf shows the same ones.
+
+### Quick Favorites with icons
+
+Items in Quick Favorites (**Q**) show their icons. The icon is picked automatically when you add an item.
+
+## Classic look
+
+The fork brings back the Blender 2.79 look:
+
+- **Colored icons:** more than 600 new icons drawn in the 2.79 style. Every Geometry Node and every new modifier
+  has one, and so do the tools and many operators, such as the Merge, Parent, Select Similar and import and
+  export menus.
+- **Emboss:** buttons, menus, tooltips, panel headers, tabs and nodes have a light top edge and a dark bottom
+  edge. Each widget style in **Preferences ▸ Themes ▸ User Interface** has a **Bevel** setting for its strength.
+- **Node headers:** a gradient from left to right.
+- **Vertices:** square, like in 2.79.
+- **Keyframes:** shaded as if lit from the top left.
+
+More in [the classic look notes](doc/fork/CLASSIC_UI.md).
 
 ## Color attributes in Solid shading
 
@@ -221,8 +403,10 @@ Material.
 
 ## More
 
+- [What to know before using it](doc/fork/README.md)
 - [All node inputs and limits](doc/fork/NODES.md)
 - [Material options](doc/fork/VIEWPORT_COLORS.md)
+- [The classic look](doc/fork/CLASSIC_UI.md)
 - [Building on Windows](doc/fork/BUILD_WINDOWS.md)
 
 The rest of this page is Blender's own read-me.

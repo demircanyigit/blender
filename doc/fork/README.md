@@ -1,8 +1,9 @@
 # About this fork
 
-An unofficial fork based on the Blender `v5.1.0` tag. It adds thirteen geometry nodes, more color
-attribute options for the Solid shading mode, and the classic 2.79 look with colored icons and
-embossed widgets. It isn't made or supported by the Blender Foundation.
+An unofficial fork based on the Blender `v5.1.0` tag. It adds 45 modifiers and a list view of the
+modifier stack, new geometry nodes, the Toolbox and Shelf editors, more color attribute options for
+the Solid shading mode, and the classic 2.79 look with colored icons and embossed widgets. It isn't
+made or supported by the Blender Foundation. The [main read-me](../../README.md) lists everything.
 
 - [NODES.md](NODES.md): what each node does, its inputs and its limits
 - [VIEWPORT_COLORS.md](VIEWPORT_COLORS.md): the material options
@@ -18,6 +19,8 @@ Files made with this fork are meant for this fork.
 
 - Node trees that use the new nodes won't work in official Blender, because it doesn't have them.
   Apply the modifier or bake the result first if a file has to open there.
+- The new modifiers don't work in official Blender either, because it doesn't know them. Apply them
+  first if the result has to survive there.
 - Isotropic Remesh and Decimate Mesh use node ids (2158 and 2159) that official Blender could
   assign to its own nodes later.
 - The material color options are ignored by official Blender. They are lost if that Blender saves
