@@ -46,10 +46,19 @@ The Modifiers tab has a second way to show the stack. The button in its header s
 - **Add menu:** every mesh modifier in one menu of seven columns: Model, Topology and Smooth, Elements and
   Select and Normals, Deform, Shape, UV and Data, and Physics with Geometry Nodes.
 
+![The Modifier List: the stack as a list, with the settings of the active Poly Edit under it](doc/fork/images/ui_modifier_list.png)
+
+![The Add menu of the Modifier List, with every mesh modifier in seven columns](doc/fork/images/ui_modifier_add_menu.png)
+
 ### New modifiers
 
 All 45 work like the built-in ones: they're in the Add Modifier menu with their own icons, they can be applied,
 and most of them also work in Edit Mode.
+
+![Voronoi Fracture with Exploded View, a tower made with Poly Select and four Poly Edits, Panelize on a sphere, and Radial Array](doc/fork/images/modifiers_modeling.png)
+
+*From left to right: Voronoi Fracture with Exploded View, Poly Select with four Poly Edits, Panelize and Radial
+Array.*
 
 **Model and topology**
 
@@ -104,6 +113,14 @@ Every step stays editable, like a history you can go back and change.
 | <img src="doc/fork/images/icons/mod_melt.png" width="32" height="32" alt="Melt"> | Melt | Sags the shape and spreads it out toward the ground |
 | <img src="doc/fork/images/icons/mod_relax.png" width="32" height="32" alt="Relax"> | Relax | Evens out the spacing of the points while keeping them on the surface |
 | <img src="doc/fork/images/icons/mod_shapekey_inbetween.png" width="32" height="32" alt="Shape Key In-between"> | Shape Key In-between | Morphs through a sequence of shape keys with one value |
+
+![Bend, Twist, Taper and Noise on four bars](doc/fork/images/modifiers_deform.png)
+
+*Bend, Twist, Taper and Noise.*
+
+![A grid with uneven points, and the same grid after Relax](doc/fork/images/modifier_relax.png)
+
+*A grid with uneven points, and the same grid after Relax.*
 
 **UV, normals and data**
 
@@ -357,6 +374,8 @@ A column of large buttons in sections, with tabs down the right side.
 - **Default tabs:** it starts with the modifiers and modeling tools in tabs. **Restore Default Tab** and
   **Reset Toolbox to Default** bring them back.
 
+<img src="doc/fork/images/ui_toolbox.png" alt="The Toolbox with its View tab open: navigation, viewpoint and layout buttons, and tabs down the side">
+
 The contents are saved in `toolbox.json` in your user settings, so they're the same in every file.
 
 ### <img src="doc/fork/images/icons/shelf.png" width="32" height="32" alt="Shelf"> Shelf
@@ -367,6 +386,8 @@ toggle with **Alt Y**.
 - <img src="doc/fork/images/icons/op_add_to_shelf.png" width="32" height="32" alt="Add to Shelf"> <img src="doc/fork/images/icons/op_remove_from_shelf.png" width="32" height="32" alt="Remove from Shelf"> **Adding buttons:** right-click any button and choose **Add to Shelf**, or **Remove from Shelf**.
 - **Icon size:** small, medium, large or a custom scale, in the shelf's header.
 - **Starter presets:** Modeling, Modifiers and Objects.
+
+![The shelf strip at the top of the 3D Viewport in Edit Mode, with the Main, Objects and Modeling tabs](doc/fork/images/ui_shelf.png)
 
 The buttons are saved in your preferences, so every shelf shows the same ones.
 
