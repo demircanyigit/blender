@@ -165,15 +165,19 @@ Radial Array, Exploded View, Randomize Elements, Element Order, Element Pivot, B
 Noise, Push, Melt, UVW Map, Smart UV Project, Mark by Angle, Material By Element, Data Channel, Mesh Tension,
 Volume Select, Morph Curves and Relax Curves.
 
+![The 31 node versions of the new modifiers in the Geometry Nodes editor](doc/fork/images/nodes_modifier_ops.png)
+
 The classic modifiers that had no node now have one too: Array, Build, Cast, Curve Deform, Edge Split, Lattice
 Deform, Laplacian Smooth, Mirror, Normal Edit, Remesh, Screw, Shrinkwrap, Simple Deform, Skin, Smooth, Solidify,
 UV Warp, Warp, Wave, Weighted Normal and Wireframe.
+
+![The 21 classic modifiers as nodes in the Geometry Nodes editor](doc/fork/images/nodes_classic_modifiers.png)
 
 ### The first thirteen nodes
 
 Add them with **Add ▸ Mesh ▸ Operations**, or **Add ▸ Curve ▸ Operations** for Sweep.
 
-![The thirteen new nodes side by side in the Geometry Nodes editor](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/all_nodes.png)
+![The thirteen modeling nodes side by side in the Geometry Nodes editor](doc/fork/images/nodes_modeling.png)
 
 #### Isotropic Remesh
 
