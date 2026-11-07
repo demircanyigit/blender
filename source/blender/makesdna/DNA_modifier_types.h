@@ -170,6 +170,13 @@ enum ModifierType {
   eModifierType_VoronoiFracture = 129,
   eModifierType_Relax = 130,
   eModifierType_PolyEdit = 131,
+  eModifierType_Dice = 132,
+  eModifierType_EditPoly = 133,
+  eModifierType_Collapse = 134,
+  eModifierType_Drape = 135,
+  eModifierType_Shatter = 136,
+  eModifierType_Masonry = 137,
+  eModifierType_Dissolve = 138,
   NUM_MODIFIER_TYPES,
 };
 
@@ -2795,6 +2802,218 @@ struct PolyEditModifierData {
   float offset[3] = {0.0f, 0.0f, 0.0f};
   /** Boolean attribute with the selection. MAX_CUSTOMDATA_LAYER_NAME. */
   char selection_attribute[68] = "selection";
+};
+
+/** #DiceModifierData.mode */
+enum DiceModifierMode {
+  MOD_DICE_MODE_COUNT = 0,
+  MOD_DICE_MODE_SIZE = 1,
+};
+
+/** #DiceModifierData.flag */
+enum DiceModifierFlag {
+  MOD_DICE_FILL = (1 << 0),
+  MOD_DICE_WORLD_SPACE = (1 << 1),
+  MOD_DICE_INTERIOR_MATERIAL = (1 << 2),
+};
+
+/** Dice modifier. */
+struct DiceModifierData {
+  ModifierData modifier;
+
+  /** #DiceModifierMode. */
+  char mode = MOD_DICE_MODE_COUNT;
+  /** #DiceModifierFlag. */
+  char flag = MOD_DICE_FILL;
+  /** Material index of the faces that fill the cuts. */
+  short interior_material = 0;
+  int count[3] = {2, 2, 2};
+  float size[3] = {0.5f, 0.5f, 0.5f};
+  /** Distance between neighboring pieces. */
+  float cut_gap = 0.0f;
+};
+
+/** #EditPolyModifierData.flag */
+enum EditPolyModifierFlag {
+  /** The stored mesh is being edited in place of the object's mesh. */
+  MOD_EDIT_POLY_EDITING = (1 << 0),
+  /** Move the stored points with the incoming points when the point count matches. */
+  MOD_EDIT_POLY_FOLLOW_INPUT = (1 << 1),
+  /** Store the incoming positions at the next evaluation. */
+  MOD_EDIT_POLY_STORE_INPUT = (1 << 2),
+};
+
+/** Edit Poly modifier: replaces the mesh with an edited copy of it. */
+struct EditPolyModifierData {
+  ModifierData modifier;
+
+  /** The edited mesh. */
+  struct Mesh *mesh = nullptr;
+  /** The object's own mesh, while #mesh is being edited in its place. */
+  struct Mesh *object_mesh = nullptr;
+  /** The incoming point positions when #mesh was made, three floats each. */
+  float *input_positions = nullptr;
+  int input_verts_num = 0;
+  /** #EditPolyModifierFlag. */
+  int flag = MOD_EDIT_POLY_FOLLOW_INPUT;
+};
+
+/** #CollapseModifierData.flag */
+enum CollapseModifierFlag {
+  MOD_COLLAPSE_INVERT_VGROUP = (1 << 0),
+};
+
+/** Collapse modifier: every mesh island falls as a rigid piece and is left where it lands. */
+struct CollapseModifierData {
+  ModifierData modifier;
+
+  /** What the pieces land on. When unset, a flat floor under the lowest point. */
+  struct Object *target = nullptr;
+  /** Pieces with points in this group stay where they are. */
+  char vertex_group[/*MAX_VGROUP_NAME*/ 64] = "";
+  /** Seconds of falling. */
+  float time = 3.0f;
+  float gravity = 9.81f;
+  /** Random start speed of each piece. */
+  float push = 1.5f;
+  float friction = 0.5f;
+  float bounce = 0.1f;
+  int seed = 0;
+  /** Solver steps per 1/60 second. */
+  int substeps = 4;
+  /** #CollapseModifierFlag. */
+  int flag = 0;
+};
+
+/** #DrapeModifierData.flag */
+enum DrapeModifierFlag {
+  MOD_DRAPE_INVERT_VGROUP = (1 << 0),
+  MOD_DRAPE_FLOOR = (1 << 1),
+  MOD_DRAPE_SELF_COLLISION = (1 << 2),
+};
+
+/** Drape modifier: the mesh falls as cloth until it rests on the collider. */
+struct DrapeModifierData {
+  ModifierData modifier;
+
+  /** What the cloth lands on. */
+  struct Object *collider = nullptr;
+  /** Points in this group stay where they are. */
+  char vertex_group[/*MAX_VGROUP_NAME*/ 64] = "";
+  /** Seconds of falling and settling. */
+  float time = 2.0f;
+  float gravity = 9.81f;
+  float stiffness = 1.0f;
+  float bending = 0.1f;
+  /** Fraction the cloth tries to get smaller by. */
+  float shrink = 0.0f;
+  /** Distance kept from colliders. */
+  float thickness = 0.01f;
+  float friction = 0.5f;
+  float pressure = 0.0f;
+  /** Solver steps per 1/60 second. */
+  int substeps = 8;
+  /** #DrapeModifierFlag. */
+  int flag = MOD_DRAPE_FLOOR;
+};
+
+/** #ShatterModifierData.flag */
+enum ShatterModifierFlag {
+  MOD_SHATTER_INTERIOR_MATERIAL = (1 << 0),
+};
+
+/** Shatter modifier: breaks a closed mesh the way a material breaks. */
+struct ShatterModifierData {
+  ModifierData modifier;
+
+  /** Where it was hit. The middle of the mesh when unset. */
+  struct Object *impact = nullptr;
+  /** #geometry::ShatterMaterial. */
+  char material = 0;
+  /** 0 for the longest side, 1 to 3 for X, Y and Z. */
+  char grain_axis = 0;
+  /** Material index of the broken faces. */
+  short interior_material = 0;
+  int pieces = 20;
+  int seed = 0;
+  /** Cuts across each edge of the broken faces, for the roughness. */
+  int detail = 2;
+  float focus = 0.5f;
+  float grain = 4.0f;
+  float roughness = 0.3f;
+  float cut_gap = 0.0f;
+  /** #ShatterModifierFlag. */
+  int flag = 0;
+  char _pad[4] = {};
+};
+
+/** #MasonryModifierData.flag */
+enum MasonryModifierFlag {
+  MOD_MASONRY_BACKING = (1 << 0),
+  MOD_MASONRY_BORDER = (1 << 1),
+  MOD_MASONRY_TOOTHED = (1 << 2),
+  MOD_MASONRY_INVERT_VGROUP = (1 << 3),
+  MOD_MASONRY_MATERIALS = (1 << 4),
+};
+
+/** Masonry modifier: covers faces with blocks in a brick, stone or paving pattern. */
+struct MasonryModifierData {
+  ModifierData modifier;
+
+  /** Center of the Fan and Radial patterns. The middle of the mesh when unset. */
+  struct Object *center = nullptr;
+  /** Only faces with all their points in this group get blocks. */
+  char vertex_group[/*MAX_VGROUP_NAME*/ 64] = "";
+  /** #geometry::MasonryPattern. */
+  char pattern = 0;
+  /** #geometry::MasonryDirection. */
+  char direction = 0;
+  short block_material = 0;
+  short mortar_material = 1;
+  short soldier_rows = 0;
+  float length = 0.3f;
+  float height = 0.1f;
+  float depth = 0.05f;
+  float mortar = 0.01f;
+  float offset = 0.0f;
+  float angle = 0.0f;
+  float random_length = 0.0f;
+  float random_height = 0.0f;
+  float random_depth = 0.0f;
+  float tilt = 0.0f;
+  float stone_shape = 0.0f;
+  float dome = 0.0f;
+  int seed = 0;
+  /** #MasonryModifierFlag. */
+  int flag = MOD_MASONRY_BACKING;
+};
+
+/** #DissolveModifierData.flag */
+enum DissolveModifierFlag {
+  MOD_DISSOLVE_INVERT_VGROUP = (1 << 0),
+  MOD_DISSOLVE_REMOVE_INLINE_POINTS = (1 << 1),
+  MOD_DISSOLVE_FACE_SPLIT = (1 << 2),
+  MOD_DISSOLVE_TEAR_BOUNDARY = (1 << 3),
+  MOD_DISSOLVE_ALL_BOUNDARIES = (1 << 4),
+  MOD_DISSOLVE_KEEP_MATERIALS = (1 << 5),
+  MOD_DISSOLVE_KEEP_SEAMS = (1 << 6),
+  MOD_DISSOLVE_KEEP_SHARP = (1 << 7),
+  MOD_DISSOLVE_KEEP_UVS = (1 << 8),
+};
+
+/** Dissolve modifier: removes points, edges or faces and merges the faces around them. */
+struct DissolveModifierData {
+  ModifierData modifier;
+
+  /** Only these points, and the edges and faces made of them, are dissolved. */
+  char vertex_group[/*MAX_VGROUP_NAME*/ 64] = "";
+  /** #geometry::DissolveMode. */
+  int mode = 3;
+  /** Limited mode: only dissolve where the surface bends less than this. */
+  float angle = 0.0872665f;
+  /** #DissolveModifierFlag. */
+  int flag = MOD_DISSOLVE_REMOVE_INLINE_POINTS;
+  char _pad[4] = {};
 };
 
 /** #SkinModifierData.symmetry_axes */

@@ -194,7 +194,7 @@ static void add_own_transform_dependencies(const bNodeTree &tree,
     needs_own_transform |= storage.transform_space == GEO_NODE_TRANSFORM_SPACE_RELATIVE;
   }
 
-  for (const StringRefNull idname : {"GeometryNodeClipMesh", "GeometryNodeDiceMesh"}) {
+  for (const StringRefNull idname : {"GeometryNodeClipMesh", "GeometryNodeDiceMesh", "GeometryNodeCollapseIslands", "GeometryNodeDrapeMesh"}) {
     for (const bNode *node : tree.nodes_by_type(idname)) {
       if (node->is_muted()) {
         continue;

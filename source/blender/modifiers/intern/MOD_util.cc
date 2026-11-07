@@ -316,6 +316,13 @@ void modifier_type_init(ModifierTypeInfo *types[])
   INIT_TYPE(VoronoiFracture);
   INIT_TYPE(Relax);
   INIT_TYPE(PolyEdit);
+  INIT_TYPE(Dice);
+  INIT_TYPE(EditPoly);
+  INIT_TYPE(Collapse);
+  INIT_TYPE(Drape);
+  INIT_TYPE(Shatter);
+  INIT_TYPE(Masonry);
+  INIT_TYPE(Dissolve);
   INIT_TYPE(UVWMap);
   INIT_TYPE(Bend);
   INIT_TYPE(Twist);

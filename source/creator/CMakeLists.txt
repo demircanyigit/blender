@@ -1950,6 +1950,12 @@ if(WITH_USD)
   absolute_include_dirs(../blender/io/usd)
 endif()
 
+install(
+  DIRECTORY ${CMAKE_SOURCE_DIR}/release/datafiles/icons_classic
+  DESTINATION ${TARGETDIR_VER}/datafiles
+  COMPONENT blender
+)
+
 # Always install USD shared library and `datafiles` regardless if Blender
 # itself uses them, the bundled Python module still needs it.
 if((DEFINED LIBDIR) AND TARGETDIR_LIB)

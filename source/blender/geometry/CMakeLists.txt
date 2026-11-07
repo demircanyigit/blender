@@ -42,6 +42,12 @@ set(SRC
   intern/merge_layers.cc
   intern/mesh_decimate.cc
   intern/mesh_clip.cc
+  intern/mesh_collapse.cc
+  intern/mesh_dice.cc
+  intern/mesh_dissolve.cc
+  intern/mesh_drape.cc
+  intern/mesh_masonry.cc
+  intern/mesh_shatter.cc
   intern/mesh_smooth.cc
   intern/mesh_voronoi_fracture.cc
   intern/pmp_mesh_conversion.hh
@@ -108,6 +114,12 @@ set(SRC
   GEO_merge_layers.hh
   GEO_mesh_decimate.hh
   GEO_mesh_clip.hh
+  GEO_mesh_collapse.hh
+  GEO_mesh_dice.hh
+  GEO_mesh_dissolve.hh
+  GEO_mesh_drape.hh
+  GEO_mesh_masonry.hh
+  GEO_mesh_shatter.hh
   GEO_mesh_smooth.hh
   GEO_mesh_voronoi_fracture.hh
   GEO_mesh_boolean.hh
@@ -166,6 +178,16 @@ if(WITH_UV_SLIM)
     ../../../intern/slim
   )
   add_definitions(-DWITH_UV_SLIM)
+endif()
+
+if(WITH_BULLET)
+  list(APPEND INC
+    ../../../intern/rigidbody
+  )
+  list(APPEND LIB
+    bf_intern_rigidbody
+    PRIVATE bf::dependencies::optional::bullet
+  )
 endif()
 
 if(WITH_MANIFOLD)

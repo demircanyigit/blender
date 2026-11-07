@@ -1,6 +1,6 @@
 # About this fork
 
-An unofficial fork based on the Blender `v5.1.0` tag. It adds 45 modifiers and a list view of the
+An unofficial fork based on the Blender `v5.1.0` tag. It adds 52 modifiers and a list view of the
 modifier stack, new geometry nodes, the Toolbox and Shelf editors, more color attribute options for
 the Solid shading mode, and the classic 2.79 look with colored icons and embossed widgets. It isn't
 made or supported by the Blender Foundation. The [main read-me](../../README.md) lists everything.

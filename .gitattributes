@@ -108,3 +108,6 @@ scripts/modules/_bpy_internal/assets/remote_library_listing/*_openapi.py linguis
 
 # Images shown on the fork's GitHub pages are normal files, so GitHub can show them without LFS.
 doc/fork/images/** -filter -diff -merge binary
+
+# Small classic icon bitmaps ship with the source, without an LFS download.
+release/datafiles/icons_classic/** -filter -diff -merge binary

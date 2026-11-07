@@ -4477,6 +4477,7 @@ class VIEW3D_MT_edit_mesh(Menu):
         props = layout.operator("mesh.knife_tool", icon='OP_KNIFE')
         props.use_occlude_geometry = True
         props.only_selected = False
+        layout.operator("mesh.multi_cut", icon='TOOL_MULTI_CUT')
 
         if with_bullet:
             layout.operator("mesh.convex_hull", icon='OP_CONVEX_HULL')
@@ -4627,6 +4628,7 @@ class VIEW3D_MT_edit_mesh_context_menu(Menu):
             col.separator()
 
             col.operator("mesh.knife_tool", icon='OP_KNIFE')
+            col.operator("mesh.multi_cut", icon='TOOL_MULTI_CUT')
             col.operator("mesh.bisect", icon='OP_BISECT')
 
             col.separator()

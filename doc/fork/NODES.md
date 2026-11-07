@@ -15,6 +15,10 @@
 | [QuadriFlow Remesh](#quadriflow-remesh) | Mesh ▸ Operations | Rebuilds a mesh out of quads |
 | [Displace](#displace) | Mesh ▸ Operations | Moves points by a height or vector |
 | [Sweep](#sweep) | Curve ▸ Operations | Sweeps a shape along curves |
+| [Collapse Islands](#collapse-islands) | Mesh ▸ Operations | Drops mesh islands as rigid pieces |
+| [Drape](#drape) | Mesh ▸ Operations | Settles a cloth mesh over a collider |
+| [Shatter](#shatter) | Mesh ▸ Operations | Breaks a mesh with material-specific patterns |
+| [Masonry](#masonry) | Mesh ▸ Operations | Covers faces with brick, stone or paving patterns |
 
 Inputs marked **field** can take a different value per element, for example from Random Value.
 Other inputs take one value, and linking a field to them shows a red link.
@@ -347,3 +351,33 @@ Limits:
 - Every cross section is swept along every curve. It doesn't cycle through them.
 - Twist needs enough curve points to show, so put Resample Curve in front of a two-point line.
 - Radius and Width are single values. Use Scale for sizes that vary.
+
+
+## Collapse Islands
+
+Drops each connected mesh island as a rigid piece. Ground takes collider geometry; with no ground,
+the node uses a floor under the mesh. Keep is a point field that holds islands in place. Space,
+Time, Gravity, Push, Seed, Friction, Bounce and Quality control the settling. The output is Mesh.
+This computes a settled result during evaluation rather than creating a rigid-body simulation cache.
+
+## Drape
+
+Settles a mesh as cloth over Collider geometry. Pin is a point field for fixed points. Floor adds a
+floor plane. Space, Time, Gravity, Stiffness, Bending, Shrink, Pressure, Thickness, Friction,
+Self Collision and Quality control the solver. The output is Mesh. Subdivide the input first to
+provide enough points to bend; higher quality and self collision increase evaluation cost.
+
+## Shatter
+
+Cuts a closed mesh using Stone, Glass, Wood, Ceramic or Ice patterns. Pieces and Seed control the
+breakup; Impact and Focus locate the hit; Grain Axis and Grain control directional patterns.
+Roughness, Detail and Cut Gap shape the broken surfaces. Outputs are Mesh, Piece Index and
+Interior, so downstream nodes can identify pieces and broken faces. Start with a closed mesh.
+
+## Masonry
+
+Covers selected faces with brick, stone or paving blocks. Pattern selects the layout; Direction,
+Angle and Center orient it. Length, Height, Depth, Mortar and Offset size the blocks and joints.
+Soldier Rows, Backing, Border and Toothed control the edges and backing. Variation inputs and Seed
+change block sizes and shapes. Tile and Tile Size support a custom tile in the node version.
+Outputs are Mesh, Block Index and Mortar. Small blocks on large faces can create substantial geometry.

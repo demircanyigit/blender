@@ -151,7 +151,7 @@ class OBJECT_MT_modifier_add_edit(ModifierAddMenu, Menu):
             self.operator_modifier_add(layout, 'VERTEX_WEIGHT_MIX')
             self.operator_modifier_add(layout, 'VERTEX_WEIGHT_PROXIMITY')
             self.operator_modifier_add_new(layout, (
-                'UVW_MAP', 'TENSION', 'VOLUME_SELECT', 'MATERIAL_BY_ELEMENT', 'DATA_CHANNEL', 'POLY_SELECT', 'POLY_EDIT',
+                'UVW_MAP', 'TENSION', 'VOLUME_SELECT', 'MATERIAL_BY_ELEMENT', 'DATA_CHANNEL', 'EDIT_POLY', 'POLY_SELECT', 'POLY_EDIT',
                 'ELEMENT_ORDER', 'ELEMENT_PIVOT', 'SMART_UV_PROJECT',
             ))
         if ob_type == 'GREASEPENCIL':
@@ -198,7 +198,7 @@ class OBJECT_MT_modifier_add_generate(ModifierAddMenu, Menu):
             self.operator_modifier_add_new(layout, (
                 'SLICE', 'CAP_HOLES', 'RADIAL_ARRAY', 'FACE_EXTRUDE', 'DELETE_MESH', 'QUADRANGULATE',
                 'PANELIZE', 'INSET', 'POKE', 'BEAUTIFY_FACES', 'ROTATE_EDGES', 'SYMMETRIZE',
-                'VORONOI_FRACTURE',
+                'VORONOI_FRACTURE', 'DICE', 'COLLAPSE', 'DRAPE', 'SHATTER', 'MASONRY', 'DISSOLVE',
             ))
         if ob_type == 'CURVES':
             self.operator_modifier_add_new(layout, ('NORMALIZE_SPLINE', 'CHAMFER_SPLINE', 'SWEEP'))

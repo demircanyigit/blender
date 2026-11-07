@@ -1080,6 +1080,174 @@ class OBJECT_OT_poly_select_store(Operator):
         return {'FINISHED'}
 
 
+def _edit_poly_modifier(context, name):
+    ob = context.object
+    if name and ob:
+        return ob.modifiers.get(name)
+    return getattr(context, "modifier", None)
+
+
+def _edit_poly_eval_mesh(context, ob):
+    """A copy of the evaluated mesh of the object with the modifiers that are on now."""
+    depsgraph = context.evaluated_depsgraph_get()
+    return bpy.data.meshes.new_from_object(
+        ob.evaluated_get(depsgraph), preserve_all_data_layers=True, depsgraph=depsgraph)
+
+
+class OBJECT_OT_edit_poly_start(Operator):
+    """Edit the mesh at the place of the Edit Poly modifier in Edit Mode. """ \
+        """The modifiers before it are turned off until editing is finished"""
+    bl_idname = "object.edit_poly_start"
+    bl_label = "Edit Poly"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    modifier: StringProperty(
+        name="Modifier",
+        description="Name of the Edit Poly modifier, the one of the panel when empty",
+    )
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.object
+        return ob is not None and ob.type == 'MESH' and not ob.library
+
+    def execute(self, context):
+        ob = context.object
+        md = _edit_poly_modifier(context, self.modifier)
+        if md is None or md.type != 'EDIT_POLY':
+            self.report({'ERROR'}, "No Edit Poly modifier")
+            return {'CANCELLED'}
+        if any(m.type == 'EDIT_POLY' and m.is_editing for m in ob.modifiers):
+            self.report({'ERROR'}, "Finish the Edit Poly that is being edited first")
+            return {'CANCELLED'}
+        if ob.data.users > 1:
+            self.report({'ERROR'}, "The mesh is used by more than one object")
+            return {'CANCELLED'}
+        if ob.mode != 'OBJECT':
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+        modifiers = list(ob.modifiers)
+        index = modifiers.index(md)
+        below = modifiers[:index]
+        above = modifiers[index + 1:]
+        shown_above = [m.show_viewport for m in above]
+
+        if md.mesh is None:
+            # The mesh as it comes into the modifier.
+            md.show_viewport = False
+            for m in above:
+                m.show_viewport = False
+            mesh = _edit_poly_eval_mesh(context, ob)
+            md.show_viewport = True
+            mesh.name = ob.data.name + " Edit Poly"
+            positions = [0.0] * (len(mesh.vertices) * 3)
+            mesh.vertices.foreach_get("co", positions)
+            base = mesh.attributes.new(".edit_poly_base", 'FLOAT_VECTOR', 'POINT')
+            base.data.foreach_set("vector", positions)
+            md.mesh = mesh
+        else:
+            # Take in how the mesh below has moved since the last edit.
+            for m in above:
+                m.show_viewport = False
+            moved = _edit_poly_eval_mesh(context, ob)
+            mesh = md.mesh
+            base = moved.attributes.get(".edit_poly_base")
+            if len(moved.vertices) == len(mesh.vertices) and base is not None:
+                positions = [0.0] * (len(moved.vertices) * 3)
+                moved.vertices.foreach_get("co", positions)
+                mesh.vertices.foreach_set("co", positions)
+                base.data.foreach_get("vector", positions)
+                stored = mesh.attributes.get(".edit_poly_base")
+                if stored is None:
+                    stored = mesh.attributes.new(".edit_poly_base", 'FLOAT_VECTOR', 'POINT')
+                stored.data.foreach_set("vector", positions)
+                mesh.update()
+            bpy.data.meshes.remove(moved)
+        for m, shown in zip(above, shown_above):
+            m.show_viewport = shown
+
+        # Remember the incoming points now, before the modifiers below are turned off.
+        md.use_store_input = True
+        context.evaluated_depsgraph_get()
+
+        ob["_edit_poly_hidden"] = [m.name for m in below if m.show_viewport]
+        for m in below:
+            m.show_viewport = False
+        md.object_mesh = ob.data
+        ob.data = md.mesh
+        md.is_editing = True
+        ob.modifiers.active = md
+        bpy.ops.object.mode_set(mode='EDIT')
+        return {'FINISHED'}
+
+
+class OBJECT_OT_edit_poly_finish(Operator):
+    """Stop editing the Edit Poly modifier and turn the modifiers before it back on"""
+    bl_idname = "object.edit_poly_finish"
+    bl_label = "Finish Editing"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    modifier: StringProperty(
+        name="Modifier",
+        description="Name of the Edit Poly modifier, the one being edited when empty",
+    )
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.object
+        return ob is not None and ob.type == 'MESH'
+
+    def execute(self, context):
+        ob = context.object
+        md = ob.modifiers.get(self.modifier) if self.modifier else None
+        if md is None:
+            md = next((m for m in ob.modifiers if m.type == 'EDIT_POLY' and m.is_editing), None)
+        if md is None or md.type != 'EDIT_POLY' or not md.is_editing:
+            self.report({'ERROR'}, "No Edit Poly modifier is being edited")
+            return {'CANCELLED'}
+        if ob.mode != 'OBJECT':
+            bpy.ops.object.mode_set(mode='OBJECT')
+        if md.object_mesh is not None:
+            ob.data = md.object_mesh
+        md.object_mesh = None
+        md.is_editing = False
+        for name in ob.get("_edit_poly_hidden", []):
+            m = ob.modifiers.get(name)
+            if m is not None:
+                m.show_viewport = True
+        if "_edit_poly_hidden" in ob:
+            del ob["_edit_poly_hidden"]
+        return {'FINISHED'}
+
+
+class OBJECT_OT_edit_poly_reset(Operator):
+    """Throw away the edits of the Edit Poly modifier, so the mesh comes through unchanged"""
+    bl_idname = "object.edit_poly_reset"
+    bl_label = "Reset Edit Poly"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    modifier: StringProperty(
+        name="Modifier",
+        description="Name of the Edit Poly modifier, the one of the panel when empty",
+    )
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.object
+        return ob is not None and ob.type == 'MESH'
+
+    def execute(self, context):
+        md = _edit_poly_modifier(context, self.modifier)
+        if md is None or md.type != 'EDIT_POLY' or md.is_editing:
+            self.report({'ERROR'}, "No Edit Poly modifier, or it's being edited")
+            return {'CANCELLED'}
+        mesh = md.mesh
+        md.mesh = None
+        if mesh is not None and mesh.users == 0:
+            bpy.data.meshes.remove(mesh)
+        return {'FINISHED'}
+
+
 class OBJECT_OT_ffd_reset_points(Operator):
     """Move every control point of the FFD modifier back to its rest place"""
     bl_idname = "object.ffd_reset_points"
@@ -1132,5 +1300,8 @@ classes = (
     TransformsToDeltasAnim,
     OBJECT_OT_assign_property_defaults,
     OBJECT_OT_poly_select_store,
+    OBJECT_OT_edit_poly_start,
+    OBJECT_OT_edit_poly_finish,
+    OBJECT_OT_edit_poly_reset,
     OBJECT_OT_ffd_reset_points,
 )

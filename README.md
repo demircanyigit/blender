@@ -21,11 +21,24 @@ Files that use these additions won't work properly in official Blender. See
 
 | Area | What's new |
 |---|---|
-| [Modifiers](#modifiers) | 45 new modifiers, a Modifier List view of the stack, viewport gizmos |
-| [Geometry Nodes](#geometry-nodes) | 65 new nodes: 13 modeling nodes, plus node versions of the new and classic modifiers |
+| [Modifiers](#modifiers) | 52 new modifiers, a Modifier List view of the stack, viewport gizmos |
+| [Geometry Nodes](#geometry-nodes) | 69 new nodes: 17 modeling nodes, plus node versions of the new and classic modifiers |
 | [Toolbox and Shelf](#toolbox-and-shelf) | Two new editors for your own buttons, and icons in Quick Favorites |
 | [Classic look](#classic-look) | Colored 2.79-style icons, embossed widgets, square vertices |
 | [Solid shading](#color-attributes-in-solid-shading) | Color attributes mixed into the material color |
+
+## Latest additions
+
+The source branch now includes seven more modifiers: **Dice, Edit Poly, Collapse, Drape, Shatter,
+Masonry and Dissolve**, plus **Collapse Islands, Drape, Shatter and Masonry** Geometry Nodes.
+Dice and Dissolve now share their geometry algorithms with their modifier versions.
+
+- **Edit Poly** lets you edit a stored mesh in the stack and optionally follow upstream point movement.
+- **Multi Cut** adds an interactive mesh cutting tool to Edit Mode.
+- **Modifier List favorites** can be reordered and shown in one, two or three columns.
+- The new modifiers and nodes have their own colored icons, included with the source.
+
+These additions are in the source branch; the Windows download may be an earlier build.
 
 ## Modifiers
 
@@ -41,7 +54,7 @@ The Modifiers tab has a second way to show the stack. The button in its header s
 - <img src="doc/fork/images/icons/modlist_first_on_top.png" width="32" height="32" alt="First On Top"> <img src="doc/fork/images/icons/modlist_last_on_top.png" width="32" height="32" alt="Last On Top"> **Order:** the list can show the first modifier on top, or the last one.
 - <img src="doc/fork/images/icons/modlist_rename.png" width="32" height="32" alt="Rename"> <img src="doc/fork/images/icons/modlist_copy.png" width="32" height="32" alt="Copy"> <img src="doc/fork/images/icons/modlist_paste.png" width="32" height="32" alt="Paste"> <img src="doc/fork/images/icons/modlist_collapse_to.png" width="32" height="32" alt="Collapse To"> <img src="doc/fork/images/icons/modlist_apply_all.png" width="32" height="32" alt="Apply All"> <img src="doc/fork/images/icons/modlist_delete_all.png" width="32" height="32" alt="Delete All"> <img src="doc/fork/images/icons/modlist_copy_stack.png" width="32" height="32" alt="Copy Stack"> **Right-click menu:** rename, copy and paste, move, enable or disable, collapse up to here, apply all,
   delete all, and copy the whole stack to the selected objects.
-- <img src="doc/fork/images/icons/modlist_favorites.png" width="32" height="32" alt="Favorites"> **Favorites:** mark the modifiers you use most, and they're listed first when you add one. They're saved in
+- <img src="doc/fork/images/icons/modlist_favorites.png" width="32" height="32" alt="Favorites"> **Favorites:** reorder your favorite modifiers, choose one to three columns, and mark the modifiers you use most, and they're listed first when you add one. They're saved in
   your user settings, so every file has them.
 - **Add menu:** every mesh modifier in one menu of seven columns: Model, Topology and Smooth, Elements and
   Select and Normals, Deform, Shape, UV and Data, and Physics with Geometry Nodes.
@@ -52,7 +65,7 @@ The Modifiers tab has a second way to show the stack. The button in its header s
 
 ### New modifiers
 
-All 45 work like the built-in ones: they're in the Add Modifier menu with their own icons, they can be applied,
+All 52 work like the built-in ones: they're in the Add Modifier menu with their own icons, they can be applied,
 and most of them also work in Edit Mode.
 
 ![Voronoi Fracture with Exploded View, a tower made with Poly Select and four Poly Edits, Panelize on a sphere, and Radial Array](doc/fork/images/modifiers_modeling.png)
@@ -79,10 +92,18 @@ Array.*
 | <img src="doc/fork/images/icons/mod_symmetrize.png" width="32" height="32" alt="Symmetrize"> | Symmetrize | Makes one side of the mesh a mirror of the other |
 | <img src="doc/fork/images/icons/mod_sweep.png" width="32" height="32" alt="Sweep"> | Sweep | Makes a mesh by moving a shape along curves |
 
+| <img src="doc/fork/images/icons/mod_dice.png" width="32" height="32" alt="Dice"> | Dice | Cuts a mesh into a grid of solid pieces, by count or size |
+| <img src="doc/fork/images/icons/mod_collapse.png" width="32" height="32" alt="Collapse"> | Collapse | Drops mesh islands as rigid pieces onto a target or floor |
+| <img src="doc/fork/images/icons/mod_drape.png" width="32" height="32" alt="Drape"> | Drape | Settles a mesh as cloth over a collider, with pinning and optional self collision |
+| <img src="doc/fork/images/icons/mod_shatter.png" width="32" height="32" alt="Shatter"> | Shatter | Breaks a closed mesh with stone, glass, wood, ceramic or ice patterns |
+| <img src="doc/fork/images/icons/mod_masonry.png" width="32" height="32" alt="Masonry"> | Masonry | Covers faces with brick, stone or paving patterns |
+| <img src="doc/fork/images/icons/mod_dissolve.png" width="32" height="32" alt="Dissolve"> | Dissolve | Removes points, edges or faces and merges the surrounding faces |
+
 **Selection and editing in the stack**
 
 | | Modifier | What it does |
 |---|---|---|
+| <img src="doc/fork/images/icons/mod_edit_poly.png" width="32" height="32" alt="Edit Poly"> | Edit Poly | Edits a stored mesh at this point in the stack, with optional upstream point movement |
 | <img src="doc/fork/images/icons/mod_poly_select.png" width="32" height="32" alt="Poly Select"> | Poly Select | Stores a selection of points, edges or faces in the stack, for the modifiers after it |
 | <img src="doc/fork/images/icons/mod_poly_edit.png" width="32" height="32" alt="Poly Edit"> | Poly Edit | Moves, extrudes, insets, pokes or deletes the selected elements |
 | <img src="doc/fork/images/icons/mod_vol_select.png" width="32" height="32" alt="Volume Select"> | Volume Select | Writes a vertex group with the points inside a sphere, box or cylinder |
@@ -155,7 +176,7 @@ They follow the viewport's Gizmos ▸ Modifier toggle.
 
 ## Geometry Nodes
 
-65 new nodes for the Geometry Nodes editor. They're real nodes, not add-ons or node groups.
+69 new nodes for the Geometry Nodes editor. They're real nodes, not add-ons or node groups.
 
 ### Modeling nodes
 
@@ -177,8 +198,12 @@ more detail [further down](#modeling-nodes-in-detail).
 | <img src="doc/fork/images/icons/geo_mod_smooth.png" width="32" height="32" alt="Smooth"> | [Smooth](#smooth) | Smooth the surface of a mesh by moving its points |
 | <img src="doc/fork/images/icons/mod_relax.png" width="32" height="32" alt="Relax"> | [Relax](#relax) | Even out the distances between the points of a mesh by sliding them along its surface |
 | <img src="doc/fork/images/icons/geo_mod_displace.png" width="32" height="32" alt="Displace"> | [Displace](#displace) | Move the points of a mesh by a height or vector, like the Displace modifier |
+| <img src="doc/fork/images/icons/geo_mod_collapse.png" width="32" height="32" alt="Collapse Islands"> | [Collapse Islands](doc/fork/NODES.md#collapse-islands) | Drops connected islands as rigid pieces onto ground geometry or a floor |
+| <img src="doc/fork/images/icons/geo_mod_drape.png" width="32" height="32" alt="Drape"> | [Drape](doc/fork/NODES.md#drape) | Settles cloth over collider geometry, with a Pin field |
+| <img src="doc/fork/images/icons/geo_mod_shatter.png" width="32" height="32" alt="Shatter"> | [Shatter](doc/fork/NODES.md#shatter) | Breaks a closed mesh and outputs Piece Index and Interior fields |
+| <img src="doc/fork/images/icons/geo_mod_masonry.png" width="32" height="32" alt="Masonry"> | [Masonry](doc/fork/NODES.md#masonry) | Creates patterned blocks with Block Index and Mortar fields |
 
-![The thirteen modeling nodes side by side in the Geometry Nodes editor](doc/fork/images/nodes_modeling.png)
+![The original thirteen modeling nodes side by side in the Geometry Nodes editor](doc/fork/images/nodes_modeling.png)
 
 ### Node versions of the new modifiers
 

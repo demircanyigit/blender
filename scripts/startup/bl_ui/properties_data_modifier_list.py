@@ -37,31 +37,64 @@ def _favorites_path():
 
 
 _favorites_cache = None
+_columns_cache = None
+DEFAULT_COLUMNS = 3
+
+
+def _favorites_load():
+    global _favorites_cache, _columns_cache
+    _favorites_cache = list(DEFAULT_FAVORITES)
+    _columns_cache = DEFAULT_COLUMNS
+    try:
+        with open(_favorites_path(), encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, ValueError):
+        return
+    # Older files are only the list of favourites.
+    if isinstance(data, dict):
+        columns = data.get("columns")
+        if isinstance(columns, int) and 1 <= columns <= 3:
+            _columns_cache = columns
+        data = data.get("favorites", _favorites_cache)
+    if isinstance(data, list):
+        _favorites_cache = [t for t in data if isinstance(t, str)]
+
+
+def _favorites_save():
+    try:
+        os.makedirs(os.path.dirname(_favorites_path()), exist_ok=True)
+        with open(_favorites_path(), "w", encoding="utf-8") as fh:
+            json.dump({"favorites": _favorites_cache, "columns": _columns_cache}, fh, indent=1)
+    except OSError:
+        pass
 
 
 def favorites_get():
-    global _favorites_cache
     if _favorites_cache is None:
-        _favorites_cache = list(DEFAULT_FAVORITES)
-        try:
-            with open(_favorites_path(), encoding="utf-8") as fh:
-                data = json.load(fh)
-            if isinstance(data, list):
-                _favorites_cache = [t for t in data if isinstance(t, str)]
-        except (OSError, ValueError):
-            pass
+        _favorites_load()
     return [t for t in _favorites_cache if t in ModifierAddMenu.MODIFIER_TYPES_TO_LABELS]
 
 
 def favorites_set(types):
     global _favorites_cache
+    if _favorites_cache is None:
+        _favorites_load()
     _favorites_cache = list(types)
-    try:
-        os.makedirs(os.path.dirname(_favorites_path()), exist_ok=True)
-        with open(_favorites_path(), "w", encoding="utf-8") as fh:
-            json.dump(_favorites_cache, fh, indent=1)
-    except OSError:
-        pass
+    _favorites_save()
+
+
+def favorites_columns_get():
+    if _columns_cache is None:
+        _favorites_load()
+    return _columns_cache
+
+
+def favorites_columns_set(columns):
+    global _columns_cache
+    if _favorites_cache is None:
+        _favorites_load()
+    _columns_cache = max(1, min(3, columns))
+    _favorites_save()
 
 
 def _type_fits_object(mod_type, ob):
@@ -443,31 +476,108 @@ class OBJECT_OT_modifier_list_favorite_toggle(Operator):
         return {'FINISHED'}
 
 
+class OBJECT_OT_modifier_list_favorite_move(Operator):
+    """Move this favourite up or down"""
+    bl_idname = "object.modifier_list_favorite_move"
+    bl_label = "Move Favourite"
+    bl_options = {'INTERNAL'}
+
+    type: StringProperty()
+    direction: EnumProperty(items=(('UP', "Up", ""), ('DOWN', "Down", ""), ('TOP', "Top", ""),
+                                   ('BOTTOM', "Bottom", "")))
+
+    def execute(self, _context):
+        favorites = favorites_get()
+        if self.type not in favorites:
+            return {'CANCELLED'}
+        i = favorites.index(self.type)
+        favorites.pop(i)
+        j = {'UP': i - 1, 'DOWN': i + 1, 'TOP': 0, 'BOTTOM': len(favorites)}[self.direction]
+        favorites.insert(max(0, min(len(favorites), j)), self.type)
+        favorites_set(favorites)
+        return {'FINISHED'}
+
+
+class OBJECT_OT_modifier_list_favorites_columns(Operator):
+    """Number of columns of the favourite buttons"""
+    bl_idname = "object.modifier_list_favorites_columns"
+    bl_label = "Columns"
+    bl_options = {'INTERNAL'}
+
+    columns: IntProperty(min=1, max=3, default=3)
+
+    def execute(self, _context):
+        favorites_columns_set(self.columns)
+        return {'FINISHED'}
+
+
 class OBJECT_OT_modifier_list_favorites(Operator):
-    """Choose the modifiers shown as buttons above the list"""
+    """Choose the modifiers shown as buttons above the list, their order and their columns"""
     bl_idname = "object.modifier_list_favorites"
     bl_label = "Favourites"
     bl_options = {'INTERNAL'}
 
+    search: StringProperty(
+        name="Search",
+        description="Show only the modifiers whose name has this text",
+        options={'TEXTEDIT_UPDATE', 'SKIP_SAVE'},
+    )
+
     def invoke(self, context, _event):
-        return context.window_manager.invoke_props_dialog(self, width=520, confirm_text="Done")
+        return context.window_manager.invoke_props_dialog(self, width=760, confirm_text="Done")
 
     def draw(self, context):
         layout = self.layout
         ob = context.object
+        labels = ModifierAddMenu.MODIFIER_TYPES_TO_LABELS
         favorites = favorites_get()
-        types = [t for t in ModifierAddMenu.MODIFIER_TYPES_TO_LABELS if ob is None or _type_fits_object(t, ob)]
-        types.sort(key=lambda t: ModifierAddMenu.MODIFIER_TYPES_TO_LABELS[t])
-        grid = layout.grid_flow(row_major=True, columns=3, even_columns=True, align=True)
+        columns = favorites_columns_get()
+
+        split = layout.split(factor=0.36)
+
+        # The favourites in their order, with buttons to move them.
+        left = split.column()
+        row = left.row(align=True)
+        row.label(text="Columns")
+        for n in (1, 2, 3):
+            row.operator(OBJECT_OT_modifier_list_favorites_columns.bl_idname, text=str(n),
+                         depress=n == columns).columns = n
+        box = left.box()
+        col = box.column(align=True)
+        if not favorites:
+            col.label(text="Click a modifier to add it")
+        for i, mod_type in enumerate(favorites):
+            row = col.row(align=True)
+            row.label(text=labels[mod_type], icon=_icon(mod_type))
+            sub = row.row(align=True)
+            sub.enabled = i > 0
+            op = sub.operator(OBJECT_OT_modifier_list_favorite_move.bl_idname, text="", icon='TRIA_UP')
+            op.type, op.direction = mod_type, 'UP'
+            sub = row.row(align=True)
+            sub.enabled = i < len(favorites) - 1
+            op = sub.operator(OBJECT_OT_modifier_list_favorite_move.bl_idname, text="", icon='TRIA_DOWN')
+            op.type, op.direction = mod_type, 'DOWN'
+            row.operator(OBJECT_OT_modifier_list_favorite_toggle.bl_idname, text="",
+                         icon='X').type = mod_type
+        left.operator(OBJECT_OT_modifier_list_favorites_reset.bl_idname, icon='LOOP_BACK')
+
+        # Every modifier, to pick from.
+        right = split.column()
+        right.prop(self, "search", text="", icon='VIEWZOOM')
+        search = self.search.strip().lower()
+        types = [t for t in labels if (ob is None or _type_fits_object(t, ob)) and
+                 (not search or search in labels[t].lower())]
+        types.sort(key=lambda t: labels[t])
+        if not types:
+            right.label(text="No modifier has that name")
+        grid = right.grid_flow(row_major=True, columns=3, even_columns=True, align=True)
         for mod_type in types:
             grid.operator(
                 OBJECT_OT_modifier_list_favorite_toggle.bl_idname,
-                text=ModifierAddMenu.MODIFIER_TYPES_TO_LABELS[mod_type],
+                text=labels[mod_type],
                 icon=_icon(mod_type),
                 depress=mod_type in favorites,
             ).type = mod_type
-        row = layout.row()
-        row.operator(OBJECT_OT_modifier_list_favorites_reset.bl_idname)
 
     def execute(self, _context):
         return {'FINISHED'}
@@ -540,12 +650,12 @@ class OBJECT_MT_modifier_list_color(ModifierListAddMenu, Menu):
 # Mesh modifiers of the list view's menu, in columns. Each column is sorted by label.
 MESH_CATEGORIES_TOP = (
     ("Model", (
-        'BEVEL', 'BOOLEAN', 'CAP_HOLES', 'FACE_EXTRUDE', 'INSET', 'MIRROR', 'PANELIZE', 'POKE',
-        'SCREW', 'SKIN', 'SLICE', 'SOLIDIFY', 'SYMMETRIZE', 'VOLUME_TO_MESH', 'VORONOI_FRACTURE', 'WELD',
+        'BEVEL', 'BOOLEAN', 'CAP_HOLES', 'COLLAPSE', 'DICE', 'DRAPE', 'FACE_EXTRUDE', 'INSET', 'MASONRY', 'MIRROR', 'PANELIZE', 'POKE',
+        'SCREW', 'SHATTER', 'SKIN', 'SLICE', 'SOLIDIFY', 'SYMMETRIZE', 'VOLUME_TO_MESH', 'VORONOI_FRACTURE', 'WELD',
         'WIREFRAME',
     )),
     ("Topology", (
-        'SUBSURF', 'MULTIRES', 'DECIMATE', 'REMESH', 'ISOTROPIC_REMESH', 'QUADRIFLOW_REMESH',
+        'SUBSURF', 'MULTIRES', 'DECIMATE', 'DISSOLVE', 'REMESH', 'ISOTROPIC_REMESH', 'QUADRIFLOW_REMESH',
         'TRIANGULATE', 'QUADRANGULATE', 'BEAUTIFY_FACES', 'ROTATE_EDGES', 'EDGE_SPLIT',
     )),
     ("Elements", (
@@ -569,7 +679,7 @@ MESH_CATEGORIES_BOTTOM = (
         'MATERIAL_BY_ELEMENT', 'TENSION', 'MESH_CACHE', 'MESH_SEQUENCE_CACHE',
         'VERTEX_WEIGHT_EDIT', 'VERTEX_WEIGHT_MIX', 'VERTEX_WEIGHT_PROXIMITY',
     )),
-    ("Select", ('POLY_SELECT', 'POLY_EDIT', 'VOLUME_SELECT')),
+    ("Select", ('EDIT_POLY', 'POLY_SELECT', 'POLY_EDIT', 'VOLUME_SELECT')),
     ("Physics", (
         'CLOTH', 'COLLISION', 'DYNAMIC_PAINT', 'EXPLODE', 'FLUID', 'OCEAN', 'PARTICLE_INSTANCE',
         'PARTICLE_SYSTEM', 'SOFT_BODY',
@@ -725,22 +835,42 @@ def draw_item_context_menu(self, context):
 # -----------------------------------------------------------------------------
 # List
 
+def _off_icon(name, fallback):
+    """The off icon of a switch, or the plain one with a build that doesn't have it yet."""
+    icons = bpy.types.UILayout.bl_rna.functions["prop"].parameters["icon"].enum_items
+    return name if name in icons else fallback
+
+
 class MODIFIER_UL_modifier_list(UIList):
     def draw_item(self, _context, layout, _data, item, _icon_value, _active_data, _active_propname, _index):
         md = item
         ob = md.id_data
         row = layout.row(align=True)
-        row.prop(md, "name", text="", emboss=False, icon=_icon(md.type))
-        sub = row.row(align=True)
+        # A modifier that is off in the viewport and in renders looks faded, like a hidden object.
+        name = row.row(align=True)
+        name.active = md.show_viewport or md.show_render
+        name.prop(md, "name", text="", emboss=False, icon=_icon(md.type))
+
+        def toggle(prop, on, **kw):
+            # Each switch that is off is faded, so it's clear at a glance which ones are on.
+            sub = row.row(align=True)
+            sub.active = on
+            sub.prop(md, prop, text="", emboss=False, **kw)
+
         if ob.type == 'MESH':
             # Same rule as the panel header: only modifiers that work in edit mode show these.
             if md.type not in {
                     'COLLISION', 'SURFACE', 'CLOTH', 'SOFT_BODY', 'FLUID', 'DYNAMIC_PAINT',
                     'PARTICLE_SYSTEM', 'OCEAN', 'EXPLODE'}:
-                sub.prop(md, "show_on_cage", text="", emboss=False)
-                sub.prop(md, "show_in_editmode", text="", emboss=False)
-        sub.prop(md, "show_viewport", text="", emboss=False)
-        sub.prop(md, "show_render", text="", emboss=False)
+                # Their own off icons, like the eye and the camera: a fade alone is hidden by the
+                # highlight under the mouse, so the click would only show once the mouse leaves.
+                toggle("show_on_cage", md.show_on_cage and md.show_in_editmode and md.show_viewport,
+                       icon='MESH_DATA' if md.show_on_cage else _off_icon('MODLIST_ON_CAGE_OFF', 'MESH_DATA'))
+                toggle("show_in_editmode", md.show_in_editmode and md.show_viewport,
+                       icon='EDITMODE_HLT' if md.show_in_editmode else
+                       _off_icon('MODLIST_EDITMODE_OFF', 'EDITMODE_HLT'))
+        toggle("show_viewport", md.show_viewport)
+        toggle("show_render", md.show_render)
 
     def filter_items(self, context, data, propname):
         items = getattr(data, propname)
@@ -773,11 +903,10 @@ def _draw_base_row(layout, ob):
 
 def draw_header(layout, context, space):
     row = layout.row(align=True)
-    if space.use_modifier_list:
-        row.menu("OBJECT_MT_modifier_list_add", text="Modifier List", icon='ADD')
-    else:
+    if not space.use_modifier_list:
+        # The list view has its Add Modifier button under the favourites.
         row.operator("wm.call_menu", text="Add Modifier", icon='ADD').name = "OBJECT_MT_modifier_add"
-    row.separator()
+        row.separator()
     toggle = row.row(align=True)
     toggle.prop(space, "use_modifier_list", text="", icon='MODLIST_VIEW_STACK', invert_checkbox=True)
     toggle.prop(space, "use_modifier_list", text="", icon='MODLIST_VIEW_LIST')
@@ -790,18 +919,30 @@ def draw_header(layout, context, space):
 
 def draw_list(layout, context, ob):
     favorites = [t for t in favorites_get() if _type_fits_object(t, ob)]
+    col = layout.column(align=True)
     if favorites:
-        grid = layout.grid_flow(row_major=True, columns=3, even_columns=True, align=True)
+        grid = col.grid_flow(row_major=True, columns=favorites_columns_get(), even_columns=True,
+                             align=True)
         for mod_type in favorites:
             grid.operator(
                 OBJECT_OT_modifier_list_add.bl_idname,
                 text=ModifierAddMenu.MODIFIER_TYPES_TO_LABELS[mod_type],
                 icon=_icon(mod_type),
             ).type = mod_type
+        col.separator(factor=0.5)
+    # Every modifier: the menu, a search that adds the one picked, and the favourites editor.
+    row = col.row(align=True)
+    row.scale_y = 1.3
+    row.menu("OBJECT_MT_modifier_list_add", text="Add Modifier", icon='ADD')
+    sub = row.row(align=True)
+    sub.operator_context = 'INVOKE_REGION_WIN'
+    sub.operator("wm.search_single_menu", text="", icon='VIEWZOOM').menu_idname = (
+        "OBJECT_MT_modifier_list_add")
+    row.operator(OBJECT_OT_modifier_list_favorites.bl_idname, text="", icon='MODLIST_FAVORITES')
+    layout.separator(factor=0.5)
 
     last_on_top = _last_on_top(context)
-    row = layout.row()
-    col = row.column(align=True)
+    col = layout.column(align=True)
     if not last_on_top:
         _draw_base_row(col, ob)
     col.template_list(
@@ -811,31 +952,50 @@ def draw_list(layout, context, ob):
     if last_on_top:
         _draw_base_row(col, ob)
 
-    tools = row.column(align=True)
-    tools.prop(ob, "show_modifier_end_result", text="", icon='MODLIST_END_RESULT')
+    md = ob.modifiers.active
+    _draw_active_bar(col, context, ob, md)
+    layout.separator(factor=0.5)
+
+
+def _draw_active_bar(layout, context, ob, md):
+    """Two rows under the list, every button the same width so the rows span the list: the
+    actions for the active modifier, then the list buttons. The buttons are always there, and
+    the ones that can't be used now are greyed out, so nothing moves around."""
+    name = md.name if md else ""
+    editable = md is not None and ob.library is None and not (md.type == 'EDIT_POLY' and md.is_editing)
     spaces = list(_view3d_spaces(context))
-    tools.operator(
+
+    # Icon-only buttons in a row keep their small size, in grid cells they take the cell's width.
+    grid = layout.grid_flow(row_major=True, columns=5, even_columns=True, even_rows=True, align=True)
+    grid.scale_y = 1.15
+
+    def cell(enabled=True):
+        sub = grid.column(align=True)
+        sub.enabled = enabled
+        return sub
+
+    cell(editable).operator("object.modifier_apply", text="", icon='MODLIST_APPLY').modifier = name
+    cell(editable).operator("object.modifier_copy", text="", icon='DUPLICATE').modifier = name
+    cell(editable).operator("object.modifier_copy_to_selected", text="",
+                            icon='MODLIST_COPY_TO_SELECTED').modifier = name
+    if md is not None:
+        cell().prop(md, "use_pin_to_last", text="", icon='PINNED' if md.use_pin_to_last else 'UNPINNED')
+    else:
+        cell(False).label(text="", icon='UNPINNED')
+    cell().prop(ob, "show_modifier_end_result", text="", icon='MODLIST_END_RESULT')
+    cell().operator(
         OBJECT_OT_modifier_list_gizmos.bl_idname,
         text="",
         icon='GIZMO',
         depress=bool(spaces) and spaces[0].show_gizmo_modifier,
     )
-    tools.separator()
-    tools.operator(OBJECT_OT_modifier_list_collapse_to.bl_idname, text="", icon='MODLIST_COLLAPSE_TO')
-    md = ob.modifiers.active
-    sub = tools.column(align=True)
-    sub.enabled = md is not None
-    name = md.name if md else ""
-    sub.operator("object.modifier_copy_to_selected", text="",
-                 icon='MODLIST_COPY_TO_SELECTED').modifier = name
-    sub.operator("object.modifier_copy", text="", icon='DUPLICATE').modifier = name
-    tools.separator()
-    tools.operator(OBJECT_OT_modifier_list_move.bl_idname, text="", icon='TRIA_UP').direction = 'UP'
-    tools.operator(OBJECT_OT_modifier_list_move.bl_idname, text="", icon='TRIA_DOWN').direction = 'DOWN'
-    tools.separator()
-    sub = tools.column(align=True)
-    sub.enabled = md is not None
-    sub.operator("object.modifier_remove", text="", icon='X').modifier = name
+    cell(md is not None).operator(OBJECT_OT_modifier_list_collapse_to.bl_idname, text="",
+                                  icon='MODLIST_COLLAPSE_TO')
+    cell(md is not None).operator(OBJECT_OT_modifier_list_move.bl_idname, text="",
+                                  icon='TRIA_UP').direction = 'UP'
+    cell(md is not None).operator(OBJECT_OT_modifier_list_move.bl_idname, text="",
+                                  icon='TRIA_DOWN').direction = 'DOWN'
+    cell(md is not None).operator("object.modifier_remove", text="", icon='X').modifier = name
 
 
 classes = (
@@ -854,6 +1014,8 @@ classes = (
     OBJECT_OT_modifier_list_gizmos,
     OBJECT_OT_modifier_list_edit_base,
     OBJECT_OT_modifier_list_favorite_toggle,
+    OBJECT_OT_modifier_list_favorite_move,
+    OBJECT_OT_modifier_list_favorites_columns,
     OBJECT_OT_modifier_list_favorites,
     OBJECT_OT_modifier_list_favorites_reset,
     OBJECT_MT_modifier_list_edit,

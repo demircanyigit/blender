@@ -76,6 +76,7 @@ _icon_classic_tools = {
     "ops.mesh.inset": 'OP_INSET',
     "ops.mesh.knife_tool": 'OP_KNIFE',
     "ops.mesh.loopcut_slide": 'OP_LOOPCUT',
+    "ops.mesh.multi_cut": 'TOOL_MULTI_CUT',
     "ops.mesh.offset_edge_loops_slide": 'OP_OFFSET_EDGE_LOOPS',
     "ops.mesh.polybuild_hover": 'TOOL_POLY_BUILD',
     "ops.mesh.primitive_cone_add_gizmo": 'TOOL_ADD_CONE',

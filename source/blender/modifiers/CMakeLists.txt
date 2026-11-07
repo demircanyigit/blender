@@ -128,6 +128,13 @@ set(SRC
   intern/MOD_voronoi_fracture.cc
   intern/MOD_relax.cc
   intern/MOD_poly_edit.cc
+  intern/MOD_collapse.cc
+  intern/MOD_dice.cc
+  intern/MOD_dissolve.cc
+  intern/MOD_drape.cc
+  intern/MOD_masonry.cc
+  intern/MOD_shatter.cc
+  intern/MOD_edit_poly.cc
   intern/MOD_sweep.cc
   intern/MOD_symmetrize.cc
   intern/MOD_chamfer_spline.cc

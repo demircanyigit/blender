@@ -7830,6 +7830,24 @@ def km_3d_view_tool_edit_mesh_knife(params):
     )
 
 
+def km_3d_view_tool_edit_mesh_multi_cut(params):
+    return (
+        "3D View Tool: Edit Mesh, Multi-Cut",
+        {"space_type": 'VIEW_3D', "region_type": 'WINDOW'},
+        {"items": [
+            # Any modifier: Ctrl and Shift change what the first click does.
+            ("mesh.multi_cut", {"type": params.tool_mouse, "value": 'PRESS', "any": True},
+             {"properties": [("wait_for_input", False)]}),
+            # Show what a click would do, before clicking.
+            ("mesh.multi_cut_hover", {"type": 'MOUSEMOVE', "value": 'ANY', "any": True}, None),
+            ("mesh.multi_cut_hover", {"type": 'LEFT_CTRL', "value": 'ANY', "any": True}, None),
+            ("mesh.multi_cut_hover", {"type": 'RIGHT_CTRL', "value": 'ANY', "any": True}, None),
+            ("mesh.multi_cut_hover", {"type": 'LEFT_SHIFT', "value": 'ANY', "any": True}, None),
+            ("mesh.multi_cut_hover", {"type": 'RIGHT_SHIFT', "value": 'ANY', "any": True}, None),
+        ]},
+    )
+
+
 def km_3d_view_tool_edit_mesh_bisect(params):
     return (
         "3D View Tool: Edit Mesh, Bisect",
@@ -9127,6 +9145,7 @@ def generate_keymaps(params=None):
         km_3d_view_tool_edit_mesh_loop_cut(params),
         km_3d_view_tool_edit_mesh_offset_edge_loop_cut(params),
         km_3d_view_tool_edit_mesh_knife(params),
+        km_3d_view_tool_edit_mesh_multi_cut(params),
         km_3d_view_tool_edit_mesh_bisect(params),
         km_3d_view_tool_edit_mesh_poly_build(params),
         km_3d_view_tool_edit_mesh_spin(params),

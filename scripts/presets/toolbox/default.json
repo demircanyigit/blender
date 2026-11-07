@@ -1520,6 +1520,66 @@
        "properties": {
         "type": "VORONOI_FRACTURE"
        }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Dice",
+       "icon": "MOD_DICE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "DICE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Collapse",
+       "icon": "MOD_COLLAPSE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "COLLAPSE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Drape",
+       "icon": "MOD_DRAPE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "DRAPE"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Shatter",
+       "icon": "MOD_SHATTER",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "SHATTER"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Masonry",
+       "icon": "MOD_MASONRY",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "MASONRY"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Dissolve",
+       "icon": "MOD_DISSOLVE",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "DISSOLVE"
+       }
       }
      ]
     },
@@ -1961,6 +2021,16 @@
        "editor": "VIEW_3D",
        "properties": {
         "type": "DATA_CHANNEL"
+       }
+      },
+      {
+       "type": "OPERATOR",
+       "operator": "object.modifier_add",
+       "name": "Edit Poly",
+       "icon": "MOD_EDIT_POLY",
+       "editor": "VIEW_3D",
+       "properties": {
+        "type": "EDIT_POLY"
        }
       },
       {

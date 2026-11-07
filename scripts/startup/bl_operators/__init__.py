@@ -26,6 +26,7 @@ _modules = [
     "image",
     "image_as_planes",
     "mesh",
+    "mesh_multi_cut",
     "node",
     "object",
     "object_align",

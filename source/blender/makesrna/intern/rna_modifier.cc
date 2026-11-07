@@ -391,6 +391,11 @@ const EnumPropertyItem rna_enum_object_modifier_type_items[] = {
      ICON_MOD_SMART_UV_PROJECT,
      "Smart UV Project",
      "Unwrap the mesh automatically: faces are projected from a few directions and packed"},
+    {eModifierType_EditPoly,
+     "EDIT_POLY",
+     ICON_MOD_EDIT_POLY,
+     "Edit Poly",
+     "Edit the mesh at this point of the stack in Edit Mode, the modifiers above keep working"},
     {eModifierType_PolyEdit,
      "POLY_EDIT",
      ICON_MOD_POLY_EDIT,
@@ -423,6 +428,36 @@ const EnumPropertyItem rna_enum_object_modifier_type_items[] = {
      ICON_MOD_TRIANGULATE,
      "Triangulate",
      "Convert all polygons to triangles"},
+    {eModifierType_Collapse,
+     "COLLAPSE",
+     ICON_MOD_COLLAPSE,
+     "Collapse",
+     "Let every loose piece fall and keep the pile where it comes to rest"},
+    {eModifierType_Drape,
+     "DRAPE",
+     ICON_MOD_DRAPE,
+     "Drape",
+     "Let the mesh fall as cloth and keep the shape it rests in"},
+    {eModifierType_Shatter,
+     "SHATTER",
+     ICON_MOD_SHATTER,
+     "Shatter",
+     "Break a closed mesh into solid pieces the way glass, wood, stone, ceramic or ice breaks"},
+    {eModifierType_Masonry,
+     "MASONRY",
+     ICON_MOD_MASONRY,
+     "Masonry",
+     "Cover faces with blocks laid in a brick, stone or paving pattern"},
+    {eModifierType_Dissolve,
+     "DISSOLVE",
+     ICON_MOD_DISSOLVE,
+     "Dissolve",
+     "Remove points, edges or faces and merge the faces around them, without leaving holes"},
+    {eModifierType_Dice,
+     "DICE",
+     ICON_MOD_DICE,
+     "Dice",
+     "Cut the mesh into a grid of pieces along the axes of its bounding box"},
     {eModifierType_VoronoiFracture,
      "VORONOI_FRACTURE",
      ICON_MOD_VORONOI_FRACTURE,
@@ -1242,6 +1277,10 @@ static void rna_Modifier_use_pin_to_last_set(PointerRNA *ptr, bool value)
 RNA_MOD_VGROUP_NAME_SET(Armature, defgrp_name);
 RNA_MOD_VGROUP_NAME_SET(Bevel, defgrp_name);
 RNA_MOD_VGROUP_NAME_SET(Cast, defgrp_name);
+RNA_MOD_VGROUP_NAME_SET(Collapse, vertex_group);
+RNA_MOD_VGROUP_NAME_SET(Drape, vertex_group);
+RNA_MOD_VGROUP_NAME_SET(Masonry, vertex_group);
+RNA_MOD_VGROUP_NAME_SET(Dissolve, vertex_group);
 RNA_MOD_VGROUP_NAME_SET(Curve, name);
 RNA_MOD_VGROUP_NAME_SET(DataTransfer, defgrp_name);
 RNA_MOD_VGROUP_NAME_SET(Decimate, defgrp_name);
@@ -1373,6 +1412,8 @@ RNA_MOD_OBJECT_SET(Array, start_cap, OB_MESH);
 RNA_MOD_OBJECT_SET(Array, end_cap, OB_MESH);
 RNA_MOD_OBJECT_SET(Array, curve_ob, OB_CURVES_LEGACY);
 RNA_MOD_OBJECT_SET(Boolean, object, OB_MESH);
+RNA_MOD_OBJECT_SET(Collapse, target, OB_MESH);
+RNA_MOD_OBJECT_SET(Drape, collider, OB_MESH);
 RNA_MOD_OBJECT_SET(Cast, object, OB_EMPTY);
 RNA_MOD_OBJECT_SET(Curve, object, OB_CURVES_LEGACY);
 RNA_MOD_OBJECT_SET(DataTransfer, ob_source, OB_MESH);
@@ -9420,6 +9461,745 @@ static void rna_def_modifier_relax(BlenderRNA *brna)
   RNA_define_lib_overridable(false);
 }
 
+static void rna_def_modifier_dice(BlenderRNA *brna)
+{
+  StructRNA *srna;
+  PropertyRNA *prop;
+
+  srna = RNA_def_struct(brna, "DiceModifier", "Modifier");
+  RNA_def_struct_ui_text(
+      srna, "Dice Modifier", "Cut the mesh into a grid of pieces along the axes of its bounding box");
+  RNA_def_struct_sdna(srna, "DiceModifierData");
+  RNA_def_struct_ui_icon(srna, ICON_MOD_DICE);
+
+  RNA_define_lib_overridable(true);
+
+  static const EnumPropertyItem mode_items[] = {
+      {MOD_DICE_MODE_COUNT, "COUNT", 0, "Count", "Choose the number of cells on each axis"},
+      {MOD_DICE_MODE_SIZE,
+       "SIZE",
+       0,
+       "Size",
+       "Choose the size of the cells. The last cell on each axis is smaller if the bounding box "
+       "doesn't divide evenly"},
+      {0, nullptr, 0, nullptr, nullptr},
+  };
+  prop = RNA_def_property(srna, "mode", PROP_ENUM, PROP_NONE);
+  RNA_def_property_enum_sdna(prop, nullptr, "mode");
+  RNA_def_property_enum_items(prop, mode_items);
+  RNA_def_property_ui_text(prop, "Mode", "How the cells are chosen");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "count", PROP_INT, PROP_XYZ);
+  RNA_def_property_int_sdna(prop, nullptr, "count");
+  RNA_def_property_array(prop, 3);
+  RNA_def_property_range(prop, 1, 1000);
+  RNA_def_property_ui_range(prop, 1, 20, 1, -1);
+  RNA_def_property_ui_text(prop, "Count", "Number of cells along each axis");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "size", PROP_FLOAT, PROP_TRANSLATION);
+  RNA_def_property_float_sdna(prop, nullptr, "size");
+  RNA_def_property_array(prop, 3);
+  RNA_def_property_range(prop, 0.0, FLT_MAX);
+  RNA_def_property_ui_range(prop, 0.0, 10.0, 0.1, 3);
+  RNA_def_property_ui_text(prop, "Size", "Size of the cells on each axis. Zero doesn't cut along that axis");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "cut_gap", PROP_FLOAT, PROP_DISTANCE);
+  RNA_def_property_float_sdna(prop, nullptr, "cut_gap");
+  RNA_def_property_range(prop, 0.0, FLT_MAX);
+  RNA_def_property_ui_range(prop, 0.0, 1.0, 0.1, 4);
+  RNA_def_property_ui_text(prop, "Cut Gap", "Distance between neighboring pieces");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "use_fill", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_DICE_FILL);
+  RNA_def_property_ui_text(
+      prop, "Fill Cuts", "Close the holes left by the cuts, so that closed meshes make solid pieces");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "use_world_space", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_DICE_WORLD_SPACE);
+  RNA_def_property_ui_text(
+      prop, "World Space", "Cut along the world axes, so the cuts stay straight when the object rotates");
+  RNA_def_property_update(prop, 0, "rna_Modifier_dependency_update");
+
+  prop = RNA_def_property(srna, "use_interior_material", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_DICE_INTERIOR_MATERIAL);
+  RNA_def_property_ui_text(prop, "Interior Material", "Give the faces that fill the cuts their own material");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "interior_material", PROP_INT, PROP_NONE);
+  RNA_def_property_int_sdna(prop, nullptr, "interior_material");
+  RNA_def_property_range(prop, 0, INT16_MAX);
+  RNA_def_property_ui_text(prop, "Interior Material Index", "Material index of the faces that fill the cuts");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  RNA_define_lib_overridable(false);
+}
+
+static void rna_def_modifier_masonry(BlenderRNA *brna)
+{
+  StructRNA *srna;
+  PropertyRNA *prop;
+
+  srna = RNA_def_struct(brna, "MasonryModifier", "Modifier");
+  RNA_def_struct_ui_text(
+      srna, "Masonry Modifier", "Cover faces with blocks laid in a brick, stone or paving pattern");
+  RNA_def_struct_sdna(srna, "MasonryModifierData");
+  RNA_def_struct_ui_icon(srna, ICON_MOD_MASONRY);
+
+  RNA_define_lib_overridable(true);
+
+  static const EnumPropertyItem pattern_items[] = {
+      RNA_ENUM_ITEM_HEADING(N_("Wall"), nullptr),
+      {0, "RUNNING", 0, "Running", "Each row shifted by half a brick"},
+      {1, "STACK", 0, "Stack", "Bricks right on top of each other"},
+      {2, "FLEMISH", 0, "Flemish", "Long and short bricks taking turns in each row"},
+      {3, "ENGLISH", 0, "English", "Rows of long bricks and rows of short bricks taking turns"},
+      {4, "ASHLAR", 0, "Ashlar", "Cut stones of mixed sizes in rows"},
+      {5, "LEDGESTONE", 0, "Ledgestone", "Thin, long stones in rows"},
+      {6, "RUBBLE", 0, "Rubble", "Uneven stones of mixed shapes"},
+      RNA_ENUM_ITEM_HEADING(N_("Paving"), nullptr),
+      {7, "HERRINGBONE", 0, "Herringbone", "Bricks in a zigzag, each at a right angle to the next"},
+      {8, "CHEVRON", 0, "Chevron", "Rows of slanted bricks meeting in V shapes"},
+      {9, "BASKET_WEAVE", 0, "Basket Weave", "Squares of bricks laid across and along in turns"},
+      {10, "PINWHEEL", 0, "Pinwheel", "Four bricks around a small square"},
+      {11, "VERSAILLES", 0, "Versailles", "Squares and rectangles of four sizes"},
+      {12, "HEXAGON", 0, "Hexagon", "Six-sided tiles"},
+      {13, "OCTAGON", 0, "Octagon", "Eight-sided tiles with small squares between them"},
+      {14, "DIAMOND", 0, "Diamond", "Diamond-shaped tiles"},
+      {15, "INTERLOCKING", 0, "Interlocking", "Pavers with wavy sides that fit into each other"},
+      {16, "COBBLESTONE", 0, "Cobblestone", "Small stones with cut corners in rough rows"},
+      {17, "FLAGSTONE", 0, "Flagstone", "Large flat stones of uneven shapes"},
+      {18, "FAN", 0, "Fan", "Stones laid in fan-shaped arcs"},
+      {19, "RADIAL", 0, "Radial", "Rings of stones around a center"},
+      {0, nullptr, 0, nullptr, nullptr},
+  };
+  prop = RNA_def_property(srna, "pattern", PROP_ENUM, PROP_NONE);
+  RNA_def_property_enum_sdna(prop, nullptr, "pattern");
+  RNA_def_property_enum_items(prop, pattern_items);
+  RNA_def_property_ui_text(prop, "Pattern", "How the blocks are laid");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  static const EnumPropertyItem direction_items[] = {
+      {0, "AUTO", 0, "Auto", "Level rows on walls, along X on floors"},
+      {1, "X", 0, "X", "Rows along X"},
+      {2, "Y", 0, "Y", "Rows along Y"},
+      {3, "FACE", 0, "Face", "Rows along the longest edge of each face"},
+      {0, nullptr, 0, nullptr, nullptr},
+  };
+  prop = RNA_def_property(srna, "direction", PROP_ENUM, PROP_NONE);
+  RNA_def_property_enum_sdna(prop, nullptr, "direction");
+  RNA_def_property_enum_items(prop, direction_items);
+  RNA_def_property_ui_text(prop, "Direction", "Which way the rows run");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "angle", PROP_FLOAT, PROP_ANGLE);
+  RNA_def_property_float_sdna(prop, nullptr, "angle");
+  RNA_def_property_ui_range(prop, -M_PI, M_PI, 10, 3);
+  RNA_def_property_ui_text(prop, "Angle", "Turn the pattern on the face");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "length", PROP_FLOAT, PROP_DISTANCE);
+  RNA_def_property_float_sdna(prop, nullptr, "length");
+  RNA_def_property_range(prop, 0.0001, FLT_MAX);
+  RNA_def_property_ui_range(prop, 0.001, 10.0, 1, 4);
+  RNA_def_property_ui_text(prop, "Length", "Size of a block along the rows");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "height", PROP_FLOAT, PROP_DISTANCE);
+  RNA_def_property_float_sdna(prop, nullptr, "height");
+  RNA_def_property_range(prop, 0.0001, FLT_MAX);
+  RNA_def_property_ui_range(prop, 0.001, 10.0, 1, 4);
+  RNA_def_property_ui_text(prop, "Height", "Size of a block across the rows");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "depth", PROP_FLOAT, PROP_DISTANCE);
+  RNA_def_property_float_sdna(prop, nullptr, "depth");
+  RNA_def_property_range(prop, 0.0, FLT_MAX);
+  RNA_def_property_ui_range(prop, 0.0, 1.0, 1, 4);
+  RNA_def_property_ui_text(prop, "Depth", "How far the blocks stick out of the face");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "mortar", PROP_FLOAT, PROP_DISTANCE);
+  RNA_def_property_float_sdna(prop, nullptr, "mortar");
+  RNA_def_property_range(prop, 0.0, FLT_MAX);
+  RNA_def_property_ui_range(prop, 0.0, 0.1, 0.1, 4);
+  RNA_def_property_ui_text(prop, "Mortar", "Width of the joints between the blocks");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "offset", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "offset");
+  RNA_def_property_range(prop, 0.0, 1.0);
+  RNA_def_property_ui_text(
+      prop, "Offset", "0 puts the blocks on the face, 1 sinks them in so their tops are at the face");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "use_backing", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_MASONRY_BACKING);
+  RNA_def_property_ui_text(prop, "Backing", "Keep the faces under the blocks, to show as mortar");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "use_border", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_MASONRY_BORDER);
+  RNA_def_property_ui_text(
+      prop, "Border", "A row of blocks along the outline of each face. Only on convex faces");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "use_toothed", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_MASONRY_TOOTHED);
+  RNA_def_property_ui_text(
+      prop, "Toothed", "Blocks at the edges of a face stick out whole instead of being cut");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "soldier_rows", PROP_INT, PROP_NONE);
+  RNA_def_property_int_sdna(prop, nullptr, "soldier_rows");
+  RNA_def_property_range(prop, 0, 1000);
+  RNA_def_property_ui_range(prop, 0, 20, 1, -1);
+  RNA_def_property_ui_text(
+      prop, "Soldier Rows", "After this many rows, a row of upright bricks. 0 for none");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "center", PROP_POINTER, PROP_NONE);
+  RNA_def_property_ui_text(
+      prop, "Center", "Center of the fans or rings. Without one, the middle of the mesh");
+  RNA_def_property_flag(prop, PROP_EDITABLE | PROP_ID_SELF_CHECK);
+  RNA_def_property_update(prop, 0, "rna_Modifier_dependency_update");
+
+  prop = RNA_def_property(srna, "random_length", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "random_length");
+  RNA_def_property_range(prop, 0.0, 1.0);
+  RNA_def_property_ui_text(prop, "Random Length", "Change the length of each block");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "random_height", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "random_height");
+  RNA_def_property_range(prop, 0.0, 1.0);
+  RNA_def_property_ui_text(prop, "Random Height", "Change the height of each row");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "random_depth", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "random_depth");
+  RNA_def_property_range(prop, 0.0, 1.0);
+  RNA_def_property_ui_text(prop, "Random Depth", "Change how far each block sticks out");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "tilt", PROP_FLOAT, PROP_ANGLE);
+  RNA_def_property_float_sdna(prop, nullptr, "tilt");
+  RNA_def_property_range(prop, 0.0, M_PI_2);
+  RNA_def_property_ui_range(prop, 0.0, M_PI_4, 10, 3);
+  RNA_def_property_ui_text(prop, "Tilt", "Largest random tilt of a block");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "stone_shape", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "stone_shape");
+  RNA_def_property_range(prop, 0.0, 1.0);
+  RNA_def_property_ui_text(prop, "Stone Shape", "Make the outlines of the blocks uneven");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "dome", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "dome");
+  RNA_def_property_range(prop, 0.0, 1.0);
+  RNA_def_property_ui_text(prop, "Dome", "Round the tops of the blocks");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "seed", PROP_INT, PROP_NONE);
+  RNA_def_property_int_sdna(prop, nullptr, "seed");
+  RNA_def_property_ui_text(prop, "Seed", "Changes the random values");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "vertex_group", PROP_STRING, PROP_NONE);
+  RNA_def_property_string_sdna(prop, nullptr, "vertex_group");
+  RNA_def_property_ui_text(
+      prop, "Vertex Group", "Only faces with all their points in this group get blocks");
+  RNA_def_property_string_funcs(prop, nullptr, nullptr, "rna_MasonryModifier_vertex_group_set");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "invert_vertex_group", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_MASONRY_INVERT_VGROUP);
+  RNA_def_property_ui_text(prop, "Invert", "Use the faces outside the group instead");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "use_materials", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_MASONRY_MATERIALS);
+  RNA_def_property_ui_text(
+      prop, "Materials", "Give the blocks and the mortar their own materials");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "block_material", PROP_INT, PROP_NONE);
+  RNA_def_property_int_sdna(prop, nullptr, "block_material");
+  RNA_def_property_range(prop, 0, INT16_MAX);
+  RNA_def_property_ui_text(prop, "Blocks", "Material index of the blocks");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "mortar_material", PROP_INT, PROP_NONE);
+  RNA_def_property_int_sdna(prop, nullptr, "mortar_material");
+  RNA_def_property_range(prop, 0, INT16_MAX);
+  RNA_def_property_ui_text(prop, "Mortar", "Material index of the faces under the blocks");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  RNA_define_lib_overridable(false);
+}
+
+static void rna_def_modifier_dissolve(BlenderRNA *brna)
+{
+  StructRNA *srna;
+  PropertyRNA *prop;
+
+  srna = RNA_def_struct(brna, "DissolveModifier", "Modifier");
+  RNA_def_struct_ui_text(
+      srna,
+      "Dissolve Modifier",
+      "Remove points, edges or faces and merge the faces around them, without leaving holes");
+  RNA_def_struct_sdna(srna, "DissolveModifierData");
+  RNA_def_struct_ui_icon(srna, ICON_MOD_DISSOLVE);
+
+  RNA_define_lib_overridable(true);
+
+  static const EnumPropertyItem mode_items[] = {
+      {0, "VERTICES", 0, "Vertices", "Remove the points, and merge the faces around them"},
+      {1, "EDGES", 0, "Edges", "Remove the edges, and merge the faces on both sides"},
+      {2, "FACES", 0, "Faces", "Merge faces that touch each other into one"},
+      {3,
+       "LIMITED",
+       0,
+       "Limited",
+       "Remove the edges and points where the surface stays nearly flat"},
+      {0, nullptr, 0, nullptr, nullptr},
+  };
+  prop = RNA_def_property(srna, "mode", PROP_ENUM, PROP_NONE);
+  RNA_def_property_enum_sdna(prop, nullptr, "mode");
+  RNA_def_property_enum_items(prop, mode_items);
+  RNA_def_property_ui_text(prop, "Mode", "What to remove");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "angle", PROP_FLOAT, PROP_ANGLE);
+  RNA_def_property_float_sdna(prop, nullptr, "angle");
+  RNA_def_property_range(prop, 0.0, M_PI);
+  RNA_def_property_ui_range(prop, 0.0, M_PI, 10, 3);
+  RNA_def_property_ui_text(prop, "Angle", "Only dissolve where the surface bends less than this");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "use_remove_inline_points", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_DISSOLVE_REMOVE_INLINE_POINTS);
+  RNA_def_property_ui_text(
+      prop, "Remove Inline Points", "Also remove points left between only two edges");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "use_face_split", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_DISSOLVE_FACE_SPLIT);
+  RNA_def_property_ui_text(
+      prop, "Face Split", "Split off the corners of faces to keep the surrounding shape");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "use_tear_boundary", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_DISSOLVE_TEAR_BOUNDARY);
+  RNA_def_property_ui_text(
+      prop, "Tear Boundary", "Split off corners on open boundaries instead of merging the faces");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "use_all_boundaries", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_DISSOLVE_ALL_BOUNDARIES);
+  RNA_def_property_ui_text(
+      prop, "All Boundaries", "Also dissolve points on open boundaries, whatever their angle");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "use_keep_materials", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_DISSOLVE_KEEP_MATERIALS);
+  RNA_def_property_ui_text(prop, "Materials", "Don't merge faces with different materials");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "use_keep_seams", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_DISSOLVE_KEEP_SEAMS);
+  RNA_def_property_ui_text(prop, "Seams", "Don't dissolve seams");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "use_keep_sharp", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_DISSOLVE_KEEP_SHARP);
+  RNA_def_property_ui_text(prop, "Sharp Edges", "Don't dissolve sharp edges");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "use_keep_uvs", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_DISSOLVE_KEEP_UVS);
+  RNA_def_property_ui_text(prop, "UVs", "Don't dissolve edges that split UV islands");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "vertex_group", PROP_STRING, PROP_NONE);
+  RNA_def_property_string_sdna(prop, nullptr, "vertex_group");
+  RNA_def_property_ui_text(
+      prop,
+      "Vertex Group",
+      "Only dissolve the points in this group, and the edges and faces made of them");
+  RNA_def_property_string_funcs(prop, nullptr, nullptr, "rna_DissolveModifier_vertex_group_set");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "invert_vertex_group", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_DISSOLVE_INVERT_VGROUP);
+  RNA_def_property_ui_text(prop, "Invert", "Use the points outside the group instead");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  RNA_define_lib_overridable(false);
+}
+
+static void rna_def_modifier_shatter(BlenderRNA *brna)
+{
+  StructRNA *srna;
+  PropertyRNA *prop;
+
+  srna = RNA_def_struct(brna, "ShatterModifier", "Modifier");
+  RNA_def_struct_ui_text(
+      srna,
+      "Shatter Modifier",
+      "Break a closed mesh into solid pieces the way glass, wood, stone, ceramic or ice breaks");
+  RNA_def_struct_sdna(srna, "ShatterModifierData");
+  RNA_def_struct_ui_icon(srna, ICON_MOD_SHATTER);
+
+  RNA_define_lib_overridable(true);
+
+  static const EnumPropertyItem material_items[] = {
+      {0, "STONE", 0, "Stone", "Chunky pieces of mixed sizes, with small chips"},
+      {1, "GLASS", 0, "Glass", "Shards between cracks running out from the impact and rings around it"},
+      {2, "WOOD", 0, "Wood", "Long splinters along the grain"},
+      {3, "CERAMIC", 0, "Ceramic", "A few big pieces"},
+      {4, "ICE", 0, "Ice", "Cracks from the impact like glass, with chunks like stone"},
+      {0, nullptr, 0, nullptr, nullptr},
+  };
+  prop = RNA_def_property(srna, "material", PROP_ENUM, PROP_NONE);
+  RNA_def_property_enum_sdna(prop, nullptr, "material");
+  RNA_def_property_enum_items(prop, material_items);
+  RNA_def_property_ui_text(prop, "Material", "How it breaks");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "pieces", PROP_INT, PROP_NONE);
+  RNA_def_property_int_sdna(prop, nullptr, "pieces");
+  RNA_def_property_range(prop, 1, 100000);
+  RNA_def_property_ui_range(prop, 1, 500, 1, -1);
+  RNA_def_property_ui_text(prop, "Pieces", "About how many pieces to break into");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "seed", PROP_INT, PROP_NONE);
+  RNA_def_property_int_sdna(prop, nullptr, "seed");
+  RNA_def_property_ui_text(prop, "Seed", "Changes the pattern");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "impact", PROP_POINTER, PROP_NONE);
+  RNA_def_property_ui_text(
+      prop,
+      "Impact",
+      "Where it was hit. The pieces are smaller there, and glass cracks out from it. Without "
+      "one, the middle of the mesh");
+  RNA_def_property_flag(prop, PROP_EDITABLE | PROP_ID_SELF_CHECK);
+  RNA_def_property_update(prop, 0, "rna_Modifier_dependency_update");
+
+  prop = RNA_def_property(srna, "focus", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "focus");
+  RNA_def_property_range(prop, 0.0, 1.0);
+  RNA_def_property_ui_text(prop, "Focus", "How much smaller the pieces get near the impact");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  static const EnumPropertyItem grain_axis_items[] = {
+      {0, "AUTO", 0, "Auto", "The longest side of the mesh"},
+      {1, "X", 0, "X", ""},
+      {2, "Y", 0, "Y", ""},
+      {3, "Z", 0, "Z", ""},
+      {0, nullptr, 0, nullptr, nullptr},
+  };
+  prop = RNA_def_property(srna, "grain_axis", PROP_ENUM, PROP_NONE);
+  RNA_def_property_enum_sdna(prop, nullptr, "grain_axis");
+  RNA_def_property_enum_items(prop, grain_axis_items);
+  RNA_def_property_ui_text(prop, "Grain Axis", "Direction of the wood grain");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "grain", PROP_FLOAT, PROP_NONE);
+  RNA_def_property_float_sdna(prop, nullptr, "grain");
+  RNA_def_property_range(prop, 1.0, 50.0);
+  RNA_def_property_ui_range(prop, 1.0, 10.0, 10, 2);
+  RNA_def_property_ui_text(prop, "Grain", "How many times longer than wide the splinters are");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "roughness", PROP_FLOAT, PROP_NONE);
+  RNA_def_property_float_sdna(prop, nullptr, "roughness");
+  RNA_def_property_range(prop, 0.0, 5.0);
+  RNA_def_property_ui_range(prop, 0.0, 1.0, 10, 2);
+  RNA_def_property_ui_text(
+      prop, "Roughness", "How jagged the broken faces are. Glass and ceramic look best at 0");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "detail", PROP_INT, PROP_NONE);
+  RNA_def_property_int_sdna(prop, nullptr, "detail");
+  RNA_def_property_range(prop, 0, 6);
+  RNA_def_property_ui_text(prop, "Detail", "Points on the broken faces for the roughness to move");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "cut_gap", PROP_FLOAT, PROP_DISTANCE);
+  RNA_def_property_float_sdna(prop, nullptr, "cut_gap");
+  RNA_def_property_range(prop, 0.0, FLT_MAX);
+  RNA_def_property_ui_range(prop, 0.0, 1.0, 0.1, 4);
+  RNA_def_property_ui_text(prop, "Cut Gap", "Distance between neighboring pieces");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "use_interior_material", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_SHATTER_INTERIOR_MATERIAL);
+  RNA_def_property_ui_text(prop, "Interior Material", "Give the broken faces their own material");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "interior_material", PROP_INT, PROP_NONE);
+  RNA_def_property_int_sdna(prop, nullptr, "interior_material");
+  RNA_def_property_range(prop, 0, INT16_MAX);
+  RNA_def_property_ui_text(
+      prop, "Interior Material Index", "Material index of the broken faces");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  RNA_define_lib_overridable(false);
+}
+
+static void rna_def_modifier_drape(BlenderRNA *brna)
+{
+  StructRNA *srna;
+  PropertyRNA *prop;
+
+  srna = RNA_def_struct(brna, "DrapeModifier", "Modifier");
+  RNA_def_struct_ui_text(
+      srna, "Drape Modifier", "Let the mesh fall as cloth and keep the shape it rests in");
+  RNA_def_struct_sdna(srna, "DrapeModifierData");
+  RNA_def_struct_ui_icon(srna, ICON_MOD_DRAPE);
+
+  RNA_define_lib_overridable(true);
+
+  prop = RNA_def_property(srna, "collider", PROP_POINTER, PROP_NONE);
+  RNA_def_property_ui_text(prop, "Collider", "Mesh the cloth lands on");
+  RNA_def_property_pointer_funcs(
+      prop, nullptr, "rna_DrapeModifier_collider_set", nullptr, "rna_Mesh_object_poll");
+  RNA_def_property_flag(prop, PROP_EDITABLE | PROP_ID_SELF_CHECK);
+  RNA_def_property_update(prop, 0, "rna_Modifier_dependency_update");
+
+  prop = RNA_def_property(srna, "use_floor", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_DRAPE_FLOOR);
+  RNA_def_property_ui_text(
+      prop, "Floor", "Land on a flat floor under the lowest point of the cloth and the collider");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "vertex_group", PROP_STRING, PROP_NONE);
+  RNA_def_property_string_sdna(prop, nullptr, "vertex_group");
+  RNA_def_property_ui_text(prop, "Pin", "Points in this group stay where they are");
+  RNA_def_property_string_funcs(prop, nullptr, nullptr, "rna_DrapeModifier_vertex_group_set");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "invert_vertex_group", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_DRAPE_INVERT_VGROUP);
+  RNA_def_property_ui_text(prop, "Invert", "Pin the points outside the group instead");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "time", PROP_FLOAT, PROP_TIME_ABSOLUTE);
+  RNA_def_property_float_sdna(prop, nullptr, "time");
+  RNA_def_property_range(prop, 0.0, 60.0);
+  RNA_def_property_ui_range(prop, 0.0, 10.0, 10, 2);
+  RNA_def_property_ui_text(prop, "Time", "Seconds the cloth falls and settles for");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "gravity", PROP_FLOAT, PROP_ACCELERATION);
+  RNA_def_property_float_sdna(prop, nullptr, "gravity");
+  RNA_def_property_range(prop, 0.0, 1000.0);
+  RNA_def_property_ui_range(prop, 0.0, 50.0, 10, 2);
+  RNA_def_property_ui_text(prop, "Gravity", "How hard the cloth is pulled down");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "stiffness", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "stiffness");
+  RNA_def_property_range(prop, 0.0, 1.0);
+  RNA_def_property_ui_text(prop, "Stiffness", "How much the cloth resists stretching");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "bending", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "bending");
+  RNA_def_property_range(prop, 0.0, 1.0);
+  RNA_def_property_ui_text(
+      prop, "Bending", "How much the cloth resists folding, from silk at 0 to leather near 1");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "shrink", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "shrink");
+  RNA_def_property_range(prop, -1.0, 0.95);
+  RNA_def_property_ui_range(prop, -0.5, 0.5, 1, 3);
+  RNA_def_property_ui_text(
+      prop, "Shrink", "Pull the cloth taut between the pins. Negative values give it slack");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "pressure", PROP_FLOAT, PROP_NONE);
+  RNA_def_property_float_sdna(prop, nullptr, "pressure");
+  RNA_def_property_range(prop, -100.0, 100.0);
+  RNA_def_property_ui_range(prop, -2.0, 2.0, 1, 2);
+  RNA_def_property_ui_text(prop, "Pressure", "Puff up closed meshes, like cushions and pillows");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "thickness", PROP_FLOAT, PROP_DISTANCE);
+  RNA_def_property_float_sdna(prop, nullptr, "thickness");
+  RNA_def_property_range(prop, 0.0, FLT_MAX);
+  RNA_def_property_ui_range(prop, 0.0, 0.1, 0.1, 4);
+  RNA_def_property_ui_text(prop, "Thickness", "Distance the cloth keeps from what it touches");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "friction", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "friction");
+  RNA_def_property_range(prop, 0.0, 1.0);
+  RNA_def_property_ui_text(
+      prop, "Friction", "How much the cloth grips what it touches instead of sliding off");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "use_self_collision", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_DRAPE_SELF_COLLISION);
+  RNA_def_property_ui_text(
+      prop, "Self Collision", "Keep folds from passing through each other. Slower");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "quality", PROP_INT, PROP_NONE);
+  RNA_def_property_int_sdna(prop, nullptr, "substeps");
+  RNA_def_property_range(prop, 1, 100);
+  RNA_def_property_ui_range(prop, 1, 30, 1, -1);
+  RNA_def_property_ui_text(prop,
+                           "Quality",
+                           "Solver steps per 1/60 second. Higher keeps the cloth from stretching "
+                           "and from passing through thin colliders");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  RNA_define_lib_overridable(false);
+}
+
+static void rna_def_modifier_collapse(BlenderRNA *brna)
+{
+  StructRNA *srna;
+  PropertyRNA *prop;
+
+  srna = RNA_def_struct(brna, "CollapseModifier", "Modifier");
+  RNA_def_struct_ui_text(
+      srna, "Collapse Modifier", "Let every loose piece fall and keep the pile where it comes to rest");
+  RNA_def_struct_sdna(srna, "CollapseModifierData");
+  RNA_def_struct_ui_icon(srna, ICON_MOD_COLLAPSE);
+
+  RNA_define_lib_overridable(true);
+
+  prop = RNA_def_property(srna, "target", PROP_POINTER, PROP_NONE);
+  RNA_def_property_ui_text(
+      prop, "Ground", "Mesh the pieces land on. Without one, they land on a flat floor under the lowest point");
+  RNA_def_property_pointer_funcs(
+      prop, nullptr, "rna_CollapseModifier_target_set", nullptr, "rna_Mesh_object_poll");
+  RNA_def_property_flag(prop, PROP_EDITABLE | PROP_ID_SELF_CHECK);
+  RNA_def_property_update(prop, 0, "rna_Modifier_dependency_update");
+
+  prop = RNA_def_property(srna, "vertex_group", PROP_STRING, PROP_NONE);
+  RNA_def_property_string_sdna(prop, nullptr, "vertex_group");
+  RNA_def_property_ui_text(prop, "Keep", "Pieces with points in this group stay where they are");
+  RNA_def_property_string_funcs(prop, nullptr, nullptr, "rna_CollapseModifier_vertex_group_set");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "invert_vertex_group", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_COLLAPSE_INVERT_VGROUP);
+  RNA_def_property_ui_text(prop, "Invert", "Keep the pieces outside the group instead");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "time", PROP_FLOAT, PROP_TIME_ABSOLUTE);
+  RNA_def_property_float_sdna(prop, nullptr, "time");
+  RNA_def_property_range(prop, 0.0, 60.0);
+  RNA_def_property_ui_range(prop, 0.0, 10.0, 10, 2);
+  RNA_def_property_ui_text(prop, "Time", "Seconds the pieces fall for. Longer lets them settle more");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "gravity", PROP_FLOAT, PROP_ACCELERATION);
+  RNA_def_property_float_sdna(prop, nullptr, "gravity");
+  RNA_def_property_range(prop, 0.0, 1000.0);
+  RNA_def_property_ui_range(prop, 0.0, 50.0, 10, 2);
+  RNA_def_property_ui_text(prop, "Gravity", "How hard the pieces are pulled down");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "push", PROP_FLOAT, PROP_VELOCITY);
+  RNA_def_property_float_sdna(prop, nullptr, "push");
+  RNA_def_property_range(prop, 0.0, 100.0);
+  RNA_def_property_ui_range(prop, 0.0, 5.0, 10, 2);
+  RNA_def_property_ui_text(prop, "Push", "Random start speed and spin of each piece, so stacks tip over");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "seed", PROP_INT, PROP_NONE);
+  RNA_def_property_int_sdna(prop, nullptr, "seed");
+  RNA_def_property_ui_text(prop, "Seed", "Changes the random push");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "friction", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "friction");
+  RNA_def_property_range(prop, 0.0, 10.0);
+  RNA_def_property_ui_range(prop, 0.0, 1.0, 10, 2);
+  RNA_def_property_ui_text(prop, "Friction", "How much the pieces resist sliding");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "bounce", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "bounce");
+  RNA_def_property_range(prop, 0.0, 1.0);
+  RNA_def_property_ui_text(prop, "Bounce", "How much the pieces bounce when they hit something");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "quality", PROP_INT, PROP_NONE);
+  RNA_def_property_int_sdna(prop, nullptr, "substeps");
+  RNA_def_property_range(prop, 1, 100);
+  RNA_def_property_ui_range(prop, 1, 20, 1, -1);
+  RNA_def_property_ui_text(
+      prop, "Quality", "Solver steps per 1/60 second. Higher keeps small or fast pieces from passing through");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  RNA_define_lib_overridable(false);
+}
+
+static void rna_def_modifier_edit_poly(BlenderRNA *brna)
+{
+  StructRNA *srna;
+  PropertyRNA *prop;
+
+  srna = RNA_def_struct(brna, "EditPolyModifier", "Modifier");
+  RNA_def_struct_ui_text(srna,
+                         "Edit Poly Modifier",
+                         "Edit the mesh at this point of the stack in Edit Mode, the modifiers "
+                         "above keep working");
+  RNA_def_struct_sdna(srna, "EditPolyModifierData");
+  RNA_def_struct_ui_icon(srna, ICON_MOD_EDIT_POLY);
+
+  RNA_define_lib_overridable(true);
+
+  prop = RNA_def_property(srna, "mesh", PROP_POINTER, PROP_NONE);
+  RNA_def_property_pointer_sdna(prop, nullptr, "mesh");
+  RNA_def_property_struct_type(prop, "Mesh");
+  RNA_def_property_flag(prop, PROP_EDITABLE);
+  RNA_def_property_ui_text(prop, "Mesh", "The edited mesh");
+  RNA_def_property_update(prop, 0, "rna_Modifier_dependency_update");
+
+  prop = RNA_def_property(srna, "object_mesh", PROP_POINTER, PROP_NONE);
+  RNA_def_property_pointer_sdna(prop, nullptr, "object_mesh");
+  RNA_def_property_struct_type(prop, "Mesh");
+  RNA_def_property_flag(prop, PROP_EDITABLE);
+  RNA_def_property_ui_text(
+      prop, "Object Mesh", "The object's own mesh, while the edited mesh is used in its place");
+  RNA_def_property_update(prop, 0, "rna_Modifier_dependency_update");
+
+  prop = RNA_def_property(srna, "is_editing", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_EDIT_POLY_EDITING);
+  RNA_def_property_ui_text(prop, "Editing", "The edited mesh is being edited in place of the object's mesh");
+  RNA_def_property_update(prop, 0, "rna_Modifier_dependency_update");
+
+  prop = RNA_def_property(srna, "use_store_input", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_EDIT_POLY_STORE_INPUT);
+  RNA_def_property_ui_text(prop, "Store Input", "Remember the incoming points at the next update");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "use_follow_input", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "flag", MOD_EDIT_POLY_FOLLOW_INPUT);
+  RNA_def_property_ui_text(prop,
+                           "Follow Changes Below",
+                           "Move the edited points with the mesh below when it only moves, as "
+                           "long as its point count stays the same");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  RNA_define_lib_overridable(false);
+}
+
 static void rna_def_modifier_voronoi_fracture(BlenderRNA *brna)
 {
   StructRNA *srna;
@@ -14647,6 +15427,13 @@ void RNA_def_modifier(BlenderRNA *brna)
   rna_def_modifier_sweep(brna);
   rna_def_modifier_smart_uv_project(brna);
   rna_def_modifier_voronoi_fracture(brna);
+  rna_def_modifier_dice(brna);
+  rna_def_modifier_edit_poly(brna);
+  rna_def_modifier_collapse(brna);
+  rna_def_modifier_drape(brna);
+  rna_def_modifier_shatter(brna);
+  rna_def_modifier_masonry(brna);
+  rna_def_modifier_dissolve(brna);
   rna_def_modifier_relax(brna);
   rna_def_modifier_poly_edit(brna);
   rna_def_modifier_skin(brna);

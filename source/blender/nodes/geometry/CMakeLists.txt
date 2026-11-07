@@ -35,7 +35,11 @@ set(SRC
   nodes/node_geo_bake.cc
   nodes/node_geo_bevel_mesh.cc
   nodes/node_geo_clip_mesh.cc
+  nodes/node_geo_collapse_islands.cc
   nodes/node_geo_dice_mesh.cc
+  nodes/node_geo_drape_mesh.cc
+  nodes/node_geo_masonry_mesh.cc
+  nodes/node_geo_shatter_mesh.cc
   nodes/node_geo_displace_mesh.cc
   nodes/node_geo_dissolve_mesh.cc
   nodes/node_geo_quadriflow_remesh.cc
