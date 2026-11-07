@@ -91,7 +91,6 @@ Array.*
 | <img src="doc/fork/images/icons/mod_rotate_edges.png" width="32" height="32" alt="Rotate Edges"> | Rotate Edges | Turns the edges between faces to connect the other corners |
 | <img src="doc/fork/images/icons/mod_symmetrize.png" width="32" height="32" alt="Symmetrize"> | Symmetrize | Makes one side of the mesh a mirror of the other |
 | <img src="doc/fork/images/icons/mod_sweep.png" width="32" height="32" alt="Sweep"> | Sweep | Makes a mesh by moving a shape along curves |
-
 | <img src="doc/fork/images/icons/mod_dice.png" width="32" height="32" alt="Dice"> | Dice | Cuts a mesh into a grid of solid pieces, by count or size |
 | <img src="doc/fork/images/icons/mod_collapse.png" width="32" height="32" alt="Collapse"> | Collapse | Drops mesh islands as rigid pieces onto a target or floor |
 | <img src="doc/fork/images/icons/mod_drape.png" width="32" height="32" alt="Drape"> | Drape | Settles a mesh as cloth over a collider, with pinning and optional self collision |
