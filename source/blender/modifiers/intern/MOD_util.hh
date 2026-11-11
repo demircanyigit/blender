@@ -11,6 +11,8 @@
 /* so modifier types match their defines */
 #include "MOD_modifiertypes.hh"
 
+#include "BLI_function_ref.hh"
+
 #include "DEG_depsgraph_build.hh"
 
 namespace blender {
@@ -20,6 +22,10 @@ struct Mesh;
 struct ModifierData;
 struct ModifierEvalContext;
 struct Object;
+
+namespace geometry {
+class SimCacheHasher;
+}
 
 void MOD_init_texture(MappingInfoModifierData *dmd, const ModifierEvalContext *ctx);
 /**
@@ -44,5 +50,21 @@ void MOD_depsgraph_update_object_bone_relation(DepsNodeHandle *node,
                                                Object *object,
                                                const char *bonename,
                                                const char *description);
+
+/**
+ * The result of a slow modifier, from the cache when the mesh, the modifier's settings and what
+ * \a extra adds are the same as before. Objects are evaluated again for undo and for changes to
+ * other objects, and this keeps that from computing everything again. The modifier's message is
+ * kept with the result and shown again.
+ *
+ * \param compute: The modifier's own #modify_mesh.
+ * \param extra: Adds what else the result depends on, like the placement of other objects.
+ */
+Mesh *MOD_cached_modify_mesh(
+    ModifierData *md,
+    const ModifierEvalContext *ctx,
+    Mesh *mesh,
+    FunctionRef<Mesh *(ModifierData *, const ModifierEvalContext *, Mesh *)> compute,
+    FunctionRef<void(geometry::SimCacheHasher &)> extra = nullptr);
 
 }  // namespace blender

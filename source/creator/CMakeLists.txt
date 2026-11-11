@@ -340,6 +340,9 @@ if(WITH_PYTHON_MODULE)
 
 else()
   add_executable(blender ${EXETYPE} ${SRC})
+  if(WIN32)
+    set_target_properties(blender PROPERTIES OUTPUT_NAME Blender)
+  endif()
   if(WITH_CPU_CHECK)
     # blender_cpu_check *NEEDS* to be linked first, there can be no exceptions
     # to this, this is to ensure this will be the first code to run once the

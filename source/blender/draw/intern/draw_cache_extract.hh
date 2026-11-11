@@ -112,6 +112,8 @@ enum class VBOType : int8_t {
   AttrViewer,
   VertexNormal,
   PaintOverlayFlag,
+  /** Loose part, material index and face set of the face of each corner. */
+  PartId,
 };
 
 /**
@@ -190,6 +192,10 @@ struct MeshBatchList {
   gpu::Batch *surface_viewer_attribute;
   gpu::Batch *paint_overlay_verts;
   gpu::Batch *paint_overlay_surface;
+  /* Surface with the face set colors as color attribute, for the Face Set solid color. */
+  gpu::Batch *surface_face_sets;
+  /* Surface with the loose part, material and face set of each face, for outlines. */
+  gpu::Batch *surface_part_ids;
 };
 
 #define MBC_BATCH_LEN (sizeof(MeshBatchList) / sizeof(void *))
@@ -231,6 +237,8 @@ enum DRWBatchFlag : uint64_t {
   MBC_VIEWER_ATTRIBUTE_OVERLAY = (1u << MBC_BATCH_INDEX(surface_viewer_attribute)),
   MBC_PAINT_OVERLAY_VERTS = (uint64_t(1u) << MBC_BATCH_INDEX(paint_overlay_verts)),
   MBC_PAINT_OVERLAY_SURFACE = (uint64_t(1u) << MBC_BATCH_INDEX(paint_overlay_surface)),
+  MBC_SURFACE_FACE_SETS = (uint64_t(1u) << MBC_BATCH_INDEX(surface_face_sets)),
+  MBC_SURFACE_PART_IDS = (uint64_t(1u) << MBC_BATCH_INDEX(surface_part_ids)),
   MBC_SURFACE_PER_MAT = (uint64_t(1u) << MBC_BATCH_LEN),
 };
 ENUM_OPERATORS(DRWBatchFlag);

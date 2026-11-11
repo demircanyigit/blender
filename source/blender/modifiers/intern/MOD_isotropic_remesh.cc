@@ -30,6 +30,7 @@
 
 #include "MOD_modifiertypes.hh"
 #include "MOD_ui_common.hh"
+#include "MOD_util.hh"
 
 namespace blender {
 
@@ -39,7 +40,7 @@ static void init_data(ModifierData *md)
   INIT_DEFAULT_STRUCT_AFTER(imd, modifier);
 }
 
-static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh *mesh)
+static Mesh *modify_mesh_compute(ModifierData *md, const ModifierEvalContext *ctx, Mesh *mesh)
 {
   const IsotropicRemeshModifierData &imd = *reinterpret_cast<IsotropicRemeshModifierData *>(md);
   if (mesh->faces_num == 0) {
@@ -116,6 +117,12 @@ static void panel_draw(const bContext * /*C*/, Panel *panel)
 static void panel_register(ARegionType *region_type)
 {
   modifier_panel_register(region_type, eModifierType_IsotropicRemesh, panel_draw);
+}
+
+/* Taken from the cache when nothing it depends on changed, see #MOD_cached_modify_mesh. */
+static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh *mesh)
+{
+  return MOD_cached_modify_mesh(md, ctx, mesh, modify_mesh_compute);
 }
 
 ModifierTypeInfo modifierType_IsotropicRemesh = {

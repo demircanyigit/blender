@@ -1,0 +1,13 @@
+Reference: https://github.com/illusioneering/textured-mesh-simplification
+Snapshot: 3b9195c (2026)
+Author: Evan Suma Rosenberg
+License: MIT (LICENSE.txt)
+
+The native experimental Wild QEM geometry backend is adapted from the area-weighted plane
+quadrics, dynamic boundary-area quadrics, and vertex-pair collapse ideas in this reference.
+Its implementation is in source/blender/geometry/intern/decimate_wild.cc.
+
+The reference is an independent implementation of Liu, Zhang and Yuksel,
+"Simplifying Textured Triangle Meshes in the Wild", SIGGRAPH Asia 2025.
+This backend is not the authors' official implementation and does not implement texture-atlas
+rebaking or the paper's complete correspondence pipeline. It resamples Blender attributes.

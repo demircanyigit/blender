@@ -174,6 +174,7 @@ static void add_own_transform_dependencies(const bNodeTree &tree,
   bool needs_own_transform = false;
 
   needs_own_transform |= has_enabled_nodes_of_type(tree, "GeometryNodeSelfObject");
+  needs_own_transform |= has_enabled_nodes_of_type(tree, "GeometryNodeUVScale");
   needs_own_transform |= has_enabled_nodes_of_type(tree, "GeometryNodeDeformCurvesOnSurface");
 
   for (const bNode *node : tree.nodes_by_type("GeometryNodeCollectionInfo")) {
@@ -211,6 +212,10 @@ static void add_own_transform_dependencies(const bNodeTree &tree,
 
 static bool needs_scene_render_params(const bNodeTree &ntree)
 {
+  /* UV density uses the scene's meters-per-unit setting, also a scene parameter. */
+  if (has_enabled_nodes_of_type(ntree, "GeometryNodeUVScale")) {
+    return true;
+  }
   for (const bNode *node : ntree.nodes_by_type("GeometryNodeCameraInfo")) {
     if (node->is_muted()) {
       continue;

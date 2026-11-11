@@ -6,6 +6,8 @@
 
 #include "BKE_studiolight.h"
 
+#include "DNA_scene_types.h"
+
 #include "BLI_math_matrix.h"
 #include "BLI_math_rotation.h"
 #include "BLI_math_vector.h"
@@ -116,6 +118,38 @@ void SceneResources::init(const SceneState &scene_state, const DRWContext *ctx)
   world_buf.xray_alpha = shading.xray_alpha;
   world_buf.background_color = scene_state.background_color;
   world_buf.object_outline_color = float4(float3(shading.object_outline_color), 1.0f);
+  world_buf.edge_color = float4(float3(shading.edge_color), shading.edge_strength);
+  world_buf.outline_width = max_ff(shading.outline_width, 1.0f);
+  world_buf.edge_crease_cos = cosf(shading.edge_crease_angle);
+  world_buf.edge_depth_threshold = shading.edge_depth_threshold;
+  world_buf.outline_flag = scene_state.outline_flag;
+
+  world_buf.toon_flag = 0;
+  if (shading.light == V3D_LIGHTING_TOON) {
+    world_buf.toon_flag = 1;
+    if (shading.toon_flag & V3D_SHADING_TOON_HIGHLIGHT) {
+      world_buf.toon_flag |= 2;
+    }
+    if (shading.toon_flag & V3D_SHADING_TOON_RIM) {
+      world_buf.toon_flag |= 4;
+    }
+    const float3 direction = scene_state.scene->display.light_direction;
+    float3 to_light;
+    if (shading.toon_flag & V3D_SHADING_TOON_VIEW_LIGHT) {
+      /* With the default direction the light is up, left and in front of the view. */
+      to_light = float3(-direction.x, direction.y, direction.z);
+    }
+    else {
+      /* The same light as the shadow, see #ShadowPass::init. */
+      const float3 to_light_ws = float3(direction.x, -direction.z, direction.y);
+      to_light = math::transform_direction(draw::View::default_get().viewmat(), to_light_ws);
+    }
+    world_buf.toon_light_vs = float4(math::normalize(to_light), float(shading.toon_bands));
+    world_buf.toon_shadow_color = float4(float3(shading.toon_shadow_color),
+                                         shading.toon_softness);
+    world_buf.toon_rim_color = float4(float3(shading.toon_rim_color), shading.toon_rim_width);
+    world_buf.toon_highlight_size = shading.toon_highlight_size;
+  }
   world_buf.ui_scale = ctx->is_image_render() ? 1.0f : U.pixelsize;
   world_buf.matcap_orientation = (shading.flag & V3D_SHADING_MATCAP_FLIP_X) != 0;
 

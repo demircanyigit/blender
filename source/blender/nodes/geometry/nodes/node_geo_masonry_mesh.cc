@@ -223,6 +223,9 @@ static void node_declare(NodeDeclarationBuilder &b)
       "A row of blocks along the outline of each face. Only on convex faces");
   b.add_input<decl::Bool>("Toothed").default_value(false).description(
       "Blocks at the edges of a face stick out whole instead of being cut");
+  b.add_input<decl::Bool>("Continuous Walls").default_value(false).description(
+      "Continue wall patterns across vertical faces with rigid bricks; Auto direction only. "
+      "Sharp edges and corners of 45 degrees or more break the layout");
 
   PanelDeclarationBuilder &variation = b.add_panel("Variation").default_closed(true);
   variation.add_input<decl::Float>("Random Length")
@@ -304,6 +307,7 @@ static void node_geo_exec(GeoNodeExecParams params)
   settings.backing = params.extract_input<bool>("Backing");
   settings.border = params.extract_input<bool>("Border");
   settings.toothed = params.extract_input<bool>("Toothed");
+  settings.continuous_walls = params.extract_input<bool>("Continuous Walls");
   settings.random_length = params.extract_input<float>("Random Length");
   settings.random_height = params.extract_input<float>("Random Height");
   settings.random_depth = params.extract_input<float>("Random Depth");

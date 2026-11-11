@@ -537,7 +537,9 @@ void ED_view3d_persp_switch_from_camera(const Depsgraph *depsgraph,
 bool ED_view3d_persp_ensure(const Depsgraph *depsgraph, View3D *v3d, ARegion *region)
 {
   RegionView3D *rv3d = static_cast<RegionView3D *>(region->regiondata);
-  const bool autopersp = (U.uiflag & USER_AUTOPERSP) != 0;
+  /* Orthographic picked by the user stays, only an automatic one goes back to perspective. */
+  const bool autopersp = (U.uiflag & USER_AUTOPERSP) != 0 &&
+                         (rv3d->rflag & RV3D_USER_ORTHO) == 0;
 
   BLI_assert((RV3D_LOCK_FLAGS(rv3d) & RV3D_LOCK_ANY_TRANSFORM) == 0);
 

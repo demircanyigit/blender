@@ -26,6 +26,7 @@ void ED_operatortypes_render()
   WM_operatortype_append(OBJECT_OT_material_slot_select);
   WM_operatortype_append(OBJECT_OT_material_slot_deselect);
   WM_operatortype_append(OBJECT_OT_material_slot_copy);
+  WM_operatortype_append(OBJECT_OT_material_to_selected);
   WM_operatortype_append(OBJECT_OT_material_slot_move);
   WM_operatortype_append(OBJECT_OT_material_slot_remove_unused);
   WM_operatortype_append(OBJECT_OT_material_slot_remove_all);
@@ -34,6 +35,9 @@ void ED_operatortypes_render()
   WM_operatortype_append(OBJECT_OT_lightprobe_cache_free);
 
   WM_operatortype_append(MATERIAL_OT_new);
+  WM_operatortype_append(MATERIAL_OT_browse_new);
+  WM_operatortype_append(MATERIAL_OT_browse_duplicate);
+  WM_operatortype_append(MATERIAL_OT_browse_delete);
   WM_operatortype_append(TEXTURE_OT_new);
   WM_operatortype_append(WORLD_OT_new);
 

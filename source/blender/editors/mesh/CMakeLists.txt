@@ -25,6 +25,7 @@ set(SRC
   editmesh_extrude_screw.cc
   editmesh_extrude_spin.cc
   editmesh_extrude_spin_gizmo.cc
+  editmesh_face_sets.cc
   editmesh_inset.cc
   editmesh_intersect.cc
   editmesh_knife.cc

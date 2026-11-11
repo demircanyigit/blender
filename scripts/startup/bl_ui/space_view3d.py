@@ -4695,6 +4695,7 @@ class VIEW3D_MT_edit_mesh_context_menu(Menu):
 
             # Modify Operators
             col.menu("VIEW3D_MT_uv_map", text="UV Unwrap Faces")
+            col.menu("VIEW3D_MT_edit_mesh_face_sets")
 
             col.separator()
 
@@ -4955,8 +4956,60 @@ class VIEW3D_MT_edit_mesh_faces(Menu):
         layout.separator()
 
         layout.menu("VIEW3D_MT_edit_mesh_faces_data")
+        layout.menu("VIEW3D_MT_edit_mesh_face_sets")
 
         layout.template_node_operator_asset_menu_items(catalog_path=self.bl_label)
+
+
+class VIEW3D_MT_edit_mesh_face_sets(Menu):
+    bl_label = "Face Sets"
+
+    def draw(self, _context):
+        layout = self.layout
+
+        layout.operator("mesh.face_set_new", text="New Face Set", icon='FACE_SET_NEW')
+        layout.operator("mesh.face_set_assign", text="Assign to Face Set...", icon='FACE_SET_ASSIGN')
+        props = layout.operator(
+            "mesh.face_sets_from", text="Split Selection by Islands", icon='FACE_SET_SPLIT_ISLANDS')
+        props.mode = 'LOOSE_PARTS'
+        props.selected_only = True
+        layout.operator("mesh.face_set_merge", text="Merge Face Sets", icon='FACE_SET_MERGE')
+        layout.operator("mesh.face_set_clear", text="Clear Face Set", icon='FACE_SET_CLEAR')
+
+        layout.separator()
+
+        layout.menu("VIEW3D_MT_edit_mesh_face_sets_from")
+
+        layout.separator()
+
+        layout.operator("mesh.face_set_select", text="Select Face Set", icon='FACE_SET_SELECT')
+        layout.operator(
+            "mesh.face_set_select_boundary", text="Select Face Set Boundaries", icon='FACE_SET_SELECT_BOUNDARY')
+        layout.operator("mesh.face_set_select_more", text="Grow by Face Set", icon='FACE_SET_SELECT_MORE')
+        layout.operator("mesh.face_set_select_less", text="Shrink by Face Set", icon='FACE_SET_SELECT_LESS')
+
+        layout.separator()
+
+        layout.operator(
+            "mesh.face_set_hide_others", text="Hide Other Face Sets", icon='FACE_SET_HIDE_OTHERS')
+        layout.operator("mesh.reveal", text="Reveal Hidden", icon='HIDE_OFF')
+
+        layout.separator()
+
+        layout.operator(
+            "mesh.face_set_randomize_colors", text="Randomize Colors", icon='FACE_SET_RANDOMIZE_COLORS')
+        layout.operator(
+            "mesh.face_sets_to_vertex_groups", text="To Vertex Groups", icon='FACE_SETS_TO_VERTEX_GROUPS')
+        layout.operator("mesh.face_sets_to_materials", text="To Materials", icon='FACE_SETS_TO_MATERIALS')
+
+
+class VIEW3D_MT_edit_mesh_face_sets_from(Menu):
+    bl_label = "Face Sets From"
+
+    def draw(self, _context):
+        layout = self.layout
+
+        layout.operator_enum("mesh.face_sets_from", "mode")
 
 
 class VIEW3D_MT_edit_mesh_normals_select_strength(Menu):
@@ -6643,6 +6696,29 @@ class VIEW3D_PT_shading_lighting(Panel):
                 col.operator("screen.userpref_show", emboss=False, text="", icon='PREFERENCES').section = 'LIGHTS'
                 col.operator("view3d.toggle_matcap_flip", emboss=False, text="", icon='ARROW_LEFTRIGHT')
 
+            elif shading.light == 'TOON':
+                col = layout.column()
+                col.use_property_split = True
+                col.use_property_decorate = False
+                col.row().prop(shading, "toon_light", expand=True)
+                col.prop(context.scene.display, "light_direction", text="")
+                col.prop(shading, "toon_bands")
+                col.prop(shading, "toon_softness")
+                col.prop(shading, "toon_shadow_color")
+
+                row = col.row(heading="Highlight")
+                row.prop(shading, "use_toon_highlight", text="")
+                sub = row.row()
+                sub.active = shading.use_toon_highlight
+                sub.prop(shading, "toon_highlight_size")
+
+                row = col.row(heading="Rim Light")
+                row.prop(shading, "use_toon_rim", text="")
+                sub = row.row(align=True)
+                sub.active = shading.use_toon_rim
+                sub.prop(shading, "toon_rim_color", text="")
+                sub.prop(shading, "toon_rim_width")
+
         elif shading.type == 'MATERIAL':
             col.prop(shading, "use_scene_lights")
             col.prop(shading, "use_scene_world")
@@ -6706,7 +6782,10 @@ class VIEW3D_PT_shading_color(Panel):
         layout = self.layout
         shading = VIEW3D_PT_shading.get_shading(context)
 
-        layout.grid_flow(row_major=True, columns=3, align=True).prop(shading, "color_type", expand=True)
+        grid = layout.grid_flow(row_major=True, columns=3, align=True)
+        # Face Set takes the place of Object, which is still there for scripts and old files.
+        for item in ('MATERIAL', 'FACE_SET', 'RANDOM', 'VERTEX', 'TEXTURE', 'SINGLE'):
+            grid.prop_enum(shading, "color_type", item)
         if shading.color_type == 'SINGLE':
             layout.row().prop(shading, "single_color", text="")
 
@@ -6759,9 +6838,27 @@ class VIEW3D_PT_shading_options(Panel):
         if shading.type in {'WIREFRAME', 'SOLID'}:
             row = col.split()
             row.prop(shading, "show_object_outline")
-            sub = row.row()
+            sub = row.row(align=True)
             sub.active = shading.show_object_outline
             sub.prop(shading, "object_outline_color", text="")
+            if shading.type == 'SOLID':
+                sub.popover(
+                    panel="VIEW3D_PT_shading_options_outline",
+                    icon='PREFERENCES',
+                    text="",
+                )
+
+        if shading.type == 'SOLID':
+            row = col.split()
+            row.prop(shading, "show_edge_lines")
+            sub = row.row(align=True)
+            sub.active = shading.show_edge_lines
+            sub.prop(shading, "edge_color", text="")
+            sub.popover(
+                panel="VIEW3D_PT_shading_options_edge_lines",
+                icon='PREFERENCES',
+                text="",
+            )
 
         if shading.type == 'SOLID' and shading.light in {'STUDIO', 'MATCAP'}:
             sub = col.row()
@@ -6816,6 +6913,51 @@ class VIEW3D_PT_shading_options_shadow(Panel):
         col.prop(scene.display, "light_direction", text="Direction")
         col.prop(scene.display, "shadow_shift", text="Offset")
         col.prop(scene.display, "shadow_focus", text="Focus")
+
+
+class VIEW3D_PT_shading_options_outline(Panel):
+    bl_label = "Outline Settings"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'HEADER'
+    bl_ui_units_x = 12
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        shading = VIEW3D_PT_shading.get_shading(context)
+
+        col = layout.column()
+        col.prop(shading, "outline_type", text="Outline By")
+        col.prop(shading, "outline_width", text="Width")
+
+
+class VIEW3D_PT_shading_options_edge_lines(Panel):
+    bl_label = "Edge Line Settings"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'HEADER'
+    bl_ui_units_x = 12
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        shading = VIEW3D_PT_shading.get_shading(context)
+
+        col = layout.column()
+        col.prop(shading, "use_edge_depth")
+        sub = col.column()
+        sub.active = shading.use_edge_depth
+        sub.prop(shading, "edge_depth_threshold")
+
+        col.prop(shading, "use_edge_hard")
+
+        col.prop(shading, "use_edge_crease")
+        sub = col.column()
+        sub.active = shading.use_edge_crease
+        sub.prop(shading, "edge_crease_angle")
+
+        col.separator()
+        col.prop(shading, "edge_strength")
+        col.prop(shading, "outline_width", text="Width")
 
 
 class VIEW3D_PT_shading_options_ssao(Panel):
@@ -9329,6 +9471,8 @@ classes = (
     VIEW3D_MT_edit_mesh_edges,
     VIEW3D_MT_edit_mesh_faces,
     VIEW3D_MT_edit_mesh_faces_data,
+    VIEW3D_MT_edit_mesh_face_sets,
+    VIEW3D_MT_edit_mesh_face_sets_from,
     VIEW3D_MT_edit_mesh_normals,
     VIEW3D_MT_edit_mesh_normals_select_strength,
     VIEW3D_MT_edit_mesh_normals_set_strength,
@@ -9414,6 +9558,8 @@ classes = (
     VIEW3D_PT_shading_color,
     VIEW3D_PT_shading_options,
     VIEW3D_PT_shading_options_shadow,
+    VIEW3D_PT_shading_options_outline,
+    VIEW3D_PT_shading_options_edge_lines,
     VIEW3D_PT_shading_options_ssao,
     VIEW3D_PT_shading_cavity,
     VIEW3D_PT_shading_render_pass,

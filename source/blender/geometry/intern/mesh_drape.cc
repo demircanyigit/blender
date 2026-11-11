@@ -33,6 +33,7 @@
 #include "BKE_mesh.hh"
 
 #include "GEO_mesh_drape.hh"
+#include "GEO_mesh_sim_cache.hh"
 
 namespace blender::geometry {
 
@@ -161,7 +162,9 @@ void solve_self_collision(MutableSpan<float3> positions,
 
 }  // namespace
 
-Mesh *mesh_drape(const Mesh &mesh, const MeshDrapeParams &params, const char **r_error)
+static Mesh *mesh_drape_compute(const Mesh &mesh,
+                                const MeshDrapeParams &params,
+                                const char **r_error)
 {
   *r_error = nullptr;
   const int verts_num = mesh.verts_num;
@@ -269,6 +272,14 @@ Mesh *mesh_drape(const Mesh &mesh, const MeshDrapeParams &params, const char **r
       p = math::transform_point(params.collider_to_space, p);
     }
     collider->tag_positions_changed();
+    if (params.collider_cage != 0.0f) {
+      /* The cage: pushed out along the normals, so the cloth rests that far away. */
+      const Array<float3> normals(collider->vert_normals());
+      for (const int i : collider_positions.index_range()) {
+        collider_positions[i] += normals[i] * params.collider_cage;
+      }
+      collider->tag_positions_changed();
+    }
     collider_bvh = collider->bvh_corner_tris();
   }
 
@@ -418,6 +429,37 @@ Mesh *mesh_drape(const Mesh &mesh, const MeshDrapeParams &params, const char **r
   }
   result->tag_positions_changed();
   return result;
+}
+
+Mesh *mesh_drape(const Mesh &mesh, const MeshDrapeParams &params, const char **r_error)
+{
+  /* Objects are evaluated again for undo and for changes to other objects. Taking the result from
+   * the cache when nothing it depends on changed keeps that from simulating all over again. */
+  SimCacheHasher hasher("mesh_drape");
+  hasher.add_mesh(mesh);
+  hasher.add(params.time);
+  hasher.add(params.gravity);
+  hasher.add(params.stiffness);
+  hasher.add(params.bending);
+  hasher.add(params.shrink);
+  hasher.add(params.thickness);
+  hasher.add(params.friction);
+  hasher.add(params.pressure);
+  hasher.add(params.floor);
+  hasher.add(params.self_collision);
+  hasher.add(params.substeps);
+  hasher.add(params.mesh_to_space);
+  hasher.add(params.collider != nullptr);
+  if (params.collider != nullptr) {
+    hasher.add_mesh_shape(*params.collider);
+    hasher.add(params.collider_to_space);
+    hasher.add(params.collider_cage);
+  }
+  hasher.add_span(params.pin);
+  return sim_cache_get(
+      hasher.finish(),
+      [&](const char **r_compute_error) { return mesh_drape_compute(mesh, params, r_compute_error); },
+      r_error);
 }
 
 }  // namespace blender::geometry

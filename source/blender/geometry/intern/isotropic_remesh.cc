@@ -218,8 +218,17 @@ static bool topology_attribute(const StringRef name)
  * attributes have no meaningful mapping after a full retopology and are intentionally dropped. */
 void transfer_attributes_from_surface(const Mesh &src_mesh,
                                       Mesh &dst_mesh,
-                                      const bke::AttributeFilter &attribute_filter)
+                                      const bke::AttributeFilter &attribute_filter,
+                                      const bool face_aware_corners)
 {
+  bool has_attributes = false;
+  src_mesh.attributes().foreach_attribute([&](const bke::AttributeIter &iter) {
+    has_attributes |= !topology_attribute(iter.name) && iter.domain != bke::AttrDomain::Edge &&
+                      iter.data_type != bke::AttrType::String && !attribute_filter.allow_skip(iter.name);
+  });
+  if (!has_attributes) {
+    return;
+  }
   const Span<float3> src_positions = src_mesh.vert_positions();
   const Span<int> src_corner_verts = src_mesh.corner_verts();
   const Span<int3> src_corner_tris = src_mesh.corner_tris();
@@ -294,6 +303,40 @@ void transfer_attributes_from_surface(const Mesh &src_mesh,
       corner_bary[corner] = vert_bary[vert];
     }
   });
+
+  if (face_aware_corners) {
+    /* Query just inside the destination face to disambiguate UV/color seams at shared positions.
+     * Sample the actual corner position on that chosen source triangle, not the biased query. */
+    threading::parallel_for(IndexRange(dst_faces_num), 1024, [&](const IndexRange range) {
+      for (const int face : range) {
+        float3 center(0);
+        for (const int corner : dst_faces[face]) {
+          center += dst_positions[dst_corner_verts[corner]];
+        }
+        center /= float(dst_faces[face].size());
+        for (const int corner : dst_faces[face]) {
+          const float3 position = dst_positions[dst_corner_verts[corner]];
+          const float3 query = math::interpolate(position, center, 1e-4f);
+          BVHTreeNearest nearest;
+          nearest.dist_sq = FLT_MAX;
+          nearest.index = -1;
+          BLI_bvhtree_find_nearest(bvh.tree, query, &nearest, bvh.nearest_callback, &bvh);
+          if (nearest.index < 0) {
+            continue;
+          }
+          const int3 tri = src_corner_tris[nearest.index];
+          const float3 a = src_positions[src_corner_verts[tri.x]];
+          const float3 b = src_positions[src_corner_verts[tri.y]];
+          const float3 c = src_positions[src_corner_verts[tri.z]];
+          float closest[3], weights[3];
+          closest_on_tri_to_point_v3(closest, position, a, b, c);
+          interp_weights_tri_v3(weights, a, b, c, closest);
+          corner_tri[corner] = nearest.index;
+          corner_bary[corner] = float3(weights);
+        }
+      }
+    });
+  }
 
   const bke::AttributeAccessor src_attributes = src_mesh.attributes();
   bke::MutableAttributeAccessor dst_attributes = dst_mesh.attributes_for_write();

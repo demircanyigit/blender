@@ -214,7 +214,7 @@ void OpaquePass::draw(Manager &manager,
     manager.submit(deferred_ps_, view);
   }
 
-  gbuffer_normal_tx.release();
+  /* The normals are released after the outline pass, which reads them for hard edges. */
   gbuffer_material_tx.release();
 }
 

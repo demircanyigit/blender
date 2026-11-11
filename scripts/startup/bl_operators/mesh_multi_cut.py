@@ -4,12 +4,13 @@
 
 """Multi-Cut: cut faces point by point.
 
-Click on edges or vertices to place cut points; each point is joined to the one before it, straight
-across the face they share or across the faces in between. Clicks inside a face of the last point
-bend the cut there. Hold the mouse button and drag to slide a point along its edge, Shift snaps it
-in steps. Backspace removes the last point, Enter or right-click makes the cut, Esc drops it.
-Ctrl+click on an edge inserts an edge loop through it. Before the first point, dragging from a face
-or empty space slices the mesh along the dragged line.
+Click on faces, edges or vertices to place cut points; each point is joined to the one before it,
+straight across the face they share or across the faces in between. A cut can start, bend and end
+inside faces: an end inside a face stays as an edge there, and a closed shape drawn inside one face
+becomes a face of its own (click the first point again to close it). Hold the mouse button and drag
+to slide a point along its edge, Shift snaps it in steps. Backspace removes the last point, Enter or
+right-click makes the cut, Esc drops it. Ctrl+click on an edge inserts an edge loop through it.
+Before the first point, dragging from a face or empty space slices the mesh along the dragged line.
 
 With the tool active, what a click would do is shown under the mouse before clicking.
 """
@@ -417,6 +418,44 @@ class _Picker:
         return best
 
 
+def _bridge_islands(bm, face, edges):
+    """Closed shapes in `edges` that touch no side of `face` get two edges to its sides, so the
+    face can be split around them: the shape becomes a face, and the rest two faces. Lines that
+    touch nothing stay as they are. New edges are added to `edges`."""
+    sides = set(face.verts)
+    links = {}
+    for e in edges:
+        a, b = e.verts
+        links.setdefault(a, []).append(b)
+        links.setdefault(b, []).append(a)
+    seen = set()
+    for start in list(links):
+        if start in seen:
+            continue
+        island, todo = [], [start]
+        seen.add(start)
+        while todo:
+            v = todo.pop()
+            island.append(v)
+            for w in links[v]:
+                if w not in seen:
+                    seen.add(w)
+                    todo.append(w)
+        if any(v in sides for v in island):
+            continue
+        if len(island) < 3 or any(len(links[v]) != 2 for v in island):
+            continue
+        a, side_a = min(((v, s) for v in island for s in sides), key=lambda p: (p[0].co - p[1].co).length)
+        b = max(island, key=lambda v: (v.co - a.co).length)
+        others = [s for s in sides if s != side_a]
+        if not others:
+            continue
+        side_b = min(others, key=lambda s: (s.co - b.co).length)
+        for v, s in ((a, side_a), (b, side_b)):
+            if bm.edges.get((v, s)) is None:
+                edges.append(bm.edges.new((v, s)))
+
+
 def _snap(t, snap_step):
     step = snap_step / 100.0
     return min(max(round(t / step) * step, 0.0), 1.0)
@@ -565,8 +604,6 @@ def _set_hover_draw(picker, hover, ctrl_loop=True):
             _draw_data["points"].append(co)
             _draw_data["labels"].append((co, _percent(value)))
         return
-    if kind == 'FACE':
-        return
     co = mat @ _point_co(hover)
     _draw_data["points"].append(co)
     if kind == 'EDGE':
@@ -626,7 +663,7 @@ class MESH_OT_multi_cut_hover(Operator):
 
 
 class MESH_OT_multi_cut(Operator):
-    """Cut faces point by point: click on edges and vertices, Enter to cut, Ctrl+click for an edge loop"""
+    """Cut faces point by point: click on faces, edges and vertices, Enter to cut, Ctrl+click for an edge loop"""
     bl_idname = "mesh.multi_cut"
     bl_label = "Multi-Cut"
     bl_options = {'UNDO'}
@@ -659,19 +696,11 @@ class MESH_OT_multi_cut(Operator):
     def _reachable(self, last, point):
         if _share_face(last, point):
             return True
-        if last[0] == 'FACE' or point[0] == 'FACE':
-            return False
         return self.picker.path(last, point) is not None
 
     def _add_point(self, point):
         """Place a point; returns true when it was placed."""
         last = self._last()
-        if point[0] == 'FACE':
-            # Inside a face: only on a face of the last point, to bend the cut there.
-            if last is None or not _share_face(last, point):
-                return False
-            self.chains[-1].append(point)
-            return True
         if last is not None and _same_point(last, point):
             return False
         if last is None or self._reachable(last, point):
@@ -679,11 +708,30 @@ class MESH_OT_multi_cut(Operator):
                 self.chains.append([])
             self.chains[-1].append(point)
         else:
-            # Not reachable: drop trailing points inside faces, and start a new cut here.
-            while self.chains[-1] and self.chains[-1][-1][0] == 'FACE':
-                self.chains[-1].pop()
+            # Not reachable: start a new cut here.
             self.chains.append([point])
         return True
+
+    def _snap_placed(self, mouse, hover):
+        """A point placed inside a face, when the mouse is close to it, so a cut can come back to
+        it, for example to close a shape."""
+        if hover is not None and hover[0] in {'VERT', 'LOOP'}:
+            return hover
+        from mathutils import Vector
+        last = self._last()
+        m = Vector(mouse)
+        best, best_dist = None, _VERT_SNAP_PX
+        for chain in self.chains:
+            for point in chain:
+                if point[0] != 'FACE' or point is last:
+                    continue
+                pos = self.picker.to_screen(_point_co(point))
+                if pos is None:
+                    continue
+                d = (pos - m).length
+                if d < best_dist:
+                    best, best_dist = point, d
+        return best or hover
 
     def _remove_point(self):
         if self.chains and self.chains[-1]:
@@ -696,7 +744,7 @@ class MESH_OT_multi_cut(Operator):
     def _segment(self, a, b):
         """Object space positions from point `a` to `b`, through the edges a cut crosses."""
         cos = [_point_co(a)]
-        if a[0] != 'FACE' and b[0] != 'FACE' and not _share_face(a, b):
+        if not _share_face(a, b):
             path = self.picker.path(a, b)
             if path is None:
                 return None
@@ -730,8 +778,6 @@ class MESH_OT_multi_cut(Operator):
         if last is None:
             _set_hover_draw(picker, hover)
             return
-        if hover[0] == 'FACE' and not _share_face(last, hover):
-            return
         co = mat @ _point_co(hover)
         _draw_data["points"].append(co)
         if hover[0] == 'EDGE':
@@ -757,7 +803,8 @@ class MESH_OT_multi_cut(Operator):
         if event.type in {'LEFT_SHIFT', 'RIGHT_SHIFT'}:
             shift = event.value == 'PRESS'
         # Ctrl only makes a loop before the first point.
-        self.hover = self.picker.pick(mouse, ctrl and self._last() is None, shift, self.snap_step)
+        self.hover = self._snap_placed(
+            mouse, self.picker.pick(mouse, ctrl and self._last() is None, shift, self.snap_step))
         self._update_draw()
         context.area.tag_redraw()
 
@@ -843,61 +890,89 @@ class MESH_OT_multi_cut(Operator):
         resolved = []
         for chain in self.chains:
             items = []
-            for kind, elem, value in chain:
+            for point in chain:
+                kind, elem, value = point
                 if kind == 'VERT':
-                    items.append(('V', elem, None))
+                    items.append(('V', elem, None, point))
                 elif kind == 'EDGE':
-                    items.append(('E', (elem.verts[0], elem.verts[1]), value))
+                    items.append(('E', (elem.verts[0], elem.verts[1]), value, point))
                 else:
-                    items.append(('F', None, value.copy()))
+                    items.append(('F', elem, value.copy(), point))
             resolved.append(items)
 
+        # The new edges inside each face. Every face is split once, at the end, by all of them.
+        nets = {}
+
+        def add_edge(face, va, vb):
+            if va == vb:
+                return
+            edge = bm.edges.get((va, vb))
+            if edge is not None and face in edge.link_faces:
+                # Along the side of the face: nothing to cut.
+                return
+            if edge is None:
+                edge = bm.edges.new((va, vb))
+            net = nets.setdefault(face, [])
+            if edge not in net:
+                net.append(edge)
+
+        # Points inside faces become new vertices; a point used again (closing a shape) is the
+        # same vertex.
+        face_verts = {}
         changed = False
         for items in resolved:
-            ends = []  # (point, positions inside the face before it)
-            coords = []
-            for item in items:
-                if item[0] == 'F':
-                    coords.append(item[2])
-                    continue
-                ends.append((item, coords))
-                coords = []
-            verts = []
-            for item, coords in ends:
-                if item[0] == 'V':
-                    verts.append((item[1], coords))
-                else:
-                    verts.append((edge_vert(item[1], item[2]), coords))
+            if len(items) < 2:
+                if items and items[0][0] == 'E':
+                    edge_vert(items[0][1], items[0][2])
                     changed = True
-            for (va, _c), (vb, coords) in zip(verts, verts[1:]):
+                continue
+            points = []  # (vertex, point for finding the way across faces)
+            for kind, elem, value, point in items:
+                if kind == 'V':
+                    points.append((elem, ('VERT', elem, None)))
+                elif kind == 'E':
+                    v = edge_vert(elem, value)
+                    changed = True
+                    points.append((v, ('VERT', v, None) if v is not None else None))
+                else:
+                    v = face_verts.get(id(point))
+                    if v is None:
+                        v = bm.verts.new(value)
+                        face_verts[id(point)] = v
+                    points.append((v, ('FACE', elem, value)))
+            for (va, pa), (vb, pb) in zip(points, points[1:]):
                 if va is None or vb is None or va == vb or not va.is_valid or not vb.is_valid:
                     continue
-                adjacent = any(e.other_vert(va) == vb for e in va.link_edges)
-                if adjacent and not coords:
+                if not pa[1].is_valid or not pb[1].is_valid:
                     continue
-                shared = [f for f in set(va.link_faces) & set(vb.link_faces) if not f.hide]
+                shared = [f for f in set(_point_faces(pa)) & set(_point_faces(pb)) if not f.hide]
                 if shared:
-                    probe = coords[0] if coords else (va.co + vb.co) / 2.0
-                    face = next((f for f in shared if intersect_face_point(f, probe)), shared[0])
-                    try:
-                        bmesh.utils.face_split(face, va, vb, coords=coords)
-                        changed = True
-                    except ValueError:
-                        pass
+                    if len(shared) > 1:
+                        probe = (va.co + vb.co) / 2.0
+                        shared.sort(key=lambda f: not intersect_face_point(f, probe))
+                    add_edge(shared[0], va, vb)
                     continue
-                path = self.picker.path(('VERT', va, None), ('VERT', vb, None))
+                path = self.picker.path(pa, pb)
                 if path is None:
                     continue
                 faces, crossings = path
                 chain_verts = [va] + [split_live(e, t) for _kind, e, t in crossings] + [vb]
                 for face, a, b in zip(faces, chain_verts, chain_verts[1:]):
-                    if any(e.other_vert(a) == b for e in a.link_edges):
-                        continue
-                    try:
-                        bmesh.utils.face_split(face, a, b)
-                    except ValueError:
-                        pass
-                changed = True
+                    add_edge(face, a, b)
+
+        for face, edges in nets.items():
+            if not face.is_valid:
+                continue
+            edges = [e for e in edges if e.is_valid]
+            if not edges:
+                continue
+            _bridge_islands(bm, face, edges)
+            face.normal_update()
+            try:
+                bmesh.utils.face_split_edgenet(face, edges)
+            except ValueError:
+                pass
+            changed = True
         if changed:
             self._mesh_changed()
         return changed
@@ -906,7 +981,7 @@ class MESH_OT_multi_cut(Operator):
 
     def _status(self, context):
         context.workspace.status_text_set(
-            "Click: cut point  |  Drag: slide on edge  |  Shift: snap  |  Backspace: remove point  |  "
+            "Click: cut point on a face, edge or vertex  |  Drag: slide on edge  |  Shift: snap  |  Backspace: remove point  |  "
             "Enter / Right-click: cut  |  Ctrl+click: edge loop  |  Esc: cancel")
 
     def _end(self, context):
@@ -956,9 +1031,11 @@ class MESH_OT_multi_cut(Operator):
         self._update_hover(context, event)
         hover = self.hover
         if self._last() is None and (hover is None or hover[0] == 'FACE'):
-            # On a face or empty space with no points: a drag from here slices.
+            # On a face or empty space with no points: a drag from here slices. A click on a face
+            # without dragging places a point there, when the button is released.
             self.slice_start = (event.mouse_region_x, event.mouse_region_y)
             self.slice_end = None
+            self.press_point = hover
             return False
         if hover is None:
             return False
@@ -983,6 +1060,7 @@ class MESH_OT_multi_cut(Operator):
         self.dragging = False
         self.drag_edge = None
         self.slice_start = self.slice_end = None
+        self.press_point = None
         # Started by a click with the tool: a click that places nothing ends it.
         self.from_click = event.type == 'LEFTMOUSE' and not self.wait_for_input
         _draw_data["modal"] = True
@@ -1040,6 +1118,12 @@ class MESH_OT_multi_cut(Operator):
                     changed = self.changed
                     self._end(context)
                     return {'FINISHED'} if changed else {'CANCELLED'}
+                point, self.press_point = self.press_point, None
+                if point is not None and point[0] == 'FACE':
+                    # A click on a face: the first point of the cut is there.
+                    self._add_point(point)
+                    self._update_hover(context, event)
+                    return {'RUNNING_MODAL'}
                 if self.from_click and not self.chains:
                     # A click on a face or empty space that didn't drag: nothing to do.
                     changed = self.changed
@@ -1067,6 +1151,7 @@ class MESH_OT_multi_cut(Operator):
         if self.slice_start is not None and event.type in {'ESC', 'RIGHTMOUSE'}:
             # Drop the slice.
             self.slice_start = self.slice_end = None
+            self.press_point = None
             _draw_clear()
             context.area.tag_redraw()
             return {'RUNNING_MODAL'}

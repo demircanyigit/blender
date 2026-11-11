@@ -38,10 +38,19 @@ set(SRC
   nodes/node_geo_collapse_islands.cc
   nodes/node_geo_dice_mesh.cc
   nodes/node_geo_drape_mesh.cc
+  nodes/node_geo_uv_scale.cc
   nodes/node_geo_masonry_mesh.cc
+  nodes/node_geo_planks.cc
+  nodes/node_geo_roof.cc
+  nodes/node_geo_carve.cc
+  nodes/node_geo_cleanup_mesh.cc
+  nodes/node_geo_stonework.cc
+  nodes/node_geo_distribute.cc
+  nodes/node_geo_materialize.cc
   nodes/node_geo_shatter_mesh.cc
   nodes/node_geo_displace_mesh.cc
   nodes/node_geo_dissolve_mesh.cc
+  nodes/node_geo_divide_mesh.cc
   nodes/node_geo_quadriflow_remesh.cc
   nodes/node_geo_axis_deform.cc
   nodes/node_geo_curve_modifier_ops.cc

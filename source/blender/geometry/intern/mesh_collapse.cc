@@ -16,6 +16,7 @@
 
 #include "BLI_array.hh"
 #include "BLI_disjoint_set.hh"
+#include "BLI_map.hh"
 #include "BLI_math_matrix.hh"
 #include "BLI_math_quaternion.hh"
 #include "BLI_math_vector.hh"
@@ -25,6 +26,7 @@
 #include "BKE_mesh.hh"
 
 #include "GEO_mesh_collapse.hh"
+#include "GEO_mesh_sim_cache.hh"
 
 #ifdef WITH_BULLET
 #  include "RBI_api.h"
@@ -128,7 +130,9 @@ rbCollisionShape *island_shape(const Span<float3> local_positions, const float s
   return shape;
 }
 
-rbCollisionShape *ground_shape(const Mesh &ground, const float4x4 &ground_to_space)
+rbCollisionShape *ground_shape(const Mesh &ground,
+                              const float4x4 &ground_to_space,
+                              const float cage)
 {
   const Span<int3> tris = ground.corner_tris();
   if (tris.is_empty()) {
@@ -139,6 +143,24 @@ rbCollisionShape *ground_shape(const Mesh &ground, const float4x4 &ground_to_spa
   Array<float3> space_positions(positions.size());
   for (const int i : positions.index_range()) {
     space_positions[i] = math::transform_point(ground_to_space, positions[i]);
+  }
+  if (cage != 0.0f) {
+    /* The cage: pushed out along the normals, so the pieces land that far away. */
+    Array<float3> normals(positions.size(), float3(0.0f));
+    for (const int3 &tri : tris) {
+      const int a = corner_verts[tri[0]];
+      const int b = corner_verts[tri[1]];
+      const int c = corner_verts[tri[2]];
+      /* Weighted by area, so small triangles don't tip the normals. */
+      const float3 n = math::cross(space_positions[b] - space_positions[a],
+                                   space_positions[c] - space_positions[a]);
+      normals[a] += n;
+      normals[b] += n;
+      normals[c] += n;
+    }
+    for (const int i : positions.index_range()) {
+      space_positions[i] += math::normalize(normals[i]) * cage;
+    }
   }
   rbMeshData *data = RB_trimesh_data_new(int(tris.size()), int(positions.size()));
   RB_trimesh_add_vertices(data,
@@ -162,7 +184,9 @@ rbCollisionShape *ground_shape(const Mesh &ground, const float4x4 &ground_to_spa
 
 #endif
 
-Mesh *mesh_collapse(const Mesh &mesh, const MeshCollapseParams &params, const char **r_error)
+static Mesh *mesh_collapse_compute(const Mesh &mesh,
+                                   const MeshCollapseParams &params,
+                                   const char **r_error)
 {
   *r_error = nullptr;
 #ifndef WITH_BULLET
@@ -182,20 +206,32 @@ Mesh *mesh_collapse(const Mesh &mesh, const MeshCollapseParams &params, const ch
     positions[i] = math::transform_point(params.mesh_to_space, mesh_positions[i]);
   }
 
-  /* Islands: points joined by edges. */
-  DisjointSet<int> sets(verts_num);
-  for (const int2 edge : mesh.edges()) {
-    sets.join(edge[0], edge[1]);
-  }
-  Array<int> island_of_root(verts_num, -1);
   Array<int> island_of_vert(verts_num);
   int islands_num = 0;
-  for (const int v : IndexRange(verts_num)) {
-    const int root = sets.find_root(v);
-    if (island_of_root[root] == -1) {
-      island_of_root[root] = islands_num++;
+  if (params.pieces.size() == int64_t(verts_num)) {
+    /* Pieces given per point, numbered from 0 in the order they first appear. */
+    Map<int, int> island_of_piece;
+    for (const int v : IndexRange(verts_num)) {
+      island_of_vert[v] = island_of_piece.lookup_or_add(params.pieces[v], islands_num);
+      if (island_of_vert[v] == islands_num) {
+        islands_num++;
+      }
     }
-    island_of_vert[v] = island_of_root[root];
+  }
+  else {
+    /* Islands: points joined by edges. */
+    DisjointSet<int> sets(verts_num);
+    for (const int2 edge : mesh.edges()) {
+      sets.join(edge[0], edge[1]);
+    }
+    Array<int> island_of_root(verts_num, -1);
+    for (const int v : IndexRange(verts_num)) {
+      const int root = sets.find_root(v);
+      if (island_of_root[root] == -1) {
+        island_of_root[root] = islands_num++;
+      }
+      island_of_vert[v] = island_of_root[root];
+    }
   }
   if (islands_num > mesh_collapse_max_islands) {
     *r_error = "Too many pieces, the limit is 20000";
@@ -286,7 +322,7 @@ Mesh *mesh_collapse(const Mesh &mesh, const MeshCollapseParams &params, const ch
   /* The ground: the given mesh, or a floor under the lowest point. */
   rbCollisionShape *floor = nullptr;
   if (params.ground != nullptr) {
-    floor = ground_shape(*params.ground, params.ground_to_space);
+    floor = ground_shape(*params.ground, params.ground_to_space, params.ground_cage);
   }
   if (floor == nullptr) {
     float3 min(FLT_MAX), max(-FLT_MAX);
@@ -358,6 +394,34 @@ Mesh *mesh_collapse(const Mesh &mesh, const MeshCollapseParams &params, const ch
   RB_dworld_delete(world);
   return result;
 #endif
+}
+
+Mesh *mesh_collapse(const Mesh &mesh, const MeshCollapseParams &params, const char **r_error)
+{
+  /* Objects are evaluated again for undo and for changes to other objects. Taking the result from
+   * the cache when nothing it depends on changed keeps that from simulating all over again. */
+  SimCacheHasher hasher("mesh_collapse");
+  hasher.add_mesh(mesh);
+  hasher.add(params.time);
+  hasher.add(params.gravity);
+  hasher.add(params.push);
+  hasher.add(params.seed);
+  hasher.add(params.friction);
+  hasher.add(params.bounce);
+  hasher.add(params.substeps);
+  hasher.add(params.mesh_to_space);
+  hasher.add(params.ground != nullptr);
+  if (params.ground != nullptr) {
+    hasher.add_mesh_shape(*params.ground);
+    hasher.add(params.ground_to_space);
+    hasher.add(params.ground_cage);
+  }
+  hasher.add_span(params.keep);
+  hasher.add_span(params.pieces);
+  return sim_cache_get(
+      hasher.finish(),
+      [&](const char **r_compute_error) { return mesh_collapse_compute(mesh, params, r_compute_error); },
+      r_error);
 }
 
 }  // namespace blender::geometry

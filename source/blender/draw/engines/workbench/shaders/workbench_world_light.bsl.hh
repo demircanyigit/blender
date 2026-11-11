@@ -45,6 +45,37 @@ float4 wrapped_lighting(float4 NL, float4 w)
   return clamp((NL + w) * denom, 0.0f, 1.0f);
 }
 
+/** Bands of light from one light, with an optional hard highlight and rim. */
+float3 get_toon_lighting(const WorldData &world_data, float3 base_color, float3 N, float3 I)
+{
+  float3 L = world_data.toon_light_vs.xyz;
+  float bands = max(world_data.toon_light_vs.w, 2.0f);
+  float softness = max(world_data.toon_shadow_color.a, 0.001f);
+
+  float t = saturate(dot(N, L) * 0.5f + 0.5f) * bands;
+  float band = min(floor(t), bands - 1.0f);
+  float step_up = smoothstep(1.0f - softness, 1.0f, t - band);
+  float level = saturate((band + step_up) / (bands - 1.0f));
+  float3 color = base_color * mix(world_data.toon_shadow_color.rgb, float3(1.0f), level);
+
+  if ((world_data.toon_flag & 2) != 0) {
+    float size = world_data.toon_highlight_size;
+    float threshold = 1.0f - size * size * 0.25f;
+    float spec = dot(N, normalize(L + I));
+    float edge = 0.001f + softness * 0.02f;
+    color += float3(0.8f * smoothstep(threshold - edge, threshold + edge, spec));
+  }
+
+  if ((world_data.toon_flag & 4) != 0) {
+    float rim = 1.0f - saturate(dot(N, I));
+    float start = 1.0f - world_data.toon_rim_color.a;
+    float edge = 0.01f + softness * 0.2f;
+    float amount = smoothstep(start - edge, start + edge, rim) * mix(0.4f, 1.0f, level);
+    color = mix(color, world_data.toon_rim_color.rgb, amount);
+  }
+  return color;
+}
+
 float3 get_world_lighting([[resource_table]] const workbench::World &world,
                           float3 base_color,
                           float roughness,
@@ -53,6 +84,10 @@ float3 get_world_lighting([[resource_table]] const workbench::World &world,
                           float3 I)
 {
   const WorldData &world_data = world.world_data;
+
+  if (world_data.toon_flag != 0) {
+    return get_toon_lighting(world_data, base_color, N, I);
+  }
 
   float3 specular_color, diffuse_color;
 

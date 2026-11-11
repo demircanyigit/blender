@@ -614,6 +614,271 @@ void OBJECT_OT_material_slot_copy(wmOperatorType *ot)
 /** \} */
 
 /* -------------------------------------------------------------------- */
+/** \name Material to Selected Operator
+ * \{ */
+
+enum {
+  MATERIAL_TO_SELECTED_ACTIVE_SLOT = 0,
+  MATERIAL_TO_SELECTED_NEW_SLOT = 1,
+};
+
+static bool material_to_selected_poll(bContext *C)
+{
+  const Material *ma = static_cast<const Material *>(
+      CTX_data_pointer_get_type(C, "material", RNA_Material).data);
+  return ma != nullptr;
+}
+
+static bool object_has_material(Object *ob, const Material *ma)
+{
+  for (short i = 1; i <= ob->totcol; i++) {
+    if (BKE_object_material_get(ob, i) == ma) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static wmOperatorStatus material_to_selected_exec(bContext *C, wmOperator *op)
+{
+  Main *bmain = CTX_data_main(C);
+  Material *ma = static_cast<Material *>(
+      CTX_data_pointer_get_type(C, "material", RNA_Material).data);
+  const bool new_slot = RNA_enum_get(op->ptr, "mode") == MATERIAL_TO_SELECTED_NEW_SLOT;
+
+  if (ma == nullptr) {
+    return OPERATOR_CANCELLED;
+  }
+
+  int changed = 0;
+  CTX_DATA_BEGIN (C, Object *, ob, selected_editable_objects) {
+    if (!OB_TYPE_SUPPORT_MATERIAL(ob->type) || ob->data == nullptr) {
+      continue;
+    }
+    if (!BKE_id_is_editable(bmain, static_cast<ID *>(ob->data))) {
+      continue;
+    }
+    /* Grease Pencil objects take Grease Pencil materials only, other objects take the others. */
+    if ((ob->type == OB_GREASE_PENCIL) != (ma->gp_style != nullptr)) {
+      continue;
+    }
+
+    if (new_slot) {
+      /* Objects sharing their data with an object done before already have it. */
+      if (object_has_material(ob, ma)) {
+        continue;
+      }
+      BKE_object_material_slot_add(bmain, ob);
+      BKE_object_material_assign(bmain, ob, ma, ob->totcol, BKE_MAT_ASSIGN_USERPREF);
+    }
+    else {
+      const short slot = (ob->totcol > 0) ? std::max<short>(ob->actcol, 1) : 1;
+      if (ob->totcol > 0 && BKE_object_material_get(ob, slot) == ma) {
+        continue;
+      }
+      BKE_object_material_assign(bmain, ob, ma, slot, BKE_MAT_ASSIGN_USERPREF);
+    }
+
+    DEG_id_tag_update(&ob->id, ID_RECALC_GEOMETRY);
+    DEG_id_tag_update(static_cast<ID *>(ob->data), ID_RECALC_GEOMETRY);
+    WM_event_add_notifier(C, NC_OBJECT | ND_DRAW, ob);
+    WM_event_add_notifier(C, NC_OBJECT | ND_OB_SHADING, ob);
+    changed++;
+  }
+  CTX_DATA_END;
+
+  if (changed == 0) {
+    BKE_report(op->reports, RPT_INFO, "No selected object needed the material");
+    return OPERATOR_CANCELLED;
+  }
+
+  DEG_relations_tag_update(bmain);
+  WM_event_add_notifier(C, NC_MATERIAL | ND_SHADING_LINKS, ma);
+  BKE_reportf(op->reports, RPT_INFO, "Gave \"%s\" to %d objects", ma->id.name + 2, changed);
+
+  return OPERATOR_FINISHED;
+}
+
+void OBJECT_OT_material_to_selected(wmOperatorType *ot)
+{
+  static const EnumPropertyItem mode_items[] = {
+      {MATERIAL_TO_SELECTED_ACTIVE_SLOT,
+       "ACTIVE_SLOT",
+       ICON_MATERIAL_TO_SELECTED,
+       "Active Slot",
+       "Put the material in the active slot of every selected object, adding a slot to objects "
+       "that have none"},
+      {MATERIAL_TO_SELECTED_NEW_SLOT,
+       "NEW_SLOT",
+       ICON_MATERIAL_SLOT_TO_SELECTED,
+       "New Slot",
+       "Add a new slot with the material to every selected object that does not have it yet"},
+      {0, nullptr, 0, nullptr, nullptr},
+  };
+
+  /* identifiers */
+  ot->name = "Material to Selected";
+  ot->idname = "OBJECT_OT_material_to_selected";
+  ot->description = "Give the active material to all selected objects";
+
+  /* API callbacks. */
+  ot->exec = material_to_selected_exec;
+  ot->poll = material_to_selected_poll;
+
+  /* flags */
+  ot->flag = OPTYPE_REGISTER | OPTYPE_UNDO;
+
+  ot->prop = RNA_def_enum(
+      ot->srna, "mode", mode_items, MATERIAL_TO_SELECTED_ACTIVE_SLOT, "Mode", "Where to put it");
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
+/** \name All Materials List Operators
+ *
+ * Add, duplicate and delete materials from the list of the All Materials tab, which shows every
+ * material of the file.
+ * \{ */
+
+static bool material_browse_poll(bContext *C)
+{
+  return CTX_wm_space_properties(C) != nullptr;
+}
+
+static bool material_browse_active_poll(bContext *C)
+{
+  const SpaceProperties *sbuts = CTX_wm_space_properties(C);
+  return sbuts != nullptr && sbuts->browse_material != nullptr;
+}
+
+/* Show the material in the tab. Nothing uses a material made here yet, so it gets a fake user,
+ * else saving the file would drop it. */
+static void material_browse_show_new(bContext *C, SpaceProperties *sbuts, Material *ma)
+{
+  /* New ID blocks start with one user for whatever creates them. */
+  id_us_min(&ma->id);
+  id_fake_user_set(&ma->id);
+
+  sbuts->browse_material = ma;
+  sbuts->preview = 1;
+  WM_event_add_notifier(C, NC_MATERIAL | NA_ADDED, ma);
+  WM_event_add_notifier(C, NC_SPACE | ND_SPACE_PROPERTIES, nullptr);
+}
+
+static wmOperatorStatus material_browse_new_exec(bContext *C, wmOperator * /*op*/)
+{
+  Main *bmain = CTX_data_main(C);
+  SpaceProperties *sbuts = CTX_wm_space_properties(C);
+
+  Material *ma = BKE_material_add(bmain, DATA_("Material"));
+  nodes::node_tree_shader_default(C, bmain, &ma->id);
+  material_browse_show_new(C, sbuts, ma);
+
+  return OPERATOR_FINISHED;
+}
+
+void MATERIAL_OT_browse_new(wmOperatorType *ot)
+{
+  /* identifiers */
+  ot->name = "New Material";
+  ot->idname = "MATERIAL_OT_browse_new";
+  ot->description = "Add a new material to the file";
+
+  /* API callbacks. */
+  ot->exec = material_browse_new_exec;
+  ot->poll = material_browse_poll;
+
+  /* flags */
+  ot->flag = OPTYPE_REGISTER | OPTYPE_UNDO | OPTYPE_INTERNAL;
+}
+
+static wmOperatorStatus material_browse_duplicate_exec(bContext *C, wmOperator * /*op*/)
+{
+  Main *bmain = CTX_data_main(C);
+  SpaceProperties *sbuts = CTX_wm_space_properties(C);
+
+  Material *ma = id_cast<Material *>(BKE_id_copy_ex(bmain,
+                                                    &sbuts->browse_material->id,
+                                                    nullptr,
+                                                    LIB_ID_COPY_DEFAULT | LIB_ID_COPY_ACTIONS));
+  material_browse_show_new(C, sbuts, ma);
+
+  return OPERATOR_FINISHED;
+}
+
+void MATERIAL_OT_browse_duplicate(wmOperatorType *ot)
+{
+  /* identifiers */
+  ot->name = "Duplicate Material";
+  ot->idname = "MATERIAL_OT_browse_duplicate";
+  ot->description = "Make a copy of the material";
+
+  /* API callbacks. */
+  ot->exec = material_browse_duplicate_exec;
+  ot->poll = material_browse_active_poll;
+
+  /* flags */
+  ot->flag = OPTYPE_REGISTER | OPTYPE_UNDO | OPTYPE_INTERNAL;
+}
+
+static wmOperatorStatus material_browse_delete_exec(bContext *C, wmOperator * /*op*/)
+{
+  Main *bmain = CTX_data_main(C);
+  SpaceProperties *sbuts = CTX_wm_space_properties(C);
+  Material *ma = sbuts->browse_material;
+  const int index = BLI_findindex(&bmain->materials, ma);
+
+  /* Clears the slots using it, and the pointer of this tab. */
+  BKE_id_delete(bmain, &ma->id);
+
+  /* Show the material that took its place in the list. */
+  const int count = BLI_listbase_count(&bmain->materials);
+  sbuts->browse_material = (count > 0) ? static_cast<Material *>(BLI_findlink(
+                                             &bmain->materials, std::min(index, count - 1))) :
+                                         nullptr;
+  sbuts->preview = 1;
+
+  DEG_relations_tag_update(bmain);
+  WM_event_add_notifier(C, NC_MATERIAL | NA_REMOVED, nullptr);
+  WM_event_add_notifier(C, NC_OBJECT | ND_OB_SHADING, nullptr);
+  WM_event_add_notifier(C, NC_WINDOW, nullptr);
+
+  return OPERATOR_FINISHED;
+}
+
+static wmOperatorStatus material_browse_delete_invoke(bContext *C,
+                                                      wmOperator *op,
+                                                      const wmEvent *event)
+{
+  const SpaceProperties *sbuts = CTX_wm_space_properties(C);
+  const ID *id = &sbuts->browse_material->id;
+  /* Ask first when something uses the material. */
+  if (id->us > ID_FAKE_USERS(id)) {
+    return WM_operator_confirm(C, op, event);
+  }
+  return material_browse_delete_exec(C, op);
+}
+
+void MATERIAL_OT_browse_delete(wmOperatorType *ot)
+{
+  /* identifiers */
+  ot->name = "Delete Material";
+  ot->idname = "MATERIAL_OT_browse_delete";
+  ot->description = "Delete the material from the file, emptying the slots that use it";
+
+  /* API callbacks. */
+  ot->invoke = material_browse_delete_invoke;
+  ot->exec = material_browse_delete_exec;
+  ot->poll = material_browse_active_poll;
+
+  /* flags */
+  ot->flag = OPTYPE_REGISTER | OPTYPE_UNDO | OPTYPE_INTERNAL;
+}
+
+/** \} */
+
+/* -------------------------------------------------------------------- */
 /** \name Material Slot Move Operator
  * \{ */
 

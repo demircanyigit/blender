@@ -121,6 +121,19 @@ void ED_operatortypes_mesh()
   WM_operatortype_append(MESH_OT_select_edge_loop_multi);
   WM_operatortype_append(MESH_OT_select_edge_ring_multi);
   WM_operatortype_append(MESH_OT_mark_seam);
+  WM_operatortype_append(MESH_OT_face_set_new);
+  WM_operatortype_append(MESH_OT_face_set_assign);
+  WM_operatortype_append(MESH_OT_face_set_select);
+  WM_operatortype_append(MESH_OT_face_set_clear);
+  WM_operatortype_append(MESH_OT_face_sets_from);
+  WM_operatortype_append(MESH_OT_face_set_select_boundary);
+  WM_operatortype_append(MESH_OT_face_set_select_more);
+  WM_operatortype_append(MESH_OT_face_set_select_less);
+  WM_operatortype_append(MESH_OT_face_set_merge);
+  WM_operatortype_append(MESH_OT_face_set_hide_others);
+  WM_operatortype_append(MESH_OT_face_set_randomize_colors);
+  WM_operatortype_append(MESH_OT_face_sets_to_vertex_groups);
+  WM_operatortype_append(MESH_OT_face_sets_to_materials);
   WM_operatortype_append(MESH_OT_mark_sharp);
 #if defined(WITH_FREESTYLE)
   WM_operatortype_append(MESH_OT_mark_freestyle_edge);

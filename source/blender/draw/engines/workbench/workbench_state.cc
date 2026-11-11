@@ -70,6 +70,19 @@ static bool operator!=(const View3DShading &a, const View3DShading &b)
   if (float3(a.object_outline_color) != float3(b.object_outline_color)) {
     return true;
   }
+  if (a.outline_type != b.outline_type || a.edge_flag != b.edge_flag ||
+      a.outline_width != b.outline_width || a.edge_strength != b.edge_strength ||
+      a.edge_crease_angle != b.edge_crease_angle ||
+      a.edge_depth_threshold != b.edge_depth_threshold ||
+      float3(a.edge_color) != float3(b.edge_color) || a.toon_flag != b.toon_flag ||
+      a.toon_bands != b.toon_bands || a.toon_softness != b.toon_softness ||
+      a.toon_highlight_size != b.toon_highlight_size ||
+      a.toon_rim_width != b.toon_rim_width ||
+      float3(a.toon_shadow_color) != float3(b.toon_shadow_color) ||
+      float3(a.toon_rim_color) != float3(b.toon_rim_color))
+  {
+    return true;
+  }
   if (a.xray_alpha != b.xray_alpha) {
     return true;
   }
@@ -244,7 +257,29 @@ void SceneState::init(const DRWContext *context,
                                                              V3D_SHADING_CAVITY_CURVATURE,
                                                              V3D_SHADING_CAVITY_BOTH);
   draw_shadows = shading.flag & V3D_SHADING_SHADOW;
-  draw_outline = shading.flag & V3D_SHADING_OBJECT_OUTLINE;
+  const bool draw_object_outline = shading.flag & V3D_SHADING_OBJECT_OUTLINE;
+  const bool draw_edge_lines = (shading.edge_flag & V3D_SHADING_EDGE_LINES) &&
+                               (shading.edge_flag & (V3D_SHADING_EDGE_DEPTH |
+                                                     V3D_SHADING_EDGE_CREASE |
+                                                     V3D_SHADING_EDGE_HARD));
+  draw_outline = draw_object_outline || draw_edge_lines;
+  draw_part_ids = draw_object_outline && shading.outline_type != V3D_SHADING_OUTLINE_OBJECT;
+  outline_flag = 0;
+  if (draw_object_outline) {
+    outline_flag |= WB_OUTLINE_OBJECT;
+  }
+  if (draw_part_ids) {
+    outline_flag |= WB_OUTLINE_PARTS;
+  }
+  if (draw_edge_lines && (shading.edge_flag & V3D_SHADING_EDGE_DEPTH)) {
+    outline_flag |= WB_EDGE_DEPTH;
+  }
+  if (draw_edge_lines && (shading.edge_flag & V3D_SHADING_EDGE_CREASE)) {
+    outline_flag |= WB_EDGE_CREASE;
+  }
+  if (draw_edge_lines && (shading.edge_flag & V3D_SHADING_EDGE_HARD)) {
+    outline_flag |= WB_EDGE_HARD;
+  }
   draw_dof = camera && camera->dof.flag & CAM_DOF_ENABLED &&
              shading.flag & V3D_SHADING_DEPTH_OF_FIELD;
 
@@ -313,6 +348,10 @@ ObjectState::ObjectState(const DRWContext *draw_ctx,
     color_type = V3D_SHADING_MATERIAL_COLOR;
   }
   else if (color_type == V3D_SHADING_VERTEX_COLOR && !has_color()) {
+    color_type = V3D_SHADING_MATERIAL_COLOR;
+  }
+  /* Only meshes have face sets. Sculpt Mode shows them with its own overlay. */
+  else if (color_type == V3D_SHADING_FACE_SET_COLOR && (ob->type != OB_MESH || sculpt_pbvh)) {
     color_type = V3D_SHADING_MATERIAL_COLOR;
   }
 

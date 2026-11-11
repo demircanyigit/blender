@@ -242,6 +242,9 @@ void mesh_buffer_cache_create_requested(TaskGraph & /*task_graph*/,
       case VBOType::SculptData:
         created_vbos[i] = extract_sculpt_data(mr);
         break;
+      case VBOType::PartId:
+        created_vbos[i] = extract_part_ids(mr);
+        break;
       case VBOType::Orco:
         created_vbos[i] = extract_orco(mr);
         break;
@@ -471,6 +474,9 @@ void mesh_buffer_cache_create_requested_subdiv(MeshBatchCache &cache,
   }
   if (vbos_to_create.contains(VBOType::SculptData)) {
     buffers.vbos.add_new(VBOType::SculptData, extract_sculpt_data_subdiv(mr, subdiv_cache));
+  }
+  if (vbos_to_create.contains(VBOType::PartId)) {
+    buffers.vbos.add_new(VBOType::PartId, extract_part_ids_subdiv(mr, subdiv_cache));
   }
   if (vbos_to_create.contains(VBOType::UVs)) {
     /* Make sure UVs are computed before edituv stuffs. */

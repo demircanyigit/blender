@@ -554,7 +554,7 @@ ModifierTypeInfo modifierType_LaplacianSmooth = {
     /*srna*/ &RNA_LaplacianSmoothModifier,
     /*type*/ ModifierTypeType::OnlyDeform,
     /*flags*/ eModifierTypeFlag_AcceptsMesh | eModifierTypeFlag_SupportsEditmode,
-    /*icon*/ ICON_MOD_SMOOTH,
+    /*icon*/ ICON_MOD_LAPLACIAN_SMOOTH,
 
     /*copy_data*/ BKE_modifier_copydata_generic,
 

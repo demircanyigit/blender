@@ -831,7 +831,7 @@ ModifierTypeInfo modifierType_CorrectiveSmooth = {
     /*srna*/ &RNA_CorrectiveSmoothModifier,
     /*type*/ ModifierTypeType::OnlyDeform,
     /*flags*/ eModifierTypeFlag_AcceptsMesh | eModifierTypeFlag_SupportsEditmode,
-    /*icon*/ ICON_MOD_SMOOTH,
+    /*icon*/ ICON_MOD_CORRECTIVE_SMOOTH,
 
     /*copy_data*/ copy_data,
 

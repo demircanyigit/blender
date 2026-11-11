@@ -19,6 +19,10 @@ class MATERIAL_MT_context_menu(Menu):
 
         layout.operator("material.copy", icon='COPYDOWN')
         layout.operator("object.material_slot_copy")
+        layout.operator("object.material_to_selected", text="Assign to Selected",
+                        icon='MATERIAL_TO_SELECTED').mode = 'ACTIVE_SLOT'
+        layout.operator("object.material_to_selected", text="Add Slot to Selected",
+                        icon='MATERIAL_SLOT_TO_SELECTED').mode = 'NEW_SLOT'
         layout.operator("material.paste", icon='PASTEDOWN')
         layout.operator("object.material_slot_remove_unused")
         layout.operator("object.material_slot_remove_all")
@@ -36,9 +40,133 @@ class MATERIAL_UL_matslots(UIList):
         layout.context_pointer_set("material_slot", slot)
 
         if ma:
+            if not ma.is_grease_pencil:
+                icon = material_ball_icon(ma)
             layout.prop(ma, "name", text="", emboss=False, icon_value=icon)
         else:
             layout.label(text="", icon_value=icon)
+
+
+def in_all_materials_tab(context):
+    """The All Materials tab also shows the panels of the Material tab, except the slot ones."""
+    return getattr(context.space_data, "context", None) == 'ALL_MATERIALS'
+
+
+_BALL_SIZE = 32
+# Per pixel: (shade, highlight, coverage), bottom row first like image pixels.
+_ball_shading = None
+# One icon per material, redrawn when its color changes: {session_uid: (color, preview)}.
+_ball_icons = {}
+_ball_previews = None
+
+
+def _ball_shading_map():
+    global _ball_shading
+    if _ball_shading is not None:
+        return _ball_shading
+    import math
+    size = _BALL_SIZE
+    center = size / 2.0
+    radius = size / 2.0 - 1.5
+    # Lit from the top left and the front.
+    lx, ly, lz = -0.45, 0.55, 0.70
+    norm = math.sqrt(lx * lx + ly * ly + lz * lz)
+    lx, ly, lz = lx / norm, ly / norm, lz / norm
+    shading = []
+    for y in range(size):
+        for x in range(size):
+            dx = (x + 0.5 - center) / radius
+            dy = (y + 0.5 - center) / radius
+            dist = math.sqrt(dx * dx + dy * dy)
+            # Smooth edge over about one pixel.
+            coverage = min(1.0, max(0.0, (1.0 - dist) * radius + 0.5))
+            if coverage <= 0.0:
+                shading.append((0.0, 0.0, 0.0))
+                continue
+            dz = math.sqrt(max(0.0, 1.0 - min(1.0, dist) ** 2))
+            # Light wrapped around the ball, so the shading falls off softly.
+            diffuse = max(0.0, (dx * lx + dy * ly + dz * lz + 0.4) / 1.4)
+            shade = 0.3 + 0.8 * diffuse
+            # Reflection of the light for the shine, broad and soft.
+            rz = 2.0 * dz * dz - 1.0
+            spec = max(0.0, (2.0 * dz * dx) * lx + (2.0 * dz * dy) * ly + rz * lz) ** 6
+            # A dark rim like the outline of the classic icons.
+            if dist > 1.0 - 1.4 / radius:
+                shade *= 0.35
+                spec = 0.0
+            shading.append((shade, spec * 0.25, coverage))
+    _ball_shading = shading
+    return shading
+
+
+def _linear_to_srgb(c):
+    c = max(0.0, min(1.0, c))
+    return c * 12.92 if c <= 0.0031308 else 1.055 * (c ** (1.0 / 2.4)) - 0.055
+
+
+def material_ball_icon(ma):
+    """A ball shaded in the material's Viewport Display color, without rendering it."""
+    global _ball_previews
+    color = tuple(round(c, 4) for c in ma.diffuse_color)
+    entry = _ball_icons.get(ma.session_uid)
+    if entry is not None and entry[0] == color:
+        return entry[1].icon_id
+
+    if _ball_previews is None:
+        import bpy.utils.previews
+        _ball_previews = bpy.utils.previews.new()
+    key = str(ma.session_uid)
+    preview = _ball_previews.get(key) or _ball_previews.new(key)
+
+    rgb = [_linear_to_srgb(c) for c in color[:3]]
+    pixels = []
+    for shade, spec, coverage in _ball_shading_map():
+        for c in rgb:
+            pixels.append(min(1.0, c * shade + spec))
+        pixels.append(coverage)
+    preview.icon_size = (_BALL_SIZE, _BALL_SIZE)
+    preview.icon_pixels_float = pixels
+    _ball_icons[ma.session_uid] = (color, preview)
+    return preview.icon_id
+
+
+class MATERIAL_UL_all(UIList):
+    """Every material of the file, with its number of users."""
+
+    def draw_item(self, _context, layout, _data, item, _icon, _active_data, _active_propname, _index):
+        ma = item
+        layout.context_pointer_set("id", ma)
+
+        row = layout.row(align=True)
+        # A ball in the Viewport Display color instead of a rendered preview.
+        row.prop(ma, "name", text="", emboss=False, icon_value=material_ball_icon(ma))
+        sub = row.row(align=True)
+        sub.alignment = 'RIGHT'
+        sub.label(text=str(ma.users))
+        sub.prop(ma, "use_fake_user", text="", emboss=False)
+
+
+class MATERIAL_PT_all_materials(Panel):
+    bl_label = "All Materials"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "all_materials"
+    bl_options = {'HIDE_HEADER'}
+
+    def draw(self, context):
+        layout = self.layout
+        space = context.space_data
+
+        row = layout.row()
+        row.template_list(
+            "MATERIAL_UL_all", "", bpy.data, "materials", space, "browse_material_index", rows=8,
+        )
+
+        col = row.column(align=True)
+        col.operator("material.browse_new", icon='ADD', text="")
+        col.operator("material.browse_delete", icon='REMOVE', text="")
+        col.separator()
+        col.operator("material.browse_duplicate", icon='DUPLICATE', text="")
 
 
 class MaterialButtonsPanel:
@@ -89,6 +217,8 @@ class EEVEE_MATERIAL_PT_context_material(MaterialButtonsPanel, Panel):
         if mat and mat.grease_pencil:
             return False
         if ob and ob.type == 'GREASEPENCIL':
+            return False
+        if in_all_materials_tab(context):
             return False
 
         return (
@@ -144,6 +274,15 @@ class EEVEE_MATERIAL_PT_context_material(MaterialButtonsPanel, Panel):
 
         elif mat:
             row.template_ID(space, "pin_id")
+
+        if ob and mat and any(o != ob for o in context.selected_editable_objects):
+            row = layout.row(align=True)
+            props = row.operator("object.material_to_selected", text="Assign to Selected",
+                                 icon='MATERIAL_TO_SELECTED')
+            props.mode = 'ACTIVE_SLOT'
+            props = row.operator("object.material_to_selected", text="Add Slot to Selected",
+                                 icon='MATERIAL_SLOT_TO_SELECTED')
+            props.mode = 'NEW_SLOT'
 
 
 def panel_node_draw(layout, ntree, _output_type, input_name):
@@ -450,6 +589,8 @@ class MATERIAL_PT_animation(MaterialButtonsPanel, Panel, PropertiesAnimationMixi
 classes = (
     MATERIAL_MT_context_menu,
     MATERIAL_UL_matslots,
+    MATERIAL_UL_all,
+    MATERIAL_PT_all_materials,
     MATERIAL_PT_preview,
     EEVEE_MATERIAL_PT_context_material,
     EEVEE_MATERIAL_PT_surface,

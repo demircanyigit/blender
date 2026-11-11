@@ -254,6 +254,18 @@ gpu::Batch *DRW_cache_mesh_surface_sculptcolors_get(Object *ob)
   return DRW_mesh_batch_cache_get_surface_sculpt(*ob, DRW_object_get_data_for_drawing<Mesh>(*ob));
 }
 
+gpu::Batch *DRW_cache_mesh_surface_face_sets_get(Object *ob)
+{
+  BLI_assert(ob->type == OB_MESH);
+  return DRW_mesh_batch_cache_get_surface_face_sets(DRW_object_get_data_for_drawing<Mesh>(*ob));
+}
+
+gpu::Batch *DRW_cache_mesh_surface_part_ids_get(Object *ob)
+{
+  BLI_assert(ob->type == OB_MESH);
+  return DRW_mesh_batch_cache_get_surface_part_ids(DRW_object_get_data_for_drawing<Mesh>(*ob));
+}
+
 gpu::Batch *DRW_cache_mesh_surface_weights_get(Object *ob)
 {
   BLI_assert(ob->type == OB_MESH);

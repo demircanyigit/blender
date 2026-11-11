@@ -102,6 +102,10 @@ set(SRC
   intern/MOD_util.cc
   intern/MOD_uvproject.cc
   intern/MOD_uvwarp.cc
+  intern/MOD_uv_scale.cc
+  intern/MOD_divide.cc
+  intern/MOD_join.cc
+  intern/MOD_blast.cc
   intern/MOD_volume_displace.cc
   intern/MOD_volume_to_mesh.cc
   intern/MOD_warp.cc
@@ -129,11 +133,21 @@ set(SRC
   intern/MOD_relax.cc
   intern/MOD_poly_edit.cc
   intern/MOD_collapse.cc
+  intern/MOD_colliders.cc
   intern/MOD_dice.cc
   intern/MOD_dissolve.cc
   intern/MOD_drape.cc
   intern/MOD_masonry.cc
+  intern/MOD_planks.cc
+  intern/MOD_roof.cc
+  intern/MOD_carve.cc
+  intern/MOD_cleanup.cc
+  intern/MOD_stonework.cc
+  intern/MOD_distribute.cc
+  intern/MOD_piece_id.cc
+  intern/MOD_materialize.cc
   intern/MOD_shatter.cc
+  intern/MOD_edge_damage.cc
   intern/MOD_edit_poly.cc
   intern/MOD_sweep.cc
   intern/MOD_symmetrize.cc
@@ -169,6 +183,7 @@ set(SRC
   intern/MOD_grease_pencil_util.hh
   intern/MOD_meshcache_util.hh
   intern/MOD_solidify_util.hh
+  intern/MOD_colliders.hh
   intern/MOD_ui_common.hh
   intern/MOD_util.hh
   intern/MOD_weightvg_util.hh

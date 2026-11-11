@@ -7,10 +7,14 @@
  */
 
 #include <cstring>
+#include <memory>
+#include <string>
 
 #include "BLI_bitmap.h"
 #include "BLI_math_matrix.h"
 #include "BLI_math_vector.h"
+#include "BLI_memory_cache.hh"
+#include "BLI_memory_counter.hh"
 
 #include "DNA_mesh_types.h"
 #include "DNA_modifier_types.h"
@@ -22,11 +26,15 @@
 #include "BKE_customdata.hh"
 #include "BKE_deform.hh"
 #include "BKE_image.hh"
+#include "BKE_lib_id.hh"
+#include "BKE_mesh.hh"
 #include "BKE_lattice.hh"
 
 #include "BKE_modifier.hh"
 
 #include "DEG_depsgraph_query.hh"
+
+#include "GEO_mesh_sim_cache.hh"
 
 #include "MOD_modifiertypes.hh"
 #include "MOD_util.hh"
@@ -323,6 +331,19 @@ void modifier_type_init(ModifierTypeInfo *types[])
   INIT_TYPE(Shatter);
   INIT_TYPE(Masonry);
   INIT_TYPE(Dissolve);
+  INIT_TYPE(UVScale);
+  INIT_TYPE(EdgeDamage);
+  INIT_TYPE(Divide);
+  INIT_TYPE(Join);
+  INIT_TYPE(Blast);
+  INIT_TYPE(Planks);
+  INIT_TYPE(Roof);
+  INIT_TYPE(Carve);
+  INIT_TYPE(Materialize);
+  INIT_TYPE(Cleanup);
+  INIT_TYPE(Stonework);
+  INIT_TYPE(Distribute);
+  INIT_TYPE(PieceId);
   INIT_TYPE(UVWMap);
   INIT_TYPE(Bend);
   INIT_TYPE(Twist);
@@ -342,6 +363,88 @@ void modifier_type_init(ModifierTypeInfo *types[])
   INIT_TYPE(ShapeKeyInbetween);
   INIT_TYPE(PolySelect);
 #undef INIT_TYPE
+}
+
+namespace {
+
+class ModifierCachedValue : public memory_cache::CachedValue {
+ public:
+  Mesh *mesh = nullptr;
+  /** The modifier's error or warning, empty for none. */
+  std::string message;
+
+  ~ModifierCachedValue() override
+  {
+    if (mesh != nullptr) {
+      BKE_id_free(nullptr, mesh);
+    }
+  }
+
+  void count_memory(MemoryCounter &memory) const override
+  {
+    if (mesh != nullptr) {
+      mesh->count_memory(memory);
+    }
+  }
+};
+
+}  // namespace
+
+Mesh *MOD_cached_modify_mesh(
+    ModifierData *md,
+    const ModifierEvalContext *ctx,
+    Mesh *mesh,
+    const FunctionRef<Mesh *(ModifierData *, const ModifierEvalContext *, Mesh *)> compute,
+    const FunctionRef<void(geometry::SimCacheHasher &)> extra)
+{
+  const ModifierTypeInfo *info = BKE_modifier_get_info(ModifierType(md->type));
+  geometry::SimCacheHasher hasher("modifier");
+  hasher.add(md->type);
+  hasher.add(ctx->flag);
+  /* The settings: everything after the part all modifiers share. */
+  hasher.add_bytes(reinterpret_cast<const char *>(md) + sizeof(ModifierData),
+                   int64_t(info->struct_size) - int64_t(sizeof(ModifierData)));
+  hasher.add_mesh(*mesh);
+  if (extra) {
+    extra(hasher);
+  }
+
+  bool computed = false;
+  Mesh *own_result = nullptr;
+  const std::shared_ptr<const ModifierCachedValue> value =
+      std::dynamic_pointer_cast<const ModifierCachedValue>(
+          geometry::sim_cache_get_value(hasher.finish(), [&]() {
+            computed = true;
+            auto value = std::make_unique<ModifierCachedValue>();
+            if (md->error) {
+              MEM_delete(md->error);
+              md->error = nullptr;
+            }
+            Mesh *result = compute(md, ctx, mesh);
+            if (md->error) {
+              value->message = md->error;
+            }
+            if (result != nullptr) {
+              /* The cache keeps its own copy. The arrays are shared, so it is cheap. */
+              value->mesh = BKE_mesh_copy_for_eval(*result);
+            }
+            own_result = result;
+            return value;
+          }));
+  if (computed) {
+    /* The modifier ran: its result and message are as it made them. */
+    return own_result;
+  }
+  if (!value) {
+    return compute(md, ctx, mesh);
+  }
+  if (!value->message.empty()) {
+    BKE_modifier_set_warning(ctx->object, md, "%s", value->message.c_str());
+  }
+  if (value->mesh == nullptr) {
+    return nullptr;
+  }
+  return BKE_mesh_copy_for_eval(*value->mesh);
 }
 
 }  // namespace blender

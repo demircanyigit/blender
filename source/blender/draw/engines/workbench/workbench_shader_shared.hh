@@ -48,6 +48,26 @@ struct [[host_shared]] WorldData {
   int _pad1;
 
   float4 background_color;
+
+  /** rgb: edge line color, a: strength. */
+  float4 edge_color;
+  float outline_width;
+  float edge_crease_cos;
+  float edge_depth_threshold;
+  /** What the outline pass draws, see #OutlinePass. */
+  int outline_flag;
+
+  /** xyz: direction to the toon light in view space, w: bands. */
+  float4 toon_light_vs;
+  /** rgb: color of the dark bands, a: softness. */
+  float4 toon_shadow_color;
+  /** rgb: rim color, a: rim width. */
+  float4 toon_rim_color;
+  float toon_highlight_size;
+  /** 0 when the lighting isn't toon, else 1, plus 2 for the highlight and 4 for the rim. */
+  int toon_flag;
+  float _pad_toon0;
+  float _pad_toon1;
 };
 
 struct [[host_shared]] ExtrudedFrustum {

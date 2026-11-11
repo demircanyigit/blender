@@ -33,6 +33,7 @@
 #include "RNA_access.hh"
 #include "RNA_prototypes.hh"
 
+#include "GEO_mesh_sim_cache.hh"
 #include "GEO_mesh_masonry.hh"
 #include "GEO_randomize.hh"
 
@@ -79,7 +80,7 @@ static bool uses_center(const int pattern)
   return ELEM(MasonryPattern(pattern), MasonryPattern::Fan, MasonryPattern::Radial);
 }
 
-static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh *mesh)
+static Mesh *modify_mesh_compute(ModifierData *md, const ModifierEvalContext *ctx, Mesh *mesh)
 {
   const MasonryModifierData &mmd = *reinterpret_cast<MasonryModifierData *>(md);
   if (mesh->faces_num == 0) {
@@ -105,6 +106,7 @@ static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh 
   params.soldier_rows = mmd.soldier_rows;
   params.border = mmd.flag & MOD_MASONRY_BORDER;
   params.toothed = mmd.flag & MOD_MASONRY_TOOTHED;
+  params.continuous_walls = mmd.flag & MOD_MASONRY_CONTINUOUS_WALLS;
   params.seed = mmd.seed;
   if (mmd.center != nullptr && mmd.center != ctx->object) {
     const float4x4 to_self = ctx->object->world_to_object() * mmd.center->object_to_world();
@@ -179,6 +181,10 @@ static void panel_draw(const bContext * /*C*/, Panel *panel)
   options.prop(ptr, "use_backing", UI_ITEM_NONE, std::nullopt, ICON_NONE);
   options.prop(ptr, "use_border", UI_ITEM_NONE, std::nullopt, ICON_NONE);
   options.prop(ptr, "use_toothed", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+  ui::Layout &continuity = options.column(true);
+  continuity.active_set(pattern <= int(MasonryPattern::Rubble) &&
+                        RNA_enum_get(ptr, "direction") == int(geometry::MasonryDirection::Auto));
+  continuity.prop(ptr, "use_continuous_walls", UI_ITEM_NONE, std::nullopt, ICON_NONE);
 
   modifier_vgroup_ui(layout, ptr, &ob_ptr, "vertex_group", "invert_vertex_group", std::nullopt);
 
@@ -231,6 +237,19 @@ static void panel_register(ARegionType *region_type)
       region_type, "variation", "Variation", nullptr, variation_panel_draw, panel_type);
   modifier_subpanel_register(
       region_type, "materials", "", materials_panel_header_draw, materials_panel_draw, panel_type);
+}
+
+/* Taken from the cache when nothing it depends on changed, see #MOD_cached_modify_mesh. */
+static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh *mesh)
+{
+  const MasonryModifierData &mmd = *reinterpret_cast<MasonryModifierData *>(md);
+  return MOD_cached_modify_mesh(
+      md, ctx, mesh, modify_mesh_compute, [&](geometry::SimCacheHasher &hasher) {
+        if (mmd.center != nullptr) {
+          hasher.add(mmd.center->object_to_world());
+          hasher.add(ctx->object->object_to_world());
+        }
+      });
 }
 
 ModifierTypeInfo modifierType_Masonry = {

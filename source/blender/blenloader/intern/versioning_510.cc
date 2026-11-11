@@ -19,10 +19,14 @@
 #include "DNA_light_types.h"
 #include "DNA_material_types.h"
 #include "DNA_mesh_types.h"
+#include "DNA_modifier_types.h"
 #include "DNA_node_types.h"
+#include "DNA_object_types.h"
+#include "DNA_scene_types.h"
 #include "DNA_screen_types.h"
 #include "DNA_sequence_types.h"
 #include "DNA_space_types.h"
+#include "DNA_view3d_types.h"
 #include "DNA_windowmanager_types.h"
 #include "DNA_workspace_types.h"
 
@@ -927,6 +931,54 @@ void blo_do_versions_510(FileData *fd, Library * /*lib*/, Main *bmain)
     }
   }
 
+  /* Stone Damage was replaced by Edge Damage, which works differently. Start it over from the
+   * defaults, keeping only the group and the attribute name. */
+  if (!DNA_struct_member_exists(
+          fd->filesdna, "EdgeDamageModifierData", "int", "smooth_iterations"))
+  {
+    for (Object &object : bmain->objects) {
+      for (ModifierData &modifier : object.modifiers) {
+        if (modifier.type != eModifierType_EdgeDamage) {
+          continue;
+        }
+        auto &data = *reinterpret_cast<EdgeDamageModifierData *>(&modifier);
+        EdgeDamageModifierData defaults{};
+        STRNCPY(defaults.vertex_group, data.vertex_group);
+        if (data.damage_attribute[0]) {
+          STRNCPY(defaults.damage_attribute, data.damage_attribute);
+        }
+        memcpy(reinterpret_cast<char *>(&data) + sizeof(ModifierData),
+               reinterpret_cast<const char *>(&defaults) + sizeof(ModifierData),
+               sizeof(EdgeDamageModifierData) - sizeof(ModifierData));
+      }
+    }
+  }
+
+  /* Files from official builds don't have this, whatever their version is. */
+  if (!DNA_struct_member_exists(fd->filesdna, "DecimateModifierData", "int", "backend")) {
+    const DecimateModifierData defaults{};
+    for (Object &object : bmain->objects) {
+      for (ModifierData &md : object.modifiers) {
+        if (md.type != eModifierType_Decimate) {
+          continue;
+        }
+        auto &data = *reinterpret_cast<DecimateModifierData *>(&md);
+        data.backend = defaults.backend;
+        data.target_mode = defaults.target_mode;
+        data.target_face_count = defaults.target_face_count;
+        data.backend_flags = defaults.backend_flags;
+        data.error_limit = defaults.error_limit;
+        data.feature_angle = defaults.feature_angle;
+        data.uv_weight = defaults.uv_weight;
+        data.normal_weight = defaults.normal_weight;
+        data.virtual_distance = defaults.virtual_distance;
+        data.max_normal_change = defaults.max_normal_change;
+        data.max_aspect_ratio = defaults.max_aspect_ratio;
+        data.uv_map[0] = '\0';
+      }
+    }
+  }
+
   /* Files from official builds don't have this, whatever their version is. */
   if (!DNA_struct_member_exists(fd->filesdna, "Material", "float", "viewport_color_factor")) {
     for (Material &material : bmain->materials) {
@@ -954,6 +1006,58 @@ void blo_do_versions_510(FileData *fd, Library * /*lib*/, Main *bmain)
         if (shelf) {
           shelf->alignment = RGN_ALIGN_TOP;
           shelf->flag = RGN_FLAG_DYNAMIC_SIZE | RGN_FLAG_NO_USER_RESIZE;
+        }
+      }
+    }
+  }
+
+  /* Outline and edge line settings of Solid shading, missing from files of official builds. */
+  if (!DNA_struct_member_exists(fd->filesdna, "View3DShading", "float", "outline_width")) {
+    const View3DShading defaults{};
+    auto set_defaults = [&](View3DShading &shading) {
+      shading.outline_type = defaults.outline_type;
+      shading.edge_flag = defaults.edge_flag;
+      shading.outline_width = defaults.outline_width;
+      copy_v3_v3(shading.edge_color, defaults.edge_color);
+      shading.edge_strength = defaults.edge_strength;
+      shading.edge_crease_angle = defaults.edge_crease_angle;
+      shading.edge_depth_threshold = defaults.edge_depth_threshold;
+    };
+    for (Scene &scene : bmain->scenes) {
+      set_defaults(scene.display.shading);
+    }
+    for (bScreen &screen : bmain->screens) {
+      for (ScrArea &area : screen.areabase) {
+        for (SpaceLink &sl : area.spacedata) {
+          if (sl.spacetype == SPACE_VIEW3D) {
+            set_defaults(reinterpret_cast<View3D &>(sl).shading);
+          }
+        }
+      }
+    }
+  }
+
+  /* Toon lighting settings of Solid shading, missing from files of official builds. */
+  if (!DNA_struct_member_exists(fd->filesdna, "View3DShading", "float", "toon_softness")) {
+    const View3DShading defaults{};
+    auto set_defaults = [&](View3DShading &shading) {
+      shading.toon_flag = defaults.toon_flag;
+      shading.toon_bands = defaults.toon_bands;
+      shading.toon_softness = defaults.toon_softness;
+      copy_v3_v3(shading.toon_shadow_color, defaults.toon_shadow_color);
+      shading.toon_highlight_size = defaults.toon_highlight_size;
+      copy_v3_v3(shading.toon_rim_color, defaults.toon_rim_color);
+      shading.toon_rim_width = defaults.toon_rim_width;
+    };
+    for (Scene &scene : bmain->scenes) {
+      set_defaults(scene.display.shading);
+    }
+    for (bScreen &screen : bmain->screens) {
+      for (ScrArea &area : screen.areabase) {
+        for (SpaceLink &sl : area.spacedata) {
+          if (sl.spacetype == SPACE_VIEW3D) {
+            set_defaults(reinterpret_cast<View3D &>(sl).shading);
+          }
         }
       }
     }

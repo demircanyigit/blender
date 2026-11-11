@@ -10,6 +10,7 @@
 
 #include "MEM_guardedalloc.h"
 
+#include "DNA_material_types.h"
 #include "DNA_scene_types.h"
 #include "DNA_sequence_types.h"
 #include "DNA_space_types.h"
@@ -177,13 +178,14 @@ void ED_buttons_visible_tabs_menu(bContext *C, ui::Layout *layout, void * /*arg*
       "show_properties_tool",        "show_properties_render",
       "show_properties_output",      "show_properties_view_layer",
       "show_properties_scene",       "show_properties_world",
-      "show_properties_collection",  "show_properties_object",
-      "show_properties_modifiers",   "show_properties_effects",
-      "show_properties_particles",   "show_properties_physics",
-      "show_properties_constraints", "show_properties_data",
-      "show_properties_bone",        "show_properties_bone_constraints",
-      "show_properties_material",    "show_properties_texture",
-      "show_properties_strip",       "show_properties_strip_modifier",
+      "show_properties_all_materials", "show_properties_collection",
+      "show_properties_object",      "show_properties_modifiers",
+      "show_properties_effects",     "show_properties_particles",
+      "show_properties_physics",     "show_properties_constraints",
+      "show_properties_data",        "show_properties_bone",
+      "show_properties_bone_constraints", "show_properties_material",
+      "show_properties_texture",     "show_properties_strip",
+      "show_properties_strip_modifier",
   };
 
   for (StringRefNull item : filter_items) {
@@ -224,6 +226,7 @@ Vector<eSpaceButtons_Context> ED_buttons_tabs_list(const SpaceProperties *sbuts,
   add_tab(BCONTEXT_VIEW_LAYER);
   add_tab(BCONTEXT_SCENE);
   add_tab(BCONTEXT_WORLD);
+  add_tab(BCONTEXT_ALL_MATERIALS);
 
   add_spacer();
 
@@ -275,6 +278,8 @@ static const char *buttons_main_region_context_string(const short mainb)
       return "data";
     case BCONTEXT_MATERIAL:
       return "material";
+    case BCONTEXT_ALL_MATERIALS:
+      return "all_materials";
     case BCONTEXT_TEXTURE:
       return "texture";
     case BCONTEXT_PARTICLE:
@@ -304,13 +309,23 @@ static const char *buttons_main_region_context_string(const short mainb)
   return "";
 }
 
+/* The panel contexts of a tab. The All Materials tab also shows the panels of the Material tab,
+ * for the material picked in its list. */
+static void buttons_main_region_contexts(const short mainb, const char *r_contexts[3])
+{
+  r_contexts[0] = buttons_main_region_context_string(mainb);
+  r_contexts[1] = (mainb == BCONTEXT_ALL_MATERIALS) ? "material" : nullptr;
+  r_contexts[2] = nullptr;
+}
+
 static void buttons_main_region_layout_properties(const bContext *C,
                                                   SpaceProperties *sbuts,
                                                   ARegion *region)
 {
   buttons_context_compute(C, sbuts);
 
-  const char *contexts[2] = {buttons_main_region_context_string(sbuts->mainb), nullptr};
+  const char *contexts[3];
+  buttons_main_region_contexts(sbuts->mainb, contexts);
 
   ED_region_panels_layout_ex(C,
                              region,
@@ -354,7 +369,8 @@ bool ED_buttons_tab_has_search_result(SpaceProperties *sbuts, const int index)
 
 static bool property_search_for_context(const bContext *C, ARegion *region, SpaceProperties *sbuts)
 {
-  const char *contexts[2] = {buttons_main_region_context_string(sbuts->mainb), nullptr};
+  const char *contexts[3];
+  buttons_main_region_contexts(sbuts->mainb, contexts);
 
   if (sbuts->mainb == BCONTEXT_TOOL) {
     return false;
@@ -955,6 +971,7 @@ static void buttons_id_remap(ScrArea * /*area*/,
   if (mappings.apply(&sbuts->pinid, ID_REMAP_APPLY_DEFAULT) == ID_REMAP_RESULT_SOURCE_UNASSIGNED) {
     sbuts->flag &= ~SB_PIN_CONTEXT;
   }
+  mappings.apply(reinterpret_cast<ID **>(&sbuts->browse_material), ID_REMAP_APPLY_DEFAULT);
 
   if (sbuts->path) {
     ButsContextPath *path = static_cast<ButsContextPath *>(sbuts->path);
@@ -1014,6 +1031,7 @@ static void buttons_foreach_id(SpaceLink *space_link, LibraryForeachIDData *data
   const bool is_readonly = (data_flags & IDWALK_READONLY) != 0;
 
   BKE_LIB_FOREACHID_PROCESS_ID(data, sbuts->pinid, IDWALK_CB_DIRECT_WEAK_LINK);
+  BKE_LIB_FOREACHID_PROCESS_IDSUPER(data, sbuts->browse_material, IDWALK_CB_DIRECT_WEAK_LINK);
   if (!is_readonly) {
     if (sbuts->pinid == nullptr) {
       sbuts->flag &= ~SB_PIN_CONTEXT;

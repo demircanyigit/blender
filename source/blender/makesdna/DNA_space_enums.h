@@ -112,6 +112,8 @@ enum eSpaceButtons_Context {
   BCONTEXT_COLLECTION = 17,
   BCONTEXT_STRIP = 18,
   BCONTEXT_STRIP_MODIFIER = 19,
+  /** Every material of the file, not only the ones of the active object. */
+  BCONTEXT_ALL_MATERIALS = 20,
 
   /* Keep last. */
   BCONTEXT_TOT,

@@ -1,12 +1,18 @@
 # About this fork
 
-An unofficial fork based on the Blender `v5.1.0` tag. It adds 52 modifiers and a list view of the
+An unofficial fork based on the Blender `v5.1.0` tag. It adds 63 modifiers and a list view of the
 modifier stack, new geometry nodes, the Toolbox and Shelf editors, more color attribute options for
 the Solid shading mode, and the classic 2.79 look with colored icons and embossed widgets. It isn't
 made or supported by the Blender Foundation. The [main read-me](../../README.md) lists everything.
 
+- [MASONRY.md](MASONRY.md): continuous brick layouts over beveled walls
+- [UV_SCALE.md](UV_SCALE.md): UV scaling and matching texel density between objects
 - [NODES.md](NODES.md): what each node does, its inputs and its limits
 - [VIEWPORT_COLORS.md](VIEWPORT_COLORS.md): the material options
+- [ALL_MATERIALS.md](ALL_MATERIALS.md): the All Materials tab and giving a material to all selected objects
+- [FACE_SETS.md](FACE_SETS.md): seeing and setting face sets in Object and Edit Mode
+- [SOLID_OUTLINES.md](SOLID_OUTLINES.md): outlines around parts, materials and face sets, and edge lines
+- [TOON_SHADING.md](TOON_SHADING.md): toon lighting in Solid mode
 - [CLASSIC_UI.md](CLASSIC_UI.md): the node icons and the emboss
 - [BUILD_WINDOWS.md](BUILD_WINDOWS.md): how to build it
 

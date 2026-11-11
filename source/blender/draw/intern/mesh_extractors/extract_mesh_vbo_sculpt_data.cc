@@ -23,6 +23,8 @@ static const GPUVertFormat &get_sculpt_data_format()
   static const GPUVertFormat format = []() {
     GPUVertFormat format{};
     GPU_vertformat_attr_add(&format, "fset", gpu::VertAttrType::UNORM_8_8_8_8);
+    /* Read as the color attribute by Workbench, for the Face Set solid color. */
+    GPU_vertformat_alias_add(&format, "ac");
     GPU_vertformat_attr_add(&format, "msk", gpu::VertAttrType::SFLOAT_32);
     return format;
   }();

@@ -36,18 +36,37 @@ set(SRC
   intern/mesh_face_extrude.cc
   intern/radial_array.cc
   intern/uvw_map.cc
+  intern/uv_scale.cc
+  intern/mesh_divide.cc
+  intern/mesh_blast.cc
   intern/volume_select.cc
   intern/join_geometries.cc
   intern/merge_curves.cc
   intern/merge_layers.cc
   intern/mesh_decimate.cc
+  intern/decimate_backends.cc
+  intern/decimate_cgal.cc
+  intern/decimate_wild.cc
+  intern/decimate_backend_types.hh
   intern/mesh_clip.cc
   intern/mesh_collapse.cc
   intern/mesh_dice.cc
+  intern/edge_damage.cc
   intern/mesh_dissolve.cc
   intern/mesh_drape.cc
+  intern/mesh_boards.cc
+  intern/mesh_boards.hh
   intern/mesh_masonry.cc
+  intern/mesh_planks.cc
+  intern/mesh_roof.cc
+  intern/mesh_carve.cc
+  intern/mesh_carve_layout.cc
+  intern/mesh_cleanup.cc
+  intern/mesh_stonework.cc
+  intern/mesh_distribute.cc
+  intern/mesh_materialize.cc
   intern/mesh_shatter.cc
+  intern/mesh_sim_cache.cc
   intern/mesh_smooth.cc
   intern/mesh_voronoi_fracture.cc
   intern/pmp_mesh_conversion.hh
@@ -108,6 +127,10 @@ set(SRC
   GEO_mesh_face_extrude.hh
   GEO_radial_array.hh
   GEO_uvw_map.hh
+  GEO_uv_scale.hh
+  GEO_mesh_divide.hh
+  GEO_mesh_blast.hh
+  GEO_decimate_backends.hh
   GEO_volume_select.hh
   GEO_join_geometries.hh
   GEO_merge_curves.hh
@@ -116,10 +139,19 @@ set(SRC
   GEO_mesh_clip.hh
   GEO_mesh_collapse.hh
   GEO_mesh_dice.hh
+  GEO_edge_damage.hh
   GEO_mesh_dissolve.hh
   GEO_mesh_drape.hh
   GEO_mesh_masonry.hh
+  GEO_mesh_planks.hh
+  GEO_mesh_roof.hh
+  GEO_mesh_carve.hh
+  GEO_mesh_cleanup.hh
+  GEO_mesh_stonework.hh
+  GEO_mesh_distribute.hh
+  GEO_mesh_materialize.hh
   GEO_mesh_shatter.hh
+  GEO_mesh_sim_cache.hh
   GEO_mesh_smooth.hh
   GEO_mesh_voronoi_fracture.hh
   GEO_mesh_boolean.hh
@@ -168,7 +200,10 @@ set(LIB
   PRIVATE bf::intern::atomic
   PRIVATE bf::intern::guardedalloc
   PRIVATE bf::extern::curve_fit_nd
+  PRIVATE bf::extern::xxhash
   PRIVATE bf::extern::pmp
+  PRIVATE bf::extern::meshoptimizer
+  PRIVATE bf::dependencies::eigen
   PRIVATE bf::dependencies::optional::manifold
   PRIVATE bf::dependencies::optional::gmp
 )
@@ -199,6 +234,19 @@ if(WITH_QUADRIFLOW)
 endif()
 
 blender_add_lib(bf_geometry "${SRC}" "${INC}" "${INC_SYS}" "${LIB}")
+if(WITH_DECIMATE_CGAL)
+  set(DECIMATE_DEPS_DIR "${CMAKE_SOURCE_DIR}/lib/decimation" CACHE PATH "CGAL and Boost header dependencies")
+  if(NOT EXISTS "${DECIMATE_DEPS_DIR}/cgal/include/CGAL/Surface_mesh.h" OR
+     NOT EXISTS "${DECIMATE_DEPS_DIR}/boost/boost/config.hpp")
+    message(FATAL_ERROR "CGAL Decimate dependencies missing. Run: python build_files/utils/make_decimate_deps.py")
+  endif()
+  target_include_directories(bf_geometry SYSTEM PRIVATE
+    "${DECIMATE_DEPS_DIR}/cgal/include" "${DECIMATE_DEPS_DIR}/boost")
+  target_compile_definitions(bf_geometry PRIVATE WITH_DECIMATE_CGAL CGAL_EIGEN3_ENABLED BOOST_ALL_NO_LIB)
+  if(MSVC)
+    set_source_files_properties(intern/decimate_cgal.cc PROPERTIES COMPILE_OPTIONS "/bigobj;/fp:strict")
+  endif()
+endif()
 add_library(bf::geometry ALIAS bf_geometry)
 
 if(WITH_GTESTS)

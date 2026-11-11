@@ -86,6 +86,8 @@ struct MeshMasonryParams {
   bool border = false;
   /** Blocks at the edge of a face stick out whole instead of being cut. */
   bool toothed = false;
+  /** Unfold connected vertical walls and place rigid blocks across their internal edges. */
+  bool continuous_walls = false;
   int seed = 0;
   /** Center of Fan and Radial, in mesh space. The middle of the mesh when unset. */
   std::optional<float3> center;

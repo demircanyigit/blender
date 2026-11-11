@@ -177,6 +177,19 @@ enum ModifierType {
   eModifierType_Shatter = 136,
   eModifierType_Masonry = 137,
   eModifierType_Dissolve = 138,
+  eModifierType_UVScale = 139,
+  eModifierType_EdgeDamage = 140,
+  eModifierType_Divide = 141,
+  eModifierType_Join = 142,
+  eModifierType_Blast = 143,
+  eModifierType_Planks = 144,
+  eModifierType_Roof = 145,
+  eModifierType_Carve = 146,
+  eModifierType_Materialize = 147,
+  eModifierType_Cleanup = 148,
+  eModifierType_Stonework = 149,
+  eModifierType_Distribute = 150,
+  eModifierType_PieceId = 151,
   NUM_MODIFIER_TYPES,
 };
 
@@ -789,6 +802,23 @@ enum DecimateModifierMode {
   MOD_DECIM_MODE_DISSOLVE = 2,
 };
 
+enum DecimateModifierBackend {
+  MOD_DECIMATE_BACKEND_BLENDER = 0,
+  MOD_DECIMATE_BACKEND_PMP = 1,
+  MOD_DECIMATE_BACKEND_MESHOPT = 2,
+  MOD_DECIMATE_BACKEND_AGGRESSIVE = 3,
+  MOD_DECIMATE_BACKEND_CGAL = 4,
+  MOD_DECIMATE_BACKEND_WILD = 5,
+};
+
+enum DecimateBackendFlag {
+  MOD_DECIMATE_KEEP_BOUNDARY = (1 << 0),
+  MOD_DECIMATE_KEEP_UV = (1 << 1),
+  MOD_DECIMATE_KEEP_MATERIALS = (1 << 2),
+  MOD_DECIMATE_KEEP_SHARP = (1 << 3),
+  MOD_DECIMATE_MERGE_COINCIDENT = (1 << 4),
+};
+
 struct DecimateModifierData {
   ModifierData modifier;
 
@@ -809,6 +839,23 @@ struct DecimateModifierData {
   short flag = 0;
   /** #DecimateModifierMode. */
   short mode = 0;
+
+  /** Alternative triangle simplifiers, used only in Collapse mode. */
+  int backend = MOD_DECIMATE_BACKEND_BLENDER;
+  /** 0: ratio, 1: target triangles. */
+  int target_mode = 0;
+  int target_face_count = 1000;
+  int backend_flags = MOD_DECIMATE_KEEP_BOUNDARY | MOD_DECIMATE_KEEP_UV |
+                      MOD_DECIMATE_KEEP_MATERIALS | MOD_DECIMATE_KEEP_SHARP |
+                      MOD_DECIMATE_MERGE_COINCIDENT;
+  float error_limit = 0;
+  float feature_angle = DEG2RADF(45.0f);
+  float uv_weight = 1;
+  float normal_weight = 0.2f;
+  float virtual_distance = 0;
+  float max_normal_change = 0;
+  float max_aspect_ratio = 10;
+  char uv_map[68] = "";
 
   /** runtime only. */
   int face_count = 0;
@@ -2804,6 +2851,447 @@ struct PolyEditModifierData {
   char selection_attribute[68] = "selection";
 };
 
+enum BlastModifierMetric {
+  MOD_BLAST_FACE_COUNT = 0,
+  MOD_BLAST_AREA = 1,
+  MOD_BLAST_VOLUME = 2,
+  MOD_BLAST_BOUNDS_SIZE = 3,
+};
+enum BlastModifierFilter {
+  MOD_BLAST_THRESHOLD = 0,
+  MOD_BLAST_LARGEST = 1,
+  MOD_BLAST_THRESHOLD_LARGEST = 2,
+};
+enum BlastModifierFlag {
+  MOD_BLAST_INVERT = (1 << 0),
+};
+struct BlastModifierData {
+  ModifierData modifier;
+  int metric = MOD_BLAST_AREA;
+  int filter = MOD_BLAST_THRESHOLD;
+  int minimum_faces = 10;
+  int keep_count = 1;
+  float minimum_area = 0.01f;
+  float minimum_volume = 0.001f;
+  float minimum_size = 0.1f;
+  int flag = 0;
+};
+
+/** #PlanksModifierData.flag */
+enum PlanksModifierFlag {
+  MOD_PLANKS_BORDER = (1 << 0),
+  MOD_PLANKS_SUPPORTS = (1 << 1),
+  MOD_PLANKS_KEEP_SURFACE = (1 << 2),
+  MOD_PLANKS_SLATTED = (1 << 3),
+  MOD_PLANKS_FRAME = (1 << 4),
+  MOD_PLANKS_CORNER_POSTS = (1 << 5),
+  MOD_PLANKS_INVERT_VGROUP = (1 << 6),
+};
+
+/** Planks modifier: floors and walls of boards on faces, and crates and barrels of boards. */
+struct PlanksModifierData {
+  ModifierData modifier;
+
+  /** Floors and walls: only faces in this group get boards. */
+  char vertex_group[/*MAX_VGROUP_NAME*/ 64] = "";
+  /** #geometry::PlanksType. */
+  char type = 0;
+  /** #geometry::PlanksPattern. */
+  char pattern = 0;
+  /** #geometry::PlanksJoints. */
+  char joints = 0;
+  /** #geometry::PlanksWallStyle. */
+  char wall_style = 0;
+  /** #geometry::PlanksBrace. */
+  char brace = 1;
+  /** #geometry::PlanksLid. */
+  char lid = 0;
+  /** #geometry::PlanksBarrelEnds. */
+  char barrel_ends = 0;
+  char _pad0 = 0;
+  /** #PlanksModifierFlag. */
+  int flag = MOD_PLANKS_KEEP_SURFACE | MOD_PLANKS_FRAME;
+  float width = 0.12f;
+  float thickness = 0.02f;
+  float gap = 0.004f;
+  float length = 1.2f;
+  float random_length = 0.3f;
+  float min_length = 0.2f;
+  float angle = 0.0f;
+  float support_spacing = 0.4f;
+  float support_width = 0.05f;
+  float support_depth = 0.15f;
+  float lap = 0.03f;
+  float batten_width = 0.05f;
+  float crate_size[3] = {0.8f, 0.6f, 0.6f};
+  float slat_gap = 0.03f;
+  float post_width = 0.06f;
+  float lid_angle = 1.2f;
+  float barrel_height = 0.9f;
+  float barrel_radius = 0.28f;
+  float bulge = 0.06f;
+  float chime = 0.03f;
+  int staves = 20;
+  int hoops = 4;
+  float hoop_width = 0.04f;
+  float hoop_thickness = 0.006f;
+  float hoop_offset = 0.12f;
+  float random_height = 0.0f;
+  float tilt = 0.0f;
+  float cup = 0.0f;
+  float bow = 0.0f;
+  float missing = 0.0f;
+  int seed = 0;
+  /** First material of the boards, or -1 to keep the face's own. */
+  int material = -1;
+  int material_count = 1;
+  /** Barrel hoops, or -1 for the boards' material. */
+  int metal_material = -1;
+  char _pad1[4] = {};
+};
+
+/** #RoofModifierData.flag */
+enum RoofModifierFlag {
+  MOD_ROOF_AUTO_RIDGE = (1 << 0),
+  MOD_ROOF_GUTTERS = (1 << 1),
+  MOD_ROOF_RIDGE_CAPS = (1 << 2),
+  MOD_ROOF_VALLEYS = (1 << 3),
+  MOD_ROOF_FLAT_ROOFING = (1 << 4),
+  MOD_ROOF_INVERT_VGROUP = (1 << 5),
+};
+
+/** Roof modifier: build roofs on outlines, or dress faces modeled as a roof. */
+struct RoofModifierData {
+  ModifierData modifier;
+
+  /** Only faces in this group are used. */
+  char vertex_group[/*MAX_VGROUP_NAME*/ 64] = "";
+  /** #geometry::RoofMode. */
+  char mode = 0;
+  /** #geometry::RoofShape. */
+  char shape = 0;
+  /** #geometry::RoofCovering. */
+  char covering = 1;
+  char _pad0 = 0;
+  /** #RoofModifierFlag. */
+  int flag = MOD_ROOF_AUTO_RIDGE | MOD_ROOF_RIDGE_CAPS | MOD_ROOF_VALLEYS | MOD_ROOF_FLAT_ROOFING;
+  float pitch = 0.6108652f;
+  float lower_pitch = 1.2217305f;
+  float break_ratio = 0.4f;
+  float ridge_angle = 0.0f;
+  float parapet_height = 0.4f;
+  float parapet_width = 0.2f;
+  float eave_overhang = 0.3f;
+  float rake_overhang = 0.2f;
+  float thickness = 0.12f;
+  float fascia_height = 0.2f;
+  float fascia_thickness = 0.03f;
+  float gutter_size = 0.12f;
+  float row_spacing = 0.2f;
+  float tile_width = 0.25f;
+  float covering_thickness = 0.02f;
+  float overlap = 0.08f;
+  float covering_gap = 0.004f;
+  float cap_width = 0.25f;
+  float cap_angle = 0.1745329f;
+  float valley_width = 0.3f;
+  float flat_angle = 0.0872665f;
+  float random_height = 0.0f;
+  float tilt = 0.0f;
+  float missing = 0.0f;
+  int seed = 0;
+  /** Material indices, or -1. */
+  int roof_material = -1;
+  int covering_material = -1;
+  int trim_material = -1;
+  int wall_material = -1;
+  char _pad1[4] = {};
+};
+
+/** #CarveModifierLayer.flag */
+enum CarveLayerFlag {
+  MOD_CARVE_LAYER_ENABLED = (1 << 0),
+  MOD_CARVE_LAYER_INVERT = (1 << 1),
+  /** The layer's materials only go where the mask is on. */
+  MOD_CARVE_LAYER_MATERIAL_MASKED = (1 << 2),
+};
+
+/** One grayscale layer of the Carve modifier. */
+struct CarveModifierLayer {
+  struct Tex *texture = nullptr;
+  /** Coordinates from this object, for #MOD_CARVE_COORDS_OBJECT. */
+  struct Object *object = nullptr;
+  /** Materials for faces above and below #material_split. */
+  struct Material *material_high = nullptr;
+  struct Material *material_low = nullptr;
+  char uv_map[/*MAX_CUSTOMDATA_LAYER_NAME*/ 68] = "";
+  /** Named attribute read as grayscale, for the Attribute source. */
+  char attribute[/*MAX_CUSTOMDATA_LAYER_NAME*/ 68] = "";
+  /** 0 Texture, 1 Pattern, 2 Attribute. */
+  char source = 1;
+  /** #geometry::CarvePattern. */
+  char pattern = 2;
+  /** 0 Local, 1 Global, 2 Object, 3 UV. */
+  char coords = 0;
+  /** #CarveLayerFlag. */
+  char flag = MOD_CARVE_LAYER_MATERIAL_MASKED;
+  float scale = 5.0f;
+  float offset[3] = {0.0f, 0.0f, 0.0f};
+  float rotation = 0.0f;
+  float detail = 2.0f;
+  float roughness = 0.5f;
+  float distortion = 0.0f;
+  float stone_length = 0.8f;
+  float row_height = 0.25f;
+  float mortar = 0.02f;
+  float roundness = 0.5f;
+  float variation = 0.5f;
+  float black = 0.0f;
+  float white = 1.0f;
+  float contrast = 0.0f;
+  float strength = 1.0f;
+  float material_split = 0.5f;
+  char _pad[4] = {};
+};
+
+/** #CarveModifierData.flag */
+enum CarveModifierFlag {
+  MOD_CARVE_NOISE_MASK = (1 << 0),
+  MOD_CARVE_NOISE_MASK_INVERT = (1 << 1),
+  MOD_CARVE_INVERT_VGROUP = (1 << 2),
+  MOD_CARVE_INVERT_ATTRIBUTE = (1 << 3),
+  MOD_CARVE_CURVATURE_INVERT = (1 << 4),
+  MOD_CARVE_FACING_INVERT = (1 << 5),
+};
+
+/** #CarveModifierData.facing */
+enum CarveModifierFacing {
+  MOD_CARVE_FACING_TOP = (1 << 0),
+  MOD_CARVE_FACING_BOTTOM = (1 << 1),
+  MOD_CARVE_FACING_SIDES = (1 << 2),
+};
+
+/** Carve modifier: displace with two grayscale layers, combined and masked. */
+struct CarveModifierData {
+  ModifierData modifier;
+
+  CarveModifierLayer layer_a;
+  CarveModifierLayer layer_b;
+  /** Material for faces where the mask is on. */
+  struct Material *mask_material = nullptr;
+  char vertex_group[/*MAX_VGROUP_NAME*/ 64] = "";
+  char mask_attribute[/*MAX_CUSTOMDATA_LAYER_NAME*/ 68] = "";
+  /** #geometry::CarveBlend. */
+  char blend = 0;
+  /** #geometry::CarveCurvature. */
+  char curvature = 0;
+  /** #CarveModifierFacing, several can be on. */
+  char facing = 0;
+  /** #geometry::CarveDirection. */
+  char direction = 0;
+  /** #CarveModifierFlag. */
+  int flag = 0;
+  float blend_factor = 1.0f;
+  float mask_scale = 2.0f;
+  float mask_detail = 2.0f;
+  float mask_threshold = 0.5f;
+  float mask_softness = 0.1f;
+  float curvature_threshold = 0.1f;
+  float curvature_softness = 0.1f;
+  float facing_angle = 0.7853982f;
+  float facing_softness = 0.1745329f;
+  float custom_direction[3] = {0.0f, 0.0f, 1.0f};
+  float strength = 0.1f;
+  float midlevel = 0.5f;
+  float max_depth = 0.0f;
+  int smooth = 0;
+  int subdivide = 0;
+  int seed = 0;
+  float mask_material_threshold = 0.5f;
+};
+
+/** #MaterializeModifierRule.flag */
+enum MaterializeRuleFlag {
+  MOD_MATERIALIZE_RULE_ENABLED = (1 << 0),
+  MOD_MATERIALIZE_RULE_INVERT = (1 << 1),
+  MOD_MATERIALIZE_RULE_USE_INDEX = (1 << 2),
+  MOD_MATERIALIZE_RULE_GLOBAL = (1 << 3),
+  MOD_MATERIALIZE_RULE_RELATIVE = (1 << 4),
+};
+
+/** One rule of the Materialize modifier. */
+struct MaterializeModifierRule {
+  struct Material *material = nullptr;
+  /** Only faces that have this material. */
+  struct Material *only_on = nullptr;
+  struct Tex *texture = nullptr;
+  /** Proximity target. */
+  struct Object *object = nullptr;
+  char name[64] = "Rule";
+  char attribute[/*MAX_CUSTOMDATA_LAYER_NAME*/ 68] = "";
+  /** #geometry::MaterializeType. */
+  char type = 1;
+  /** #geometry::MaterializeCurvature. */
+  char curvature = 0;
+  /** #geometry::MaterializeDirection. */
+  char direction = 0;
+  /** #geometry::MaterializeRandom. */
+  char random = 0;
+  /** 0, 1 or 2 for X, Y or Z. */
+  char axis = 2;
+  char _pad0[3] = {};
+  /** #MaterializeRuleFlag. */
+  int flag = MOD_MATERIALIZE_RULE_ENABLED | MOD_MATERIALIZE_RULE_RELATIVE;
+  int material_index = 0;
+  int grow = 0;
+  int min_island = 0;
+  int samples = 16;
+  int seed = 0;
+  float breakup = 0.0f;
+  float breakup_scale = 5.0f;
+  float curvature_angle = 0.5235988f;
+  float custom_direction[3] = {0.0f, 0.0f, 1.0f};
+  float direction_angle = 0.7853982f;
+  float height_from = 0.0f;
+  float height_to = 0.5f;
+  float slope_min = 0.0f;
+  float slope_max = 0.5235988f;
+  float noise_scale = 2.0f;
+  float noise_detail = 2.0f;
+  float noise_threshold = 0.5f;
+  float chance = 0.3f;
+  float threshold = 0.5f;
+  float distance = 0.5f;
+  float occlusion_distance = 0.5f;
+  float occlusion = 0.5f;
+  float thickness = 0.1f;
+  char _pad1[4] = {};
+};
+
+/** Materialize modifier: give faces materials by rules, in order. */
+struct MaterializeModifierData {
+  ModifierData modifier;
+
+  MaterializeModifierRule *rules = nullptr;
+  int rules_num = 0;
+  int active_rule = 0;
+
+#ifdef __cplusplus
+  Span<MaterializeModifierRule> rules_span() const;
+  MutableSpan<MaterializeModifierRule> rules_span();
+#endif
+};
+
+enum JoinModifierFlag {
+  MOD_JOIN_INCLUDE_SELF = (1 << 0),
+  MOD_JOIN_CHILD_COLLECTIONS = (1 << 1),
+  MOD_JOIN_PIECE_IDS = (1 << 2),
+};
+enum JoinModifierSourceType {
+  MOD_JOIN_SOURCE_OBJECT = 0,
+  MOD_JOIN_SOURCE_COLLECTION = 1,
+};
+enum JoinModifierSourceFlag {
+  MOD_JOIN_SOURCE_ENABLED = (1 << 0),
+};
+struct JoinModifierSource {
+  JoinModifierSource *next = nullptr, *prev = nullptr;
+  struct Object *object = nullptr;
+  struct Collection *collection = nullptr;
+  int source_type = MOD_JOIN_SOURCE_OBJECT;
+  int flag = MOD_JOIN_SOURCE_ENABLED;
+};
+struct JoinModifierData {
+  ModifierData modifier;
+  ListBaseT<JoinModifierSource> sources = {nullptr, nullptr};
+  int flag = MOD_JOIN_INCLUDE_SELF | MOD_JOIN_CHILD_COLLECTIONS | MOD_JOIN_PIECE_IDS;
+  char _pad[4] = {};
+};
+
+enum DivideModifierFlag {
+  MOD_DIVIDE_AXIS_X = (1 << 0),
+  MOD_DIVIDE_AXIS_Y = (1 << 1),
+  MOD_DIVIDE_AXIS_Z = (1 << 2),
+};
+struct DivideModifierData {
+  ModifierData modifier;
+  float grid_size[3] = {0.5f, 0.5f, 0.5f};
+  float offset[3] = {0.0f, 0.0f, 0.0f};
+  float rotation[3] = {0.0f, 0.0f, 0.0f};
+  float tolerance = 1e-6f;
+  int flag = MOD_DIVIDE_AXIS_X | MOD_DIVIDE_AXIS_Y | MOD_DIVIDE_AXIS_Z;
+  char _pad[4] = {};
+};
+
+/** #EdgeDamageModifierData.flag */
+enum EdgeDamageFlag {
+  MOD_EDGE_DAMAGE_PER_ISLAND = (1 << 0),
+  MOD_EDGE_DAMAGE_INVERT_VGROUP = (1 << 1),
+  MOD_EDGE_DAMAGE_SMOOTH_SHADING = (1 << 2),
+  MOD_EDGE_DAMAGE_VISUALIZE = (1 << 3),
+};
+
+/** Edge Damage modifier: a smoothed, pushed copy of the mesh intersected with the mesh. */
+struct EdgeDamageModifierData {
+  ModifierData modifier;
+
+  /** Damage is only allowed in this group. */
+  char vertex_group[/*MAX_VGROUP_NAME*/ 64] = "";
+  /** Point attribute that is 1 on the damaged faces. */
+  char damage_attribute[68] = "damage";
+  /** #geometry::EdgeDamageRemesh. */
+  char remesh = 0;
+  /** #geometry::EdgeDamageSolver. */
+  char solver = 2;
+  /** #geometry::EdgeDamageNoise. */
+  char noise_type = 0;
+  char _pad0 = 0;
+  /** #EdgeDamageFlag. */
+  int flag = MOD_EDGE_DAMAGE_PER_ISLAND | MOD_EDGE_DAMAGE_SMOOTH_SHADING;
+  float resolution = 0.05f;
+  int remesh_iterations = 3;
+  int smooth_iterations = 10;
+  float smooth_factor = 0.5f;
+  float push = 0.02f;
+  float noise_amount = 0.03f;
+  float noise_scale = 0.15f;
+  float noise_detail = 3.0f;
+  float noise_roughness = 0.5f;
+  float island_variation = 0.3f;
+  int seed = 0;
+  /** Material index of the damaged faces, or -1 to keep the original materials. */
+  int material_index = -1;
+  char _pad1[4] = {};
+};
+
+enum UVScaleMode {
+  MOD_UV_SCALE_SCALE = 0,
+  MOD_UV_SCALE_DENSITY = 1,
+};
+
+enum UVScalePivot {
+  MOD_UV_SCALE_PIVOT_CENTER = 0,
+  MOD_UV_SCALE_PIVOT_ORIGIN = 1,
+  MOD_UV_SCALE_PIVOT_CUSTOM = 2,
+};
+
+enum UVScaleFlag {
+  MOD_UV_SCALE_ISLANDS = (1 << 0),
+};
+
+struct UVScaleModifierData {
+  ModifierData modifier;
+  char uv_map[68] = "";
+  int mode = MOD_UV_SCALE_SCALE;
+  int pivot = MOD_UV_SCALE_PIVOT_CENTER;
+  int flag = MOD_UV_SCALE_ISLANDS;
+  float scale[2] = {1.0f, 1.0f};
+  float center[2] = {0.5f, 0.5f};
+  float density = 1024.0f;
+  int resolution[2] = {1024, 1024};
+  char _pad[4] = {};
+};
+
 /** #DiceModifierData.mode */
 enum DiceModifierMode {
   MOD_DICE_MODE_COUNT = 0,
@@ -2858,9 +3346,37 @@ struct EditPolyModifierData {
   int flag = MOD_EDIT_POLY_FOLLOW_INPUT;
 };
 
+/** #ModifierColliderSource.source_type */
+enum ModifierColliderSourceType {
+  MOD_COLLIDER_SOURCE_OBJECT = 0,
+  MOD_COLLIDER_SOURCE_COLLECTION = 1,
+};
+
+/** #ModifierColliderSource.flag */
+enum ModifierColliderSourceFlag {
+  MOD_COLLIDER_SOURCE_ENABLED = (1 << 0),
+};
+
+/** One more object, or all the mesh objects in a collection, for Drape and Collapse to hit. */
+struct ModifierColliderSource {
+  ModifierColliderSource *next = nullptr, *prev = nullptr;
+  struct Object *object = nullptr;
+  struct Collection *collection = nullptr;
+  /** #ModifierColliderSourceType. */
+  int source_type = MOD_COLLIDER_SOURCE_OBJECT;
+  /** #ModifierColliderSourceFlag. */
+  int flag = MOD_COLLIDER_SOURCE_ENABLED;
+};
+
 /** #CollapseModifierData.flag */
 enum CollapseModifierFlag {
   MOD_COLLAPSE_INVERT_VGROUP = (1 << 0),
+};
+
+/** #CollapseModifierData.pieces */
+enum CollapseModifierPieces {
+  MOD_COLLAPSE_PIECES_ISLANDS = 0,
+  MOD_COLLAPSE_PIECES_ATTRIBUTE = 1,
 };
 
 /** Collapse modifier: every mesh island falls as a rigid piece and is left where it lands. */
@@ -2869,6 +3385,8 @@ struct CollapseModifierData {
 
   /** What the pieces land on. When unset, a flat floor under the lowest point. */
   struct Object *target = nullptr;
+  /** More objects and collections to land on, with #target. */
+  ListBaseT<ModifierColliderSource> colliders = {nullptr, nullptr};
   /** Pieces with points in this group stay where they are. */
   char vertex_group[/*MAX_VGROUP_NAME*/ 64] = "";
   /** Seconds of falling. */
@@ -2883,6 +3401,14 @@ struct CollapseModifierData {
   int substeps = 4;
   /** #CollapseModifierFlag. */
   int flag = 0;
+  /** The ground is pushed out along its normals by this much. */
+  float cage = 0.0f;
+  /** #CollapseModifierPieces. */
+  char pieces = MOD_COLLAPSE_PIECES_ISLANDS;
+  char _pad[3] = {};
+  /** Attribute with the piece of each face or point. MAX_CUSTOMDATA_LAYER_NAME. */
+  char piece_name[68] = "piece";
+  char _pad1[4] = {};
 };
 
 /** #DrapeModifierData.flag */
@@ -2898,6 +3424,8 @@ struct DrapeModifierData {
 
   /** What the cloth lands on. */
   struct Object *collider = nullptr;
+  /** More objects and collections to land on, with #collider. */
+  ListBaseT<ModifierColliderSource> colliders = {nullptr, nullptr};
   /** Points in this group stay where they are. */
   char vertex_group[/*MAX_VGROUP_NAME*/ 64] = "";
   /** Seconds of falling and settling. */
@@ -2915,6 +3443,9 @@ struct DrapeModifierData {
   int substeps = 8;
   /** #DrapeModifierFlag. */
   int flag = MOD_DRAPE_FLOOR;
+  /** The colliders are pushed out along their normals by this much. */
+  float cage = 0.0f;
+  char _pad[4] = {};
 };
 
 /** #ShatterModifierData.flag */
@@ -2954,6 +3485,7 @@ enum MasonryModifierFlag {
   MOD_MASONRY_TOOTHED = (1 << 2),
   MOD_MASONRY_INVERT_VGROUP = (1 << 3),
   MOD_MASONRY_MATERIALS = (1 << 4),
+  MOD_MASONRY_CONTINUOUS_WALLS = (1 << 5),
 };
 
 /** Masonry modifier: covers faces with blocks in a brick, stone or paving pattern. */
@@ -2986,6 +3518,207 @@ struct MasonryModifierData {
   int seed = 0;
   /** #MasonryModifierFlag. */
   int flag = MOD_MASONRY_BACKING;
+};
+
+/** #CleanupModifierData.flag */
+enum CleanupModifierFlag {
+  MOD_CLEANUP_INVERT_VGROUP = (1 << 0),
+  MOD_CLEANUP_LOOSE_VERTS = (1 << 1),
+  MOD_CLEANUP_LOOSE_EDGES = (1 << 2),
+  MOD_CLEANUP_LOOSE_FACES = (1 << 3),
+  MOD_CLEANUP_DUPLICATE_FACES = (1 << 4),
+  MOD_CLEANUP_INTERIOR_FACES = (1 << 5),
+  MOD_CLEANUP_DEGENERATE = (1 << 6),
+  MOD_CLEANUP_EXTRA_VERTS = (1 << 7),
+  MOD_CLEANUP_LIMITED = (1 << 8),
+  MOD_CLEANUP_LIMITED_ALL_BOUNDARIES = (1 << 9),
+  MOD_CLEANUP_SMALL_PIECES = (1 << 10),
+  MOD_CLEANUP_FILL_HOLES = (1 << 11),
+  MOD_CLEANUP_MAKE_PLANAR = (1 << 12),
+  MOD_CLEANUP_SPLIT_NONPLANAR = (1 << 13),
+  MOD_CLEANUP_SPLIT_CONCAVE = (1 << 14),
+  MOD_CLEANUP_RECALC_NORMALS = (1 << 15),
+};
+
+/** Cleanup modifier: many mesh clean-up steps in one, run in a fixed order. */
+struct CleanupModifierData {
+  ModifierData modifier;
+
+  /** Only these points, and the edges and faces made of them, are cleaned up. */
+  char vertex_group[/*MAX_VGROUP_NAME*/ 64] = "";
+  /** #CleanupModifierFlag. */
+  int flag = MOD_CLEANUP_LOOSE_VERTS | MOD_CLEANUP_LOOSE_EDGES | MOD_CLEANUP_DUPLICATE_FACES |
+             MOD_CLEANUP_DEGENERATE;
+  /** #BMO_Delimit, for Limited Dissolve. */
+  int limited_delimit = 1;
+  float degenerate_distance = 0.0001f;
+  float extra_verts_angle = 0.0174533f;
+  float limited_angle = 0.0872665f;
+  int small_pieces_faces = 4;
+  float small_pieces_size = 0.0f;
+  int fill_holes_sides = 4;
+  float make_planar_factor = 1.0f;
+  int make_planar_iterations = 1;
+  float split_nonplanar_angle = 0.0872665f;
+  /** Points, edges and faces before and after, from the last evaluation. Shown in the panel. */
+  int stats[6] = {};
+  char _pad[4] = {};
+};
+
+/** #StoneworkModifierData.flag */
+enum StoneworkModifierFlag {
+  MOD_STONEWORK_FILLERS = (1 << 0),
+  MOD_STONEWORK_MORTAR = (1 << 1),
+  MOD_STONEWORK_MERGE = (1 << 2),
+  MOD_STONEWORK_COLOR = (1 << 3),
+};
+
+/** #StoneworkModifierData.source */
+enum StoneworkModifierSource {
+  MOD_STONEWORK_SOURCE_BUILTIN = 0,
+  MOD_STONEWORK_SOURCE_COLLECTION = 1,
+};
+
+/** Stonework modifier: fills the mesh with whole stones, stacked from the bottom up. */
+struct StoneworkModifierData {
+  ModifierData modifier;
+
+  /** Own stones, when #source is #MOD_STONEWORK_SOURCE_COLLECTION. */
+  struct Collection *collection = nullptr;
+  /** #StoneworkFill. */
+  char fill = 0;
+  /** #StoneworkShape. */
+  char shape = 6;
+  /** #StoneworkModifierSource. */
+  char source = 0;
+  /** #StoneworkRemesh, for the mortar. */
+  char mortar_remesh = 0;
+  /** #StoneworkModifierFlag. */
+  int flag = MOD_STONEWORK_FILLERS;
+  float stone_size = 0.2f;
+  float size_variation = 0.35f;
+  float flatness = 0.5f;
+  float gap = 0.005f;
+  float poke_out = 0.0f;
+  float roughness = 0.3f;
+  float close_gaps = 1.0f;
+  float scale_min = 1.0f;
+  float scale_max = 1.0f;
+  float hue_min = 0.0f;
+  float hue_max = 1.0f;
+  float saturation_min = 0.45f;
+  float saturation_max = 0.85f;
+  float value_min = 0.65f;
+  float value_max = 0.95f;
+  float mortar_depth = 0.05f;
+  float mortar_resolution = 0.05f;
+  int detail = 2;
+  int max_stones = 2000;
+  int seed = 0;
+  int material_index = 0;
+  int mortar_material_index = 1;
+  /** Stones from the last evaluation, shown in the panel. */
+  int stones_num = 0;
+  /** #StoneworkColorMode. */
+  char color_mode = 0;
+  char _pad[3] = {};
+};
+
+/** #DistributeModifierData.flag */
+enum DistributeModifierFlag {
+  MOD_DISTRIBUTE_ALIGN_NORMAL = (1 << 0),
+  MOD_DISTRIBUTE_STAY_INSIDE = (1 << 1),
+  MOD_DISTRIBUTE_FILLERS = (1 << 2),
+  MOD_DISTRIBUTE_MORTAR = (1 << 3),
+  MOD_DISTRIBUTE_COLOR = (1 << 4),
+  MOD_DISTRIBUTE_REALIZE = (1 << 5),
+  MOD_DISTRIBUTE_KEEP_SURFACE = (1 << 6),
+  MOD_DISTRIBUTE_INVERT_VGROUP = (1 << 7),
+};
+
+/** Distribute modifier: objects from a collection packed on the faces by their sides. */
+struct DistributeModifierData {
+  ModifierData modifier;
+
+  struct Collection *collection = nullptr;
+  /** Small objects for the gaps. */
+  struct Collection *fillers = nullptr;
+  /** MAX_VGROUP_NAME. */
+  char vertex_group[64] = "";
+  /** #DistributeRotation. */
+  char rotation = 0;
+  /** #DistributeDirection. */
+  char direction = 0;
+  /** #StoneworkRemesh. */
+  char mortar_remesh = 0;
+  /** #StoneworkColorMode. */
+  char color_mode = 0;
+  /** #DistributeModifierFlag. */
+  int flag = MOD_DISTRIBUTE_ALIGN_NORMAL | MOD_DISTRIBUTE_STAY_INSIDE | MOD_DISTRIBUTE_FILLERS |
+             MOD_DISTRIBUTE_KEEP_SURFACE;
+  float gap = 0.01f;
+  float jitter = 0.0f;
+  float scale_min = 1.0f;
+  float scale_max = 1.0f;
+  float offset = 0.0f;
+  float filler_scale = 0.5f;
+  float mortar_offset = 0.0f;
+  float mortar_resolution = 0.05f;
+  float noise_strength = 0.01f;
+  float noise_scale = 5.0f;
+  float noise_detail = 3.0f;
+  float hue_min = 0.0f;
+  float hue_max = 1.0f;
+  float saturation_min = 0.45f;
+  float saturation_max = 0.85f;
+  float value_min = 0.65f;
+  float value_max = 0.95f;
+  int tries = 24;
+  int max_count = 5000;
+  int seed = 0;
+  int mortar_material_index = 1;
+  /** Objects from the last evaluation, shown in the panel. */
+  int count_num = 0;
+};
+
+/** #PieceIdModifierData.flag */
+enum PieceIdModifierFlag {
+  MOD_PIECE_ID_SEAMS = (1 << 0),
+  MOD_PIECE_ID_SHARP = (1 << 1),
+  MOD_PIECE_ID_COMBINE = (1 << 2),
+  MOD_PIECE_ID_RANDOM = (1 << 3),
+  MOD_PIECE_ID_INVERT_VGROUP = (1 << 4),
+};
+
+/** #PieceIdModifierData.domain */
+enum PieceIdModifierDomain {
+  MOD_PIECE_ID_DOMAIN_FACE = 0,
+  MOD_PIECE_ID_DOMAIN_POINT = 1,
+};
+
+/** Piece ID modifier: a whole number per face or point saying which piece it belongs to. */
+struct PieceIdModifierData {
+  ModifierData modifier;
+
+  /** Attribute that is written. MAX_CUSTOMDATA_LAYER_NAME. */
+  char name[68] = "piece";
+  /** Attribute that is read, for the Attribute source. MAX_CUSTOMDATA_LAYER_NAME. */
+  char source_name[68] = "";
+  /** MAX_VGROUP_NAME. */
+  char vertex_group[64] = "";
+  /** Where the pieces come from. */
+  char source = 0;
+  /** #PieceIdModifierDomain. */
+  char domain = MOD_PIECE_ID_DOMAIN_FACE;
+  char _pad0[2] = {};
+  /** #PieceIdModifierFlag. */
+  int flag = MOD_PIECE_ID_SEAMS | MOD_PIECE_ID_SHARP;
+  /** Vertex group weight from which a face or point is in the group. */
+  float threshold = 0.5f;
+  int seed = 0;
+  /** Pieces from the last evaluation, shown in the panel. */
+  int count_num = 0;
+  char _pad[4] = {};
 };
 
 /** #DissolveModifierData.flag */

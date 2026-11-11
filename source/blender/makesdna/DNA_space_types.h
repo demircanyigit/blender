@@ -34,6 +34,7 @@ struct Histogram;
 struct ID;
 struct Image;
 struct Mask;
+struct Material;
 struct MovieClip;
 struct MovieClipScopes;
 struct Scopes;
@@ -160,6 +161,8 @@ struct SpaceProperties {
   /** Runtime. */
   int pathflag = 0, dataicon = 0;
   ID *pinid = nullptr;
+  /** Material shown in the All Materials tab, not reference counted. */
+  Material *browse_material = nullptr;
 
   void *texuser = nullptr;
 

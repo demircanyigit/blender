@@ -71,6 +71,7 @@ waveletNoiseTile.bin
 /release/datafiles/assets/
 /tests/data/
 /lib/macos_x64/
+/lib/decimation/
 
 # Build files for VS and VS Code.
 /build/

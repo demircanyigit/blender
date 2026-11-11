@@ -63,6 +63,8 @@ static inline eLightingType lighting_type_from_v3d_lighting(char lighting)
     case V3D_LIGHTING_MATCAP:
       return eLightingType::MATCAP;
     case V3D_LIGHTING_STUDIO:
+    /* Toon is a branch of the studio lighting, see #WorldData.toon_flag. */
+    case V3D_LIGHTING_TOON:
       return eLightingType::STUDIO;
     default:
       BLI_assert_unreachable();

@@ -349,6 +349,7 @@ option(WITH_OPENCOLORIO "Enable OpenColorIO color management" ON)
 option(WITH_XR_OPENXR "Enable VR features through the OpenXR specification" ON)
 
 option(WITH_GMP "Enable features depending on GMP (Exact Boolean)" ON)
+option(WITH_DECIMATE_CGAL "Enable the CGAL Decimate backend (run make_decimate_deps.py first)" ON)
 option(WITH_MANIFOLD "Enable features depending on Manifold (Fast Robust Boolean)" ON)
 
 option(WITH_OPENIMAGEDENOISE "Enable the OpenImageDenoise compositing node" ON)

@@ -29,6 +29,10 @@ struct Materials {
     float4 data_blend = materials_data[handle * 3 + 2];
 
     color = (data.r == -1) ? attr_color.rgb : data.rgb;
+    /* Face set colors, stored in display space. */
+    if (data.r == -2) {
+      color = pow(attr_color.rgb, float3(2.2f));
+    }
 
     float color_factor = data_b.a;
     int color_blend = int(data_blend.x);

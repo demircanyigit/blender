@@ -47,7 +47,7 @@ static void init_data(ModifierData *md)
   INIT_DEFAULT_STRUCT_AFTER(data, modifier);
 }
 
-static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh *mesh)
+static Mesh *modify_mesh_compute(ModifierData *md, const ModifierEvalContext *ctx, Mesh *mesh)
 {
   const DissolveModifierData &dmd = *reinterpret_cast<DissolveModifierData *>(md);
   if (mesh->verts_num == 0) {
@@ -157,6 +157,12 @@ static void panel_draw(const bContext * /*C*/, Panel *panel)
 static void panel_register(ARegionType *region_type)
 {
   modifier_panel_register(region_type, eModifierType_Dissolve, panel_draw);
+}
+
+/* Taken from the cache when nothing it depends on changed, see #MOD_cached_modify_mesh. */
+static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh *mesh)
+{
+  return MOD_cached_modify_mesh(md, ctx, mesh, modify_mesh_compute);
 }
 
 ModifierTypeInfo modifierType_Dissolve = {

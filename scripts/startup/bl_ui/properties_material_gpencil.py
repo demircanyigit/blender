@@ -95,6 +95,9 @@ class MATERIAL_PT_gpencil_slots(GreasePencilMaterialsPanel, Panel):
         ma = context.material
         found_material = ma and ma.grease_pencil
         found_object = context.object and context.object.type == 'GREASEPENCIL'
+        # Not in the All Materials tab, which has its own list.
+        if getattr(context.space_data, "context", None) == 'ALL_MATERIALS':
+            return False
         return found_material or found_object
 
 

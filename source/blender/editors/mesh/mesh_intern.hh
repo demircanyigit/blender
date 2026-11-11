@@ -260,6 +260,22 @@ void MESH_OT_edge_rotate(wmOperatorType *ot);
 void MESH_OT_hide(wmOperatorType *ot);
 void MESH_OT_reveal(wmOperatorType *ot);
 void MESH_OT_mark_seam(wmOperatorType *ot);
+
+/* `editmesh_face_sets.cc` */
+
+void MESH_OT_face_set_new(wmOperatorType *ot);
+void MESH_OT_face_set_assign(wmOperatorType *ot);
+void MESH_OT_face_set_select(wmOperatorType *ot);
+void MESH_OT_face_set_clear(wmOperatorType *ot);
+void MESH_OT_face_sets_from(wmOperatorType *ot);
+void MESH_OT_face_set_select_boundary(wmOperatorType *ot);
+void MESH_OT_face_set_select_more(wmOperatorType *ot);
+void MESH_OT_face_set_select_less(wmOperatorType *ot);
+void MESH_OT_face_set_merge(wmOperatorType *ot);
+void MESH_OT_face_set_hide_others(wmOperatorType *ot);
+void MESH_OT_face_set_randomize_colors(wmOperatorType *ot);
+void MESH_OT_face_sets_to_vertex_groups(wmOperatorType *ot);
+void MESH_OT_face_sets_to_materials(wmOperatorType *ot);
 void MESH_OT_mark_sharp(wmOperatorType *ot);
 void MESH_OT_flip_normals(wmOperatorType *ot);
 void MESH_OT_solidify(wmOperatorType *ot);

@@ -93,6 +93,9 @@ enum {
    */
   RV3D_ZOFFSET_DISABLED = 1 << 6,
   RV3D_WAS_CAMOB = 1 << 7,
+  /** Orthographic was picked by the user, so Auto Perspective doesn't switch back to
+   * perspective when rotating out of an axis view. */
+  RV3D_USER_ORTHO = 1 << 8,
 };
 
 /** #RegionView3D.viewlock */
@@ -257,6 +260,32 @@ enum {
   V3D_SHADING_CAVITY_SSAO = 0,
   V3D_SHADING_CAVITY_CURVATURE = 1,
   V3D_SHADING_CAVITY_BOTH = 2,
+};
+
+/** #View3DShading.outline_type */
+enum {
+  V3D_SHADING_OUTLINE_OBJECT = 0,
+  V3D_SHADING_OUTLINE_LOOSE_PART = 1,
+  V3D_SHADING_OUTLINE_MATERIAL = 2,
+  V3D_SHADING_OUTLINE_FACE_SET = 3,
+};
+
+/** #View3DShading.edge_flag */
+enum {
+  /** Draw lines found from depth and normals. */
+  V3D_SHADING_EDGE_LINES = (1 << 0),
+  V3D_SHADING_EDGE_DEPTH = (1 << 1),
+  V3D_SHADING_EDGE_CREASE = (1 << 2),
+  /** Lines where the shading normals split: sharp edges and flat faces. */
+  V3D_SHADING_EDGE_HARD = (1 << 3),
+};
+
+/** #View3DShading.toon_flag */
+enum {
+  V3D_SHADING_TOON_HIGHLIGHT = (1 << 0),
+  V3D_SHADING_TOON_RIM = (1 << 1),
+  /** The light turns with the view instead of being fixed in the scene. */
+  V3D_SHADING_TOON_VIEW_LIGHT = (1 << 2),
 };
 
 /** #View3DShading.use_compositor */
@@ -605,6 +634,33 @@ struct View3DShading {
   /* Render pass displayed in the viewport. Is an `eScenePassType` where one bit is set */
   int render_pass = SCE_PASS_COMBINED;
   char aov_name[64] = "";
+
+  /** Where the outline is drawn, see #V3D_SHADING_OUTLINE_OBJECT. */
+  char outline_type = V3D_SHADING_OUTLINE_OBJECT;
+  /** See #V3D_SHADING_EDGE_LINES. */
+  char edge_flag = V3D_SHADING_EDGE_DEPTH | V3D_SHADING_EDGE_CREASE;
+  char _pad_outline[2] = {};
+  /** Outline width in pixels. */
+  float outline_width = 1.0f;
+  float edge_color[3] = {};
+  float edge_strength = 1.0f;
+  /** Faces meeting at a sharper angle than this get a line. */
+  float edge_crease_angle = 0.523599f;
+  /** Relative depth jump that gets a line. */
+  float edge_depth_threshold = 0.05f;
+
+  /** Toon lighting, see #V3D_SHADING_TOON_HIGHLIGHT. */
+  char toon_flag = V3D_SHADING_TOON_HIGHLIGHT;
+  /** Number of light steps. */
+  char toon_bands = 3;
+  char _pad_toon[2] = {};
+  /** How soft the step between two bands is. */
+  float toon_softness = 0.05f;
+  /** Multiplied into the darkest band. */
+  float toon_shadow_color[3] = {0.45f, 0.45f, 0.6f};
+  float toon_highlight_size = 0.3f;
+  float toon_rim_color[3] = {1.0f, 1.0f, 1.0f};
+  float toon_rim_width = 0.2f;
 
   struct IDProperty *prop = nullptr;
   void *_pad2 = nullptr;

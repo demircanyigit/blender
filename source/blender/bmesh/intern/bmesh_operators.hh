@@ -64,6 +64,7 @@ enum {
   SIMFACE_COPLANAR,
   SIMFACE_SMOOTH,
   SIMFACE_FREESTYLE,
+  SIMFACE_FACE_SET,
 };
 
 /* similar edge selection slot values */

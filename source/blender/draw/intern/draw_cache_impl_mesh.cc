@@ -817,6 +817,26 @@ gpu::Batch *DRW_mesh_batch_cache_get_sculpt_overlays(Mesh &mesh)
   return cache.batch.sculpt_overlays;
 }
 
+gpu::Batch *DRW_mesh_batch_cache_get_surface_face_sets(Mesh &mesh)
+{
+  MeshBatchCache &cache = *mesh_batch_cache_get(mesh);
+
+  /* The face set colors come from the sculpt overlay data. */
+  cache.cd_needed.sculpt_overlays = 1;
+  cache.batch_requested |= MBC_SURFACE_FACE_SETS;
+  DRW_batch_request(&cache.batch.surface_face_sets);
+
+  return cache.batch.surface_face_sets;
+}
+
+gpu::Batch *DRW_mesh_batch_cache_get_surface_part_ids(Mesh &mesh)
+{
+  MeshBatchCache &cache = *mesh_batch_cache_get(mesh);
+  cache.batch_requested |= MBC_SURFACE_PART_IDS;
+  DRW_batch_request(&cache.batch.surface_part_ids);
+  return cache.batch.surface_part_ids;
+}
+
 gpu::Batch *DRW_mesh_batch_cache_get_surface_viewer_attribute(Mesh &mesh)
 {
   MeshBatchCache &cache = *mesh_batch_cache_get(mesh);
@@ -1165,7 +1185,9 @@ void DRW_mesh_batch_cache_create_requested(TaskGraph &task_graph,
       }
       GPU_BATCH_CLEAR_SAFE(cache.batch.surface);
       GPU_BATCH_CLEAR_SAFE(cache.batch.sculpt_overlays);
-      cache.batch_ready &= ~(MBC_SURFACE | MBC_SURFACE_PER_MAT | MBC_SCULPT_OVERLAYS);
+      GPU_BATCH_CLEAR_SAFE(cache.batch.surface_face_sets);
+      cache.batch_ready &= ~(MBC_SURFACE | MBC_SURFACE_PER_MAT | MBC_SCULPT_OVERLAYS |
+                             MBC_SURFACE_FACE_SETS);
 
       mesh_cd_layers_type_merge(&cache.cd_used, cache.cd_needed);
       drw_attributes_merge(&cache.attr_used, &cache.attr_needed);
@@ -1305,6 +1327,20 @@ void DRW_mesh_batch_cache_create_requested(TaskGraph &task_graph,
                          list,
                          std::nullopt,
                          {VBOType::Position, VBOType::PaintOverlayFlag}});
+    }
+    if (batches_to_create & MBC_SURFACE_FACE_SETS) {
+      batch_info.append({*cache.batch.surface_face_sets,
+                         GPU_PRIM_TRIS,
+                         list,
+                         IBOType::Tris,
+                         {VBOType::CornerNormal, VBOType::Position, VBOType::SculptData}});
+    }
+    if (batches_to_create & MBC_SURFACE_PART_IDS) {
+      batch_info.append({*cache.batch.surface_part_ids,
+                         GPU_PRIM_TRIS,
+                         list,
+                         IBOType::Tris,
+                         {VBOType::Position, VBOType::PartId}});
     }
     if (batches_to_create & MBC_SCULPT_OVERLAYS) {
       batch_info.append({*cache.batch.sculpt_overlays,

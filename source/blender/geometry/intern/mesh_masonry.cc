@@ -25,6 +25,7 @@
 #include "DNA_mesh_types.h"
 
 #include "BLI_array.hh"
+#include "BLI_map.hh"
 #include "BLI_math_base.hh"
 #include "BLI_math_vector.hh"
 #include "BLI_noise.hh"
@@ -303,7 +304,8 @@ struct Row {
   bool soldier;
 };
 
-/** Rows of equal height (taller soldier rows every #soldier_every rows), with random boundaries. */
+/** Rows of equal height (taller soldier rows every #soldier_every rows), with random boundaries.
+ */
 Vector<Row> uniform_rows(const PatternContext &ctx,
                          const float height,
                          const int soldier_every,
@@ -322,7 +324,8 @@ Vector<Row> uniform_rows(const PatternContext &ctx,
     return float(group_index) * group + float(r - group_index * n) * height;
   };
   auto boundary = [&](const int r) {
-    const float jitter = (ctx.random(ctx.id(kind, r, 0), 1) - 0.5f) * random_height * height * 0.6f;
+    const float jitter = (ctx.random(ctx.id(kind, r, 0), 1) - 0.5f) * random_height * height *
+                         0.6f;
     return base(r) + jitter;
   };
   Vector<Row> rows;
@@ -466,7 +469,8 @@ void row_banded(PatternContext &ctx,
     float x0 = float(band) * band_length + shift;
     for (const int i : cuts.index_range()) {
       const float x1 = float(band) * band_length + shift + cuts[i];
-      ctx.add(rect(x0 + g, row.y0 + g, x1 - g, row.y1 - g), noise::hash(band_id, uint32_t(i) + 99));
+      ctx.add(rect(x0 + g, row.y0 + g, x1 - g, row.y1 - g),
+              noise::hash(band_id, uint32_t(i) + 99));
       x0 = x1;
     }
   }
@@ -756,8 +760,9 @@ void pattern_diamond(PatternContext &ctx)
          i++)
     {
       const float2 c(float(i) * hx * 2.0f + shift, float(j) * hy);
-      ctx.add_convex({c + float2(hx, 0.0f), c + float2(0.0f, hy), c - float2(hx, 0.0f), c - float2(0.0f, hy)},
-                     ctx.id(kind, i, j));
+      ctx.add_convex(
+          {c + float2(hx, 0.0f), c + float2(0.0f, hy), c - float2(hx, 0.0f), c - float2(0.0f, hy)},
+          ctx.id(kind, i, j));
     }
   }
 }
@@ -770,13 +775,15 @@ void pattern_cells(PatternContext &ctx, const float2 pitch, const float jitter, 
     return float2((float(i) + 0.5f + (ctx.random(id, 1) - 0.5f) * jitter) * pitch.x,
                   (float(j) + 0.5f + (ctx.random(id, 2) - 0.5f) * jitter) * pitch.y);
   };
-  for (int i = floor_div(ctx.box.min.x, pitch.x) - 1; i <= floor_div(ctx.box.max.x, pitch.x) + 1; i++)
+  for (int i = floor_div(ctx.box.min.x, pitch.x) - 1; i <= floor_div(ctx.box.max.x, pitch.x) + 1;
+       i++)
   {
     for (int j = floor_div(ctx.box.min.y, pitch.y) - 1; j <= floor_div(ctx.box.max.y, pitch.y) + 1;
          j++)
     {
       const float2 s = site(i, j);
-      Polygon cell = rect(s.x - pitch.x * 2.0f, s.y - pitch.y * 2.0f, s.x + pitch.x * 2.0f, s.y + pitch.y * 2.0f);
+      Polygon cell = rect(
+          s.x - pitch.x * 2.0f, s.y - pitch.y * 2.0f, s.x + pitch.x * 2.0f, s.y + pitch.y * 2.0f);
       for (int di = -2; di <= 2 && !cell.is_empty(); di++) {
         for (int dj = -2; dj <= 2 && !cell.is_empty(); dj++) {
           if (di == 0 && dj == 0) {
@@ -785,7 +792,8 @@ void pattern_cells(PatternContext &ctx, const float2 pitch, const float jitter, 
           const float2 other = site(i + di, j + dj);
           const float2 mid = (s + other) * 0.5f;
           const float2 dir = other - s;
-          /* Keep the side of the bisector toward this site: a clip edge with the site on its left. */
+          /* Keep the side of the bisector toward this site: a clip edge with the site on its left.
+           */
           const float2 along(-dir.y, dir.x);
           const float2 big = along * 1000.0f;
           const float2 back = -dir * 1000.0f;
@@ -886,8 +894,8 @@ void pattern_fan(PatternContext &ctx)
   const float row_step = radius * 0.7f;
   const float ring = p.height;
   auto fan_center = [&](const int i, const int j) {
-    return ctx.center + float2(float(i) * radius * 2.0f + ((j & 1) ? radius : 0.0f),
-                               float(j) * row_step);
+    return ctx.center +
+           float2(float(i) * radius * 2.0f + ((j & 1) ? radius : 0.0f), float(j) * row_step);
   };
   /* The fan a point belongs to: the highest one at or below it that reaches it. */
   auto owner = [&](const float2 &q) {
@@ -920,8 +928,11 @@ void pattern_fan(PatternContext &ctx)
         const float step = PI_F / float(count);
         const float angle_gap = k == 0 ? 0.0f : g / middle;
         for (int s = 0; s < count; s++) {
-          Polygon block = sector(
-              c, k == 0 ? 0.0f : r0 + g, r1 - g, float(s) * step + angle_gap, float(s + 1) * step - angle_gap);
+          Polygon block = sector(c,
+                                 k == 0 ? 0.0f : r0 + g,
+                                 r1 - g,
+                                 float(s) * step + angle_gap,
+                                 float(s + 1) * step - angle_gap);
           if (owner(centroid(block)) != int2(i, j)) {
             continue;
           }
@@ -940,7 +951,8 @@ void pattern_custom(PatternContext &ctx)
   const MeshMasonryParams &p = ctx.params;
   const int kind = int(MasonryPattern::Custom);
   const float2 size = math::max(p.tile_size, float2(1e-4f));
-  for (int i = floor_div(ctx.box.min.x, size.x) - 1; i <= floor_div(ctx.box.max.x, size.x) + 1; i++)
+  for (int i = floor_div(ctx.box.min.x, size.x) - 1; i <= floor_div(ctx.box.max.x, size.x) + 1;
+       i++)
   {
     for (int j = floor_div(ctx.box.min.y, size.y) - 1; j <= floor_div(ctx.box.max.y, size.y) + 1;
          j++)
@@ -1148,7 +1160,8 @@ void build_block(BlockMeshData &data,
   if (dome) {
     const float lift = params.dome * std::sqrt(area / PI_F) * 0.5f;
     for (const float2 &q : outline) {
-      data.positions.append(to_3d(math::interpolate(q, middle, 0.5f), base + depth + lift * 0.75f));
+      data.positions.append(
+          to_3d(math::interpolate(q, middle, 0.5f), base + depth + lift * 0.75f));
     }
     data.positions.append(to_3d(middle, base + depth + lift));
   }
@@ -1213,8 +1226,9 @@ void build_block(BlockMeshData &data,
                              math::interpolate(outline[i], middle, 0.5f)};
       add_face(Span<int>(verts, 4), Span<float2>(uvs, 4));
       const int fan[3] = {ring + i, ring + next, tip};
-      const float2 fan_uvs[3] = {
-          math::interpolate(outline[i], middle, 0.5f), math::interpolate(outline[next], middle, 0.5f), middle};
+      const float2 fan_uvs[3] = {math::interpolate(outline[i], middle, 0.5f),
+                                 math::interpolate(outline[next], middle, 0.5f),
+                                 middle};
       add_face(Span<int>(fan, 3), Span<float2>(fan_uvs, 3));
     }
   }
@@ -1288,6 +1302,218 @@ void face_frame(const MeshMasonryParams &params,
   r_v = v;
 }
 
+/** A wall laid out in distance along the wall and height. Internal mesh edges do not clip bricks.
+ */
+struct WallPatch {
+  Vector<int> faces;
+  Vector<Polygon> face_outlines;
+  Polygon outline;
+};
+
+struct WallBoundary {
+  int start_vert, end_vert;
+  float2 start, end;
+};
+
+Vector<WallPatch> wall_patches(const Mesh &mesh,
+                               const MeshMasonryParams &params,
+                               MutableSpan<int> face_patch,
+                               MutableSpan<float> shifts,
+                               MutableSpan<float3> directions)
+{
+  Vector<WallPatch> patches;
+  if (!params.continuous_walls || params.direction != MasonryDirection::Auto ||
+      int(params.pattern) > int(MasonryPattern::Rubble))
+  {
+    return patches;
+  }
+  const Span<float3> positions = mesh.vert_positions();
+  const Span<int2> edges = mesh.edges();
+  const OffsetIndices faces = mesh.faces();
+  const Span<int> corner_verts = mesh.corner_verts();
+  const Span<int> corner_edges = mesh.corner_edges();
+  const Span<float3> normals = mesh.face_normals();
+  const VArraySpan<bool> sharp = *mesh.attributes().lookup_or_default<bool>(
+      "sharp_edge", bke::AttrDomain::Edge, false);
+  Array<int> edge_a(mesh.edges_num, -1), edge_b(mesh.edges_num, -1);
+  Array<bool> eligible(mesh.faces_num, false), visited(mesh.faces_num, false);
+  Array<int> component_id(mesh.faces_num, -1);
+  const float tolerance = std::max(params.length, params.height) * 1e-5f + 1e-7f;
+  for (const int face : faces.index_range()) {
+    eligible[face] = std::abs(normals[face].z) < 1e-5f &&
+                     (params.selection.is_empty() || params.selection[face]);
+    directions[face] = math::normalize(math::cross(float3(0, 0, 1), normals[face]));
+    for (const int edge : corner_edges.slice(faces[face])) {
+      if (edge_a[edge] == -1) {
+        edge_a[edge] = face;
+      }
+      else if (edge_b[edge] == -1) {
+        edge_b[edge] = face;
+      }
+      else {
+        edge_b[edge] = -2; /* Non-manifold edges break the layout. */
+      }
+    }
+  }
+  auto neighbor = [&](const int edge, const int face) {
+    return edge_b[edge] < 0 ? -1 : (edge_a[edge] == face ? edge_b[edge] : edge_a[edge]);
+  };
+  auto can_cross = [&](const int a, const int b, const int edge) {
+    if (b < 0 || !eligible[b] || sharp[edge] || math::dot(normals[a], normals[b]) <= 0.707107f) {
+      return false;
+    }
+    const float3 delta = positions[edges[edge][1]] - positions[edges[edge][0]];
+    return std::abs(math::dot(delta, directions[a] - directions[b])) < tolerance;
+  };
+  auto coordinate = [&](const int face, const int vert) {
+    return float2(math::dot(positions[vert], directions[face]) + shifts[face], positions[vert].z);
+  };
+  for (const int root : faces.index_range()) {
+    if (!eligible[root] || visited[root]) {
+      continue;
+    }
+    WallPatch patch;
+    patch.faces.append(root);
+    shifts[root] = 0;
+    visited[root] = true;
+    component_id[root] = root;
+    for (int i = 0; i < patch.faces.size(); i++) {
+      const int face = patch.faces[i];
+      for (const int edge : corner_edges.slice(faces[face])) {
+        const int other = neighbor(edge, face);
+        if (!can_cross(face, other, edge) || visited[other]) {
+          continue;
+        }
+        const float3 point = positions[edges[edge][0]];
+        shifts[other] = shifts[face] + math::dot(point, directions[face] - directions[other]);
+        visited[other] = true;
+        component_id[other] = root;
+        patch.faces.append(other);
+      }
+    }
+    if (patch.faces.size() < 2) {
+      continue;
+    }
+    Vector<WallBoundary> boundary;
+    Map<int, Vector<int>> starts;
+    for (const int face : patch.faces) {
+      Polygon outline;
+      const IndexRange corners = faces[face];
+      for (const int corner : corners) {
+        const int next = corners.start() + (corner - corners.start() + 1) % corners.size();
+        const int a = corner_verts[corner], b = corner_verts[next];
+        const int edge = corner_edges[corner];
+        const int other = neighbor(edge, face);
+        const float2 qa = coordinate(face, a), qb = coordinate(face, b);
+        outline.append(qa);
+        const bool internal = can_cross(face, other, edge) && component_id[other] == root &&
+                              math::distance_squared(qa, coordinate(other, a)) <
+                                  tolerance * tolerance &&
+                              math::distance_squared(qb, coordinate(other, b)) <
+                                  tolerance * tolerance;
+        if (!internal) {
+          starts.lookup_or_add_default(a).append(boundary.size());
+          boundary.append({a, b, qa, qb});
+        }
+      }
+      patch.face_outlines.append(std::move(outline));
+    }
+    if (boundary.is_empty()) {
+      continue;
+    }
+    Array<bool> used(boundary.size(), false);
+    int current = 0;
+    bool valid = true;
+    for (const int step : boundary.index_range()) {
+      const WallBoundary &segment = boundary[current];
+      used[current] = true;
+      patch.outline.append(segment.start);
+      if (segment.end_vert == boundary[0].start_vert &&
+          math::distance_squared(segment.end, boundary[0].start) < tolerance * tolerance)
+      {
+        valid = step ==
+                boundary.size() - 1; /* Multiple boundary loops, such as holes, fall back. */
+        break;
+      }
+      int next = -1;
+      if (const Vector<int> *candidates = starts.lookup_ptr(segment.end_vert)) {
+        for (const int candidate : *candidates) {
+          if (!used[candidate] && math::distance_squared(segment.end, boundary[candidate].start) <
+                                      tolerance * tolerance)
+          {
+            if (next != -1) {
+              valid = false;
+              break;
+            }
+            next = candidate;
+          }
+        }
+      }
+      if (!valid || next == -1 || step == boundary.size() - 1) {
+        valid = false;
+        break;
+      }
+      current = next;
+    }
+    if (!valid || patch.outline.size() < 3) {
+      continue;
+    }
+    /* Remove straight subdivision points before testing convexity and clipping. */
+    Polygon simplified;
+    const int count = patch.outline.size();
+    for (const int i : patch.outline.index_range()) {
+      const float2 a = patch.outline[(i + count - 1) % count];
+      const float2 b = patch.outline[i];
+      const float2 c = patch.outline[(i + 1) % count];
+      if (math::dot(b - a, c - b) >= 0 &&
+          std::abs(cross2(b - a, c - b)) <=
+              tolerance * (math::distance(a, b) + math::distance(b, c)))
+      {
+        continue;
+      }
+      simplified.append(b);
+    }
+    patch.outline = std::move(simplified);
+    if (signed_area(patch.outline) < 0) {
+      std::reverse(patch.outline.begin(), patch.outline.end());
+    }
+    if (patch.outline.size() < 3 || !is_convex(patch.outline)) {
+      continue;
+    }
+    for (const int face : patch.faces) {
+      face_patch[face] = patches.size();
+    }
+    patches.append(std::move(patch));
+  }
+  return patches;
+}
+
+/** Choose the surface frame under a brick's center, extrapolating at toothed boundaries. */
+int wall_sample_face(const WallPatch &patch, const float2 &point)
+{
+  int result = patch.faces[0];
+  float best = FLT_MAX;
+  for (const int i : patch.faces.index_range()) {
+    const Polygon &outline = patch.face_outlines[i];
+    if (point_inside(outline, point)) {
+      return patch.faces[i];
+    }
+    for (const int j : outline.index_range()) {
+      const float2 a = outline[j], delta = outline[(j + 1) % outline.size()] - a;
+      const float length_squared = math::length_squared(delta);
+      const float t = length_squared > 0 ?
+                          std::clamp(math::dot(point - a, delta) / length_squared, 0.0f, 1.0f) :
+                          0;
+      const float distance = math::distance_squared(point, a + t * delta);
+      if (distance < best) {
+        best = distance;
+        result = patch.faces[i];
+      }
+    }
+  }
+  return result;
+}
+
 /** \} */
 
 }  // namespace
@@ -1318,6 +1544,11 @@ Mesh *mesh_masonry(const Mesh &mesh, const MeshMasonryParams &params)
   const float gap = std::max(params.mortar, 0.0f);
   BlockMeshData data;
   Array<bool> covered(mesh.faces_num, false);
+  Array<int> face_patch(mesh.faces_num, -1);
+  Array<float> wall_shifts(mesh.faces_num, 0.0f);
+  Array<float3> wall_directions(mesh.faces_num);
+  const Vector<WallPatch> patches = wall_patches(
+      mesh, params, face_patch, wall_shifts, wall_directions);
 
   for (const int face : faces.index_range()) {
     if (!params.selection.is_empty() && !params.selection[face]) {
@@ -1327,11 +1558,22 @@ Mesh *mesh_masonry(const Mesh &mesh, const MeshMasonryParams &params)
     if (face_range.size() < 3) {
       continue;
     }
-    Vector<float3, 16> face_positions;
-    for (const int corner : face_range) {
-      face_positions.append(positions[corner_verts[corner]]);
+    const WallPatch *patch = face_patch[face] >= 0 ? &patches[face_patch[face]] : nullptr;
+    if (patch && patch->faces[0] != face) {
+      continue;
     }
-    const float3 n = face_normals[face];
+    Vector<float3, 16> face_positions;
+    if (patch) {
+      for (const float2 &point : patch->outline) {
+        face_positions.append(float3(point.x, point.y, 0));
+      }
+    }
+    else {
+      for (const int corner : face_range) {
+        face_positions.append(positions[corner_verts[corner]]);
+      }
+    }
+    const float3 n = patch ? float3(0, 0, 1) : face_normals[face];
     float3 u, v;
     face_frame(params, n, face_positions, u, v);
     float3 face_center(0.0f);
@@ -1353,7 +1595,8 @@ Mesh *mesh_masonry(const Mesh &mesh, const MeshMasonryParams &params)
     }
 
     Vector<Block> blocks;
-    PatternContext ctx{params, {}, float2(math::dot(center, u), math::dot(center, v)), seed_hash, gap, blocks};
+    PatternContext ctx{
+        params, {}, float2(math::dot(center, u), math::dot(center, v)), seed_hash, gap, blocks};
     ctx.box.min = float2(FLT_MAX);
     ctx.box.max = float2(-FLT_MAX);
     for (const float2 &q : outline) {
@@ -1382,7 +1625,6 @@ Mesh *mesh_masonry(const Mesh &mesh, const MeshMasonryParams &params)
     }
 
     const bool fill_convex = is_convex(fill_outline);
-    const int material = params.block_material >= 0 ? params.block_material : materials[face];
     for (const int i : blocks.index_range()) {
       Block &block = blocks[i];
       Polygon shape = std::move(block.outline);
@@ -1410,9 +1652,35 @@ Mesh *mesh_masonry(const Mesh &mesh, const MeshMasonryParams &params)
       if (shape.size() < 3 || std::abs(signed_area(shape)) < block_area * 1e-3f) {
         continue;
       }
+      const float2 middle = centroid(shape);
+      const float3 flat_middle = u * middle.x + v * middle.y;
+      const int sample = patch ? wall_sample_face(*patch, float2(flat_middle.x, flat_middle.y)) :
+                                 face;
+      const int material = params.block_material >= 0 ? params.block_material : materials[sample];
+      const int first_vert = data.positions.size();
       build_block(data, params, shape, block.id, u, v, n, plane, material);
+      if (patch) {
+        const float3 wall_u = wall_directions[sample];
+        const float3 wall_n = face_normals[sample];
+        const float surface_plane = math::dot(positions[corner_verts[faces[sample].start()]],
+                                              wall_n);
+        const float3 anchor = wall_u * (flat_middle.x - wall_shifts[sample]) +
+                              float3(0, 0, flat_middle.y) + wall_n * surface_plane;
+        for (const int vert : IndexRange(first_vert, data.positions.size() - first_vert)) {
+          const float3 p = data.positions[vert];
+          data.positions[vert] = anchor + wall_u * (p.x - flat_middle.x) +
+                                 float3(0, 0, p.y - flat_middle.y) + wall_n * p.z;
+        }
+      }
     }
-    covered[face] = true;
+    if (patch) {
+      for (const int patch_face : patch->faces) {
+        covered[patch_face] = true;
+      }
+    }
+    else {
+      covered[face] = true;
+    }
   }
 
   if (data.blocks_num == 0) {
@@ -1443,14 +1711,16 @@ Mesh *mesh_masonry(const Mesh &mesh, const MeshMasonryParams &params)
     }
     const StringRef uv_name = mesh.active_or_default_uv_map_name();
     if (!uv_name.is_empty()) {
-      bke::SpanAttributeWriter<float2> uv = block_attributes.lookup_or_add_for_write_only_span<float2>(
-          uv_name, bke::AttrDomain::Corner);
+      bke::SpanAttributeWriter<float2> uv =
+          block_attributes.lookup_or_add_for_write_only_span<float2>(uv_name,
+                                                                     bke::AttrDomain::Corner);
       uv.span.copy_from(data.corner_uvs);
       uv.finish();
     }
     if (params.block_index_id) {
-      bke::SpanAttributeWriter<int> index = block_attributes.lookup_or_add_for_write_only_span<int>(
-          *params.block_index_id, bke::AttrDomain::Point);
+      bke::SpanAttributeWriter<int> index =
+          block_attributes.lookup_or_add_for_write_only_span<int>(*params.block_index_id,
+                                                                  bke::AttrDomain::Point);
       index.span.copy_from(data.vert_block);
       index.finish();
     }
@@ -1507,16 +1777,18 @@ Mesh *mesh_masonry(const Mesh &mesh, const MeshMasonryParams &params)
       material_index.finish();
     }
     if (params.mortar_id) {
-      bke::SpanAttributeWriter<bool> mortar = backing_attributes.lookup_or_add_for_write_only_span<bool>(
-          *params.mortar_id, bke::AttrDomain::Face);
+      bke::SpanAttributeWriter<bool> mortar =
+          backing_attributes.lookup_or_add_for_write_only_span<bool>(*params.mortar_id,
+                                                                     bke::AttrDomain::Face);
       mortar.span.copy_from(covered);
       mortar.finish();
     }
   }
   if (backing != nullptr && params.block_index_id) {
     bke::MutableAttributeAccessor backing_attributes = backing->attributes_for_write();
-    bke::SpanAttributeWriter<int> index = backing_attributes.lookup_or_add_for_write_only_span<int>(
-        *params.block_index_id, bke::AttrDomain::Point);
+    bke::SpanAttributeWriter<int> index =
+        backing_attributes.lookup_or_add_for_write_only_span<int>(*params.block_index_id,
+                                                                  bke::AttrDomain::Point);
     index.span.fill(-1);
     index.finish();
   }

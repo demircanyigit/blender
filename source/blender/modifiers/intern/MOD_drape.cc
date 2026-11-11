@@ -20,10 +20,13 @@
 #include "DNA_screen_types.h"
 
 #include "BKE_deform.hh"
+#include "BKE_lib_id.hh"
 #include "BKE_lib_query.hh"
 #include "BKE_mesh.hh"
 #include "BKE_mesh_wrapper.hh"
 #include "BKE_modifier.hh"
+
+#include "BLO_read_write.hh"
 
 #include "DEG_depsgraph_build.hh"
 #include "DEG_depsgraph_query.hh"
@@ -36,6 +39,7 @@
 
 #include "GEO_mesh_drape.hh"
 
+#include "MOD_colliders.hh"
 #include "MOD_modifiertypes.hh"
 #include "MOD_ui_common.hh"
 #include "MOD_util.hh"
@@ -60,15 +64,38 @@ static void foreach_ID_link(ModifierData *md, Object *ob, IDWalkFunc walk, void 
 {
   DrapeModifierData *dmd = reinterpret_cast<DrapeModifierData *>(md);
   walk(user_data, ob, reinterpret_cast<ID **>(&dmd->collider), IDWALK_CB_NOP);
+  MOD_collider_sources_foreach_ID(dmd->colliders, ob, walk, user_data);
+}
+
+static void copy_data(const ModifierData *md, ModifierData *target, const int flag)
+{
+  BKE_modifier_copydata_generic(md, target, flag);
+  const DrapeModifierData &src = *reinterpret_cast<const DrapeModifierData *>(md);
+  DrapeModifierData &dst = *reinterpret_cast<DrapeModifierData *>(target);
+  MOD_collider_sources_copy(dst.colliders, src.colliders);
+}
+
+static void free_data(ModifierData *md)
+{
+  MOD_collider_sources_free(reinterpret_cast<DrapeModifierData *>(md)->colliders);
+}
+
+static void blend_write(BlendWriter *writer, const ID * /*owner*/, const ModifierData *md)
+{
+  const DrapeModifierData *dmd = reinterpret_cast<const DrapeModifierData *>(md);
+  writer->write_struct(dmd);
+  MOD_collider_sources_blend_write(writer, dmd->colliders);
+}
+
+static void blend_read(BlendDataReader *reader, ModifierData *md)
+{
+  MOD_collider_sources_blend_read(reader, reinterpret_cast<DrapeModifierData *>(md)->colliders);
 }
 
 static void update_depsgraph(ModifierData *md, const ModifierUpdateDepsgraphContext *ctx)
 {
   const DrapeModifierData *dmd = reinterpret_cast<DrapeModifierData *>(md);
-  if (dmd->collider != nullptr) {
-    DEG_add_object_relation(ctx->node, dmd->collider, DEG_OB_COMP_TRANSFORM, "Drape Modifier");
-    DEG_add_object_relation(ctx->node, dmd->collider, DEG_OB_COMP_GEOMETRY, "Drape Modifier");
-  }
+  MOD_colliders_update_depsgraph(dmd->collider, dmd->colliders, ctx, "Drape Modifier");
   /* Down is down in the world, so the object's turn and place matter. */
   DEG_add_depends_on_transform_relation(ctx->node, "Drape Modifier");
 }
@@ -94,15 +121,11 @@ static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh 
   params.self_collision = dmd.flag & MOD_DRAPE_SELF_COLLISION;
   params.mesh_to_space = ctx->object->object_to_world();
 
-  if (dmd.collider != nullptr && dmd.collider != ctx->object && dmd.collider->type == OB_MESH) {
-    Object *collider_eval = DEG_get_evaluated(ctx->depsgraph, dmd.collider);
-    Mesh *collider = BKE_modifier_get_evaluated_mesh_from_evaluated_object(collider_eval);
-    if (collider != nullptr) {
-      BKE_mesh_wrapper_ensure_mdata(collider);
-      params.collider = collider;
-      params.collider_to_space = collider_eval->object_to_world();
-    }
-  }
+  /* Every collider joined, already in world space. */
+  Mesh *colliders = MOD_colliders_mesh(dmd.collider, dmd.colliders, ctx);
+  params.collider = colliders;
+  params.collider_to_space = float4x4::identity();
+  params.collider_cage = dmd.cage;
 
   Array<bool> pin;
   const MDeformVert *dvert = nullptr;
@@ -119,6 +142,9 @@ static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh 
 
   const char *error = nullptr;
   Mesh *result = geometry::mesh_drape(*mesh, params, &error);
+  if (colliders != nullptr) {
+    BKE_id_free(nullptr, colliders);
+  }
   if (error != nullptr) {
     BKE_modifier_set_error(ctx->object, md, "%s", error);
   }
@@ -133,6 +159,8 @@ static void panel_draw(const bContext * /*C*/, Panel *panel)
 
   layout.use_property_split_set(true);
   layout.prop(ptr, "collider", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+  MOD_collider_sources_draw(layout, ptr);
+  layout.prop(ptr, "cage", UI_ITEM_NONE, std::nullopt, ICON_NONE);
   layout.prop(ptr, "use_floor", UI_ITEM_NONE, std::nullopt, ICON_NONE);
   modifier_vgroup_ui(layout, ptr, &ob_ptr, "vertex_group", "invert_vertex_group", IFACE_("Pin"));
 
@@ -171,7 +199,7 @@ ModifierTypeInfo modifierType_Drape = {
     /*flags*/ eModifierTypeFlag_AcceptsMesh | eModifierTypeFlag_SupportsEditmode,
     /*icon*/ ICON_MOD_DRAPE,
 
-    /*copy_data*/ BKE_modifier_copydata_generic,
+    /*copy_data*/ copy_data,
 
     /*deform_verts*/ nullptr,
     /*deform_matrices*/ nullptr,
@@ -182,7 +210,7 @@ ModifierTypeInfo modifierType_Drape = {
 
     /*init_data*/ init_data,
     /*required_data_mask*/ required_data_mask,
-    /*free_data*/ nullptr,
+    /*free_data*/ free_data,
     /*is_disabled*/ nullptr,
     /*update_depsgraph*/ update_depsgraph,
     /*depends_on_time*/ nullptr,
@@ -191,8 +219,8 @@ ModifierTypeInfo modifierType_Drape = {
     /*foreach_tex_link*/ nullptr,
     /*free_runtime_data*/ nullptr,
     /*panel_register*/ panel_register,
-    /*blend_write*/ nullptr,
-    /*blend_read*/ nullptr,
+    /*blend_write*/ blend_write,
+    /*blend_read*/ blend_read,
     /*foreach_cache*/ nullptr,
     /*foreach_working_space_color*/ nullptr,
 };

@@ -474,6 +474,7 @@ static const EnumPropertyItem rna_enum_viewport_lighting_items[] = {
     {V3D_LIGHTING_STUDIO, "STUDIO", 0, "Studio", "Display using studio lighting"},
     {V3D_LIGHTING_MATCAP, "MATCAP", 0, "MatCap", "Display using matcap material and lighting"},
     {V3D_LIGHTING_FLAT, "FLAT", 0, "Flat", "Display using flat lighting"},
+    {V3D_LIGHTING_TOON, "TOON", 0, "Toon", "Display using bands of light"},
     {0, nullptr, 0, nullptr, nullptr},
 };
 
@@ -482,6 +483,7 @@ static const EnumPropertyItem rna_enum_shading_color_type_items[] = {
     {V3D_SHADING_OBJECT_COLOR, "OBJECT", 0, "Object", "Show object color"},
     {V3D_SHADING_RANDOM_COLOR, "RANDOM", 0, "Random", "Show random object color"},
     {V3D_SHADING_VERTEX_COLOR, "VERTEX", 0, "Attribute", "Show active color attribute"},
+    {V3D_SHADING_FACE_SET_COLOR, "FACE_SET", 0, "Face Set", "Show the color of each face set"},
     {V3D_SHADING_TEXTURE_COLOR,
      "TEXTURE",
      0,
@@ -570,6 +572,11 @@ const EnumPropertyItem buttons_context_items[] = {
      "Bone Constraints",
      "Bone Constraint Properties"},
     {BCONTEXT_MATERIAL, "MATERIAL", ICON_MATERIAL, "Material", "Material Properties"},
+    {BCONTEXT_ALL_MATERIALS,
+     "ALL_MATERIALS",
+     ICON_ALL_MATERIALS,
+     "All Materials",
+     "Every material in the file"},
     {BCONTEXT_TEXTURE, "TEXTURE", ICON_TEXTURE, "Texture", "Texture Properties"},
     {BCONTEXT_PARTICLE, "PARTICLES", ICON_PARTICLES, "Particles", "Particle Properties"},
     {BCONTEXT_PHYSICS, "PHYSICS", ICON_PHYSICS, "Physics", "Physics Properties"},
@@ -2355,9 +2362,44 @@ static void rna_SpaceProperties_context_update(Main * /*bmain*/,
 {
   SpaceProperties *sbuts = static_cast<SpaceProperties *>(ptr->data);
   /* XXX BCONTEXT_DATA is ugly, but required for lights... See #51318. */
-  if (ELEM(sbuts->mainb, BCONTEXT_WORLD, BCONTEXT_MATERIAL, BCONTEXT_TEXTURE, BCONTEXT_DATA)) {
+  if (ELEM(sbuts->mainb,
+           BCONTEXT_WORLD,
+           BCONTEXT_MATERIAL,
+           BCONTEXT_ALL_MATERIALS,
+           BCONTEXT_TEXTURE,
+           BCONTEXT_DATA))
+  {
     sbuts->preview = 1;
   }
+}
+
+/* The index of the material shown in the All Materials tab, in the file's list of materials,
+ * for showing it as the active item of that list. */
+static int rna_SpaceProperties_browse_material_index_get(PointerRNA *ptr)
+{
+  SpaceProperties *sbuts = static_cast<SpaceProperties *>(ptr->data);
+  if (sbuts->browse_material == nullptr) {
+    return -1;
+  }
+  return BLI_findindex(&G_MAIN->materials, sbuts->browse_material);
+}
+
+static void rna_SpaceProperties_browse_material_index_set(PointerRNA *ptr, int value)
+{
+  SpaceProperties *sbuts = static_cast<SpaceProperties *>(ptr->data);
+  Material *ma = static_cast<Material *>(BLI_findlink(&G_MAIN->materials, value));
+  if (ma != nullptr) {
+    sbuts->browse_material = ma;
+  }
+}
+
+static void rna_SpaceProperties_browse_material_update(Main * /*bmain*/,
+                                                      Scene * /*scene*/,
+                                                      PointerRNA *ptr)
+{
+  SpaceProperties *sbuts = static_cast<SpaceProperties *>(ptr->data);
+  sbuts->preview = 1;
+  WM_main_add_notifier(NC_MATERIAL | ND_SHADING, nullptr);
 }
 
 static int rna_SpaceProperties_tab_search_results_getlength(const PointerRNA *ptr,
@@ -4874,6 +4916,173 @@ static void rna_def_space_view3d_shading(BlenderRNA *brna)
   RNA_def_property_range(prop, 0.0f, 1.0f);
   RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
 
+  static const EnumPropertyItem outline_type_items[] = {
+      {V3D_SHADING_OUTLINE_OBJECT, "OBJECT", 0, "Object", "Line around each object"},
+      {V3D_SHADING_OUTLINE_LOOSE_PART,
+       "LOOSE_PART",
+       0,
+       "Loose Part",
+       "Line around each connected part of a mesh"},
+      {V3D_SHADING_OUTLINE_MATERIAL,
+       "MATERIAL",
+       0,
+       "Material",
+       "Line where one material meets another"},
+      {V3D_SHADING_OUTLINE_FACE_SET,
+       "FACE_SET",
+       0,
+       "Face Set",
+       "Line where one face set meets another"},
+      {0, nullptr, 0, nullptr, nullptr},
+  };
+  prop = RNA_def_property(srna, "outline_type", PROP_ENUM, PROP_NONE);
+  RNA_def_property_enum_sdna(prop, nullptr, "outline_type");
+  RNA_def_property_enum_items(prop, outline_type_items);
+  RNA_def_property_ui_text(prop, "Outline By", "Where the outline is drawn");
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  prop = RNA_def_property(srna, "outline_width", PROP_FLOAT, PROP_PIXEL);
+  RNA_def_property_float_sdna(prop, nullptr, "outline_width");
+  RNA_def_property_range(prop, 1.0f, 8.0f);
+  RNA_def_property_ui_range(prop, 1.0f, 8.0f, 1, 1);
+  RNA_def_property_ui_text(prop, "Outline Width", "Thickness of the outline");
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  prop = RNA_def_property(srna, "show_edge_lines", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "edge_flag", V3D_SHADING_EDGE_LINES);
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_ui_text(
+      prop, "Edge Lines", "Draw lines where the surface jumps in depth or bends sharply");
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  prop = RNA_def_property(srna, "use_edge_depth", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "edge_flag", V3D_SHADING_EDGE_DEPTH);
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_ui_text(prop, "Depth", "Lines where the surface jumps in depth");
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  prop = RNA_def_property(srna, "use_edge_hard", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "edge_flag", V3D_SHADING_EDGE_HARD);
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_ui_text(
+      prop, "Hard", "Lines along hard edges: edges marked sharp and flat-shaded faces");
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  static const EnumPropertyItem toon_light_items[] = {
+      {0, "SCENE", 0, "Scene", "The light is fixed in the scene, like the shadow"},
+      {V3D_SHADING_TOON_VIEW_LIGHT,
+       "VIEW",
+       0,
+       "View",
+       "The light turns with the view, so the lighting stays the same as you orbit"},
+      {0, nullptr, 0, nullptr, nullptr},
+  };
+  prop = RNA_def_property(srna, "toon_light", PROP_ENUM, PROP_NONE);
+  RNA_def_property_enum_bitflag_sdna(prop, nullptr, "toon_flag");
+  RNA_def_property_enum_items(prop, toon_light_items);
+  RNA_def_property_ui_text(
+      prop, "Light", "Where the toon light comes from, both use the Light Direction");
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  prop = RNA_def_property(srna, "toon_bands", PROP_INT, PROP_NONE);
+  RNA_def_property_int_sdna(prop, nullptr, "toon_bands");
+  RNA_def_property_range(prop, 2, 6);
+  RNA_def_property_ui_text(prop, "Bands", "Number of light steps");
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  prop = RNA_def_property(srna, "toon_softness", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "toon_softness");
+  RNA_def_property_range(prop, 0.0f, 1.0f);
+  RNA_def_property_ui_text(prop, "Softness", "How soft the step between two bands is");
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  prop = RNA_def_property(srna, "toon_shadow_color", PROP_FLOAT, PROP_COLOR);
+  RNA_def_property_float_sdna(prop, nullptr, "toon_shadow_color");
+  RNA_def_property_array(prop, 3);
+  RNA_def_property_range(prop, 0.0f, 1.0f);
+  RNA_def_property_ui_text(
+      prop, "Shadow Color", "Color multiplied into the dark bands");
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  prop = RNA_def_property(srna, "use_toon_highlight", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "toon_flag", V3D_SHADING_TOON_HIGHLIGHT);
+  RNA_def_property_ui_text(prop, "Highlight", "A hard-edged highlight spot");
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  prop = RNA_def_property(srna, "toon_highlight_size", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "toon_highlight_size");
+  RNA_def_property_range(prop, 0.0f, 1.0f);
+  RNA_def_property_ui_text(prop, "Size", "Size of the highlight");
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  prop = RNA_def_property(srna, "use_toon_rim", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "toon_flag", V3D_SHADING_TOON_RIM);
+  RNA_def_property_ui_text(
+      prop, "Rim Light", "A bright edge where the surface turns away from the view");
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  prop = RNA_def_property(srna, "toon_rim_color", PROP_FLOAT, PROP_COLOR);
+  RNA_def_property_float_sdna(prop, nullptr, "toon_rim_color");
+  RNA_def_property_array(prop, 3);
+  RNA_def_property_range(prop, 0.0f, 1.0f);
+  RNA_def_property_ui_text(prop, "Rim Color", "Color of the rim light");
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  prop = RNA_def_property(srna, "toon_rim_width", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "toon_rim_width");
+  RNA_def_property_range(prop, 0.0f, 1.0f);
+  RNA_def_property_ui_text(prop, "Width", "Width of the rim light");
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  prop = RNA_def_property(srna, "use_edge_crease", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "edge_flag", V3D_SHADING_EDGE_CREASE);
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_ui_text(prop, "Crease", "Lines where the surface bends sharply");
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  prop = RNA_def_property(srna, "edge_color", PROP_FLOAT, PROP_COLOR);
+  RNA_def_property_float_sdna(prop, nullptr, "edge_color");
+  RNA_def_property_array(prop, 3);
+  RNA_def_property_range(prop, 0.0f, 1.0f);
+  RNA_def_property_ui_text(prop, "Edge Line Color", "Color of the edge lines");
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  prop = RNA_def_property(srna, "edge_strength", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "edge_strength");
+  RNA_def_property_range(prop, 0.0f, 1.0f);
+  RNA_def_property_ui_text(prop, "Strength", "How strong the edge lines are");
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  prop = RNA_def_property(srna, "edge_crease_angle", PROP_FLOAT, PROP_ANGLE);
+  RNA_def_property_float_sdna(prop, nullptr, "edge_crease_angle");
+  RNA_def_property_range(prop, DEG2RADF(1.0f), DEG2RADF(180.0f));
+  RNA_def_property_ui_text(
+      prop, "Angle", "Faces meeting at a sharper angle than this get a crease line");
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  prop = RNA_def_property(srna, "edge_depth_threshold", PROP_FLOAT, PROP_FACTOR);
+  RNA_def_property_float_sdna(prop, nullptr, "edge_depth_threshold");
+  RNA_def_property_range(prop, 0.001f, 1.0f);
+  RNA_def_property_ui_range(prop, 0.001f, 0.5f, 1, 3);
+  RNA_def_property_ui_text(
+      prop, "Threshold", "How big a depth jump must be to get a line, relative to distance");
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
   prop = RNA_def_property(srna, "shadow_intensity", PROP_FLOAT, PROP_FACTOR);
   RNA_def_property_float_sdna(prop, nullptr, "shadow_intensity");
   RNA_def_property_ui_text(prop, "Shadow Intensity", "Darkness of shadows");
@@ -6060,6 +6269,7 @@ static void rna_def_space_properties_filter(StructRNA *srna)
       "show_properties_bone",
       "show_properties_bone_constraints",
       "show_properties_material",
+      "show_properties_all_materials",
       "show_properties_texture",
       "show_properties_particles",
       "show_properties_physics",
@@ -6131,6 +6341,26 @@ static void rna_def_space_properties(BlenderRNA *brna)
   RNA_def_property_clear_flag(prop, PROP_ID_REFCOUNT);
   RNA_def_property_update(
       prop, NC_SPACE | ND_SPACE_PROPERTIES, "rna_SpaceProperties_pin_id_update");
+
+  prop = RNA_def_property(srna, "browse_material", PROP_POINTER, PROP_NONE);
+  RNA_def_property_pointer_sdna(prop, nullptr, "browse_material");
+  RNA_def_property_struct_type(prop, "Material");
+  RNA_def_property_flag(prop, PROP_EDITABLE);
+  RNA_def_property_clear_flag(prop, PROP_ID_REFCOUNT);
+  RNA_def_property_ui_text(prop, "Material", "Material shown in the All Materials tab");
+  RNA_def_property_update(
+      prop, NC_SPACE | ND_SPACE_PROPERTIES, "rna_SpaceProperties_browse_material_update");
+
+  prop = RNA_def_property(srna, "browse_material_index", PROP_INT, PROP_NONE);
+  RNA_def_property_int_funcs(prop,
+                             "rna_SpaceProperties_browse_material_index_get",
+                             "rna_SpaceProperties_browse_material_index_set",
+                             nullptr);
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_ui_text(
+      prop, "Material Index", "Index of the material shown in the All Materials tab");
+  RNA_def_property_update(
+      prop, NC_SPACE | ND_SPACE_PROPERTIES, "rna_SpaceProperties_browse_material_update");
 
   prop = RNA_def_property(srna, "use_pin_id", PROP_BOOLEAN, PROP_NONE);
   RNA_def_property_boolean_sdna(prop, nullptr, "flag", SB_PIN_CONTEXT);

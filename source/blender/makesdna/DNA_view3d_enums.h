@@ -28,6 +28,8 @@ enum eV3DShadingLightingMode {
   V3D_LIGHTING_FLAT = 0,
   V3D_LIGHTING_STUDIO = 1,
   V3D_LIGHTING_MATCAP = 2,
+  /** Bands of light, with an optional highlight and rim. */
+  V3D_LIGHTING_TOON = 3,
 };
 
 /** #View3DShading.color_type, #View3DShading.wire_color_type */
@@ -38,6 +40,8 @@ enum eV3DShadingColorType {
   V3D_SHADING_TEXTURE_COLOR = 3,
   V3D_SHADING_OBJECT_COLOR = 4,
   V3D_SHADING_VERTEX_COLOR = 5,
+  /** Color of the sculpt face set of each face, meshes only. */
+  V3D_SHADING_FACE_SET_COLOR = 6,
 };
 
 /** #View3DShading.background_type */

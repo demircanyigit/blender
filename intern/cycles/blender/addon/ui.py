@@ -1222,8 +1222,10 @@ class CYCLES_PT_context_material(CyclesButtonsPanel, Panel):
     def poll(cls, context):
         if context.active_object and context.active_object.type == 'GREASEPENCIL':
             return False
-        else:
-            return (context.material or context.object) and CyclesButtonsPanel.poll(context)
+        # Not in the All Materials tab, which has its own list.
+        if getattr(context.space_data, "context", None) == 'ALL_MATERIALS':
+            return False
+        return (context.material or context.object) and CyclesButtonsPanel.poll(context)
 
     def draw(self, context):
         layout = self.layout
@@ -1273,6 +1275,15 @@ class CYCLES_PT_context_material(CyclesButtonsPanel, Panel):
         elif mat:
             layout.template_ID(space, "pin_id")
             layout.separator()
+
+        if ob and mat and any(o != ob for o in context.selected_editable_objects):
+            row = layout.row(align=True)
+            props = row.operator("object.material_to_selected", text="Assign to Selected",
+                                 icon='MATERIAL_TO_SELECTED')
+            props.mode = 'ACTIVE_SLOT'
+            props = row.operator("object.material_to_selected", text="Add Slot to Selected",
+                                 icon='MATERIAL_SLOT_TO_SELECTED')
+            props.mode = 'NEW_SLOT'
 
 
 class CYCLES_OBJECT_PT_motion_blur(CyclesButtonsPanel, Panel):

@@ -21,13 +21,99 @@ Files that use these additions won't work properly in official Blender. See
 
 | Area | What's new |
 |---|---|
-| [Modifiers](#modifiers) | 52 new modifiers, a Modifier List view of the stack, viewport gizmos |
-| [Geometry Nodes](#geometry-nodes) | 69 new nodes: 17 modeling nodes, plus node versions of the new and classic modifiers |
+| [Modifiers](#modifiers) | 63 new modifiers, a Modifier List view of the stack, viewport gizmos |
+| [Geometry Nodes](#geometry-nodes) | 75 new nodes: 17 modeling nodes, plus node versions of the new and classic modifiers |
 | [Toolbox and Shelf](#toolbox-and-shelf) | Two new editors for your own buttons, and icons in Quick Favorites |
 | [Classic look](#classic-look) | Colored 2.79-style icons, embossed widgets, square vertices |
-| [Solid shading](#color-attributes-in-solid-shading) | Color attributes mixed into the material color |
+| [Solid shading](#color-attributes-in-solid-shading) | Color attributes mixed into the material color, [outlines around parts and edge lines](doc/fork/SOLID_OUTLINES.md), [toon lighting](doc/fork/TOON_SHADING.md) |
+| [Materials](doc/fork/ALL_MATERIALS.md) | An All Materials tab for every material in the file, and giving a material to all selected objects |
 
 ## Latest additions
+
+**[Toon shading](doc/fork/TOON_SHADING.md)**: Solid mode has a Toon lighting choice with bands,
+softness, a shadow color, and switches for a hard highlight and a rim light. The light is fixed
+in the scene or turns with the view.
+
+**[Outlines and edge lines](doc/fork/SOLID_OUTLINES.md)** in Solid shading: the outline can go
+around loose parts, materials or face sets, not only objects, in any width. Edge Lines draws lines
+where the surface jumps in depth, bends sharply or has hard edges.
+
+**[Face sets outside Sculpt Mode](doc/fork/FACE_SETS.md)**: a **Face Set** color in Solid shading
+shows them in Object and Edit Mode, and Face > Face Sets in Edit Mode (also in the right-click
+menu) makes, assigns, merges, selects, hides and clears them, makes them from loose parts,
+materials, seams, sharp edges or angles, and turns them into vertex groups or materials. Select
+Similar has Face Set too. The Piece ID modifier has the main buttons when it makes pieces from
+face sets.
+
+**Orthographic stays orthographic**: with Auto Perspective on, a view you switched to
+orthographic yourself (Numpad 5) no longer goes back to perspective when you rotate or Alt-drag
+it out of a front, side or top view. Numpad 5 again goes back to perspective.
+
+**[All Materials](doc/fork/ALL_MATERIALS.md)** is a new Properties tab that lists every material
+in the file, with its users, to add, copy, delete and edit any of them. The Material tab can now
+give the active material to all selected objects, in their active slot or a new one.
+
+
+**[Blast](doc/fork/BLAST.md)** filters small disconnected mesh islands by polygon count, area,
+volume or bounding-box size, and can retain just the N largest islands.
+
+
+**[Join](doc/fork/JOIN.md)** combines evaluated meshes from multiple objects or collections in
+one modifier, with live transforms and source modifiers, without Boolean operations.
+
+
+**[Divide](doc/fork/DIVIDE.md)** adds connected grid cuts to polygon surfaces, with adjustable
+XYZ grid size, offset and rotation.
+
+
+**[Edge Damage](doc/fork/EDGE_DAMAGE.md)** wears and chips edges by intersecting the mesh with a
+smoothed, pushed and noised copy of itself, per island, with a choice of remesh and boolean solver.
+
+
+**[Planks](doc/fork/PLANKS.md)** lays floors and walls of boards on faces (straight, herringbone,
+chevron, basket, lap and board and batten, with joists or studs) and builds crates and barrels.
+
+
+**[Roof](doc/fork/ROOF.md)** builds gable, hip, shed, flat, pyramid, gambrel and mansard roofs on
+outlines, or dresses modeled roofs with overhangs, tiles, shingles, metal, caps, valleys and gutters.
+
+
+**[Carve](doc/fork/CARVE.md)** displaces with two layers of textures, patterns (nine stone walls,
+bricks, voronoi, noise, waves) or attributes, combined and masked by noise, curvature and facing,
+and can set materials by layer and mask.
+
+
+**[Materialize](doc/fork/MATERIALIZE.md)** gives faces materials by a list of rules: curvature, direction,
+height, slope, noise, random, attribute, proximity, ambient occlusion, thickness and texture.
+
+
+**[Cleanup](doc/fork/CLEANUP.md)** runs the Clean Up menu in one go: delete loose, duplicate and
+interior parts, dissolve, delete small pieces, fill holes, flatten and split faces, and fix normals.
+
+**[Stonework](doc/fork/STONEWORK.md)** fills a mesh with whole stones, stacked one at a time from
+the bottom up: built-in round, angular, block, slab and wedge stones, or your own.
+
+**[Distribute](doc/fork/DISTRIBUTE.md)** packs objects from a collection on the faces, by their
+measured sides, so none of them touch. It fills the gaps with smaller objects and can turn the
+surface into bumpy mortar.
+
+**[Piece ID](doc/fork/PIECE_ID.md)** writes which piece each face or point belongs to, from loose
+parts, split edges, materials, face sets, a vertex group, another attribute or the selection.
+Collapse can drop those pieces instead of loose parts, and Join writes an ID per object and per
+parent.
+
+
+**[Decimate algorithms](doc/fork/DECIMATE.md)** adds PMP, Meshoptimizer, Meshoptimizer Aggressive,
+CGAL and experimental Wild QEM alongside the original Blender algorithm in the existing modifier.
+
+
+**[Masonry Continuous Walls](doc/fork/MASONRY.md)** keeps rigid bricks continuous across vertical
+bevel segments. Smooth, Corrective Smooth and Laplacian Smooth now have distinct icons.
+
+**[UV Scale and Texel Density](doc/fork/UV_SCALE.md)** adds a modifier and matching Geometry Node
+for global or per-island UV scaling, or a target in pixels per meter. Both account for object
+scale and scene units when matching density, and use the new checker-tile icons.
+
 
 The source branch now includes seven more modifiers: **Dice, Edit Poly, Collapse, Drape, Shatter,
 Masonry and Dissolve**, plus **Collapse Islands, Drape, Shatter and Masonry** Geometry Nodes.
@@ -65,7 +151,7 @@ The Modifiers tab has a second way to show the stack. The button in its header s
 
 ### New modifiers
 
-All 52 work like the built-in ones: they're in the Add Modifier menu with their own icons, they can be applied,
+All 57 work like the built-in ones: they're in the Add Modifier menu with their own icons, they can be applied,
 and most of them also work in Edit Mode.
 
 ![Voronoi Fracture with Exploded View, a tower made with Poly Select and four Poly Edits, Panelize on a sphere, and Radial Array](doc/fork/images/modifiers_modeling.png)
@@ -92,10 +178,20 @@ Array.*
 | <img src="doc/fork/images/icons/mod_symmetrize.png" width="32" height="32" alt="Symmetrize"> | Symmetrize | Makes one side of the mesh a mirror of the other |
 | <img src="doc/fork/images/icons/mod_sweep.png" width="32" height="32" alt="Sweep"> | Sweep | Makes a mesh by moving a shape along curves |
 | <img src="doc/fork/images/icons/mod_dice.png" width="32" height="32" alt="Dice"> | Dice | Cuts a mesh into a grid of solid pieces, by count or size |
-| <img src="doc/fork/images/icons/mod_collapse.png" width="32" height="32" alt="Collapse"> | Collapse | Drops mesh islands as rigid pieces onto a target or floor |
-| <img src="doc/fork/images/icons/mod_drape.png" width="32" height="32" alt="Drape"> | Drape | Settles a mesh as cloth over a collider, with pinning and optional self collision |
+| <img src="doc/fork/images/icons/mod_divide.png" width="32" height="32" alt="Divide"> | [Divide](doc/fork/DIVIDE.md) | Divides polygon surfaces into connected grid-like sections with adjustable size, offset and rotation |
+| <img src="doc/fork/images/icons/mod_join.png" width="32" height="32" alt="Join"> | [Join](doc/fork/JOIN.md) | Combines evaluated meshes from objects and collections without Boolean operations, with an ID per object and per parent |
+| <img src="doc/fork/images/icons/mod_collapse.png" width="32" height="32" alt="Collapse"> | Collapse | Drops loose parts, or pieces from an attribute, as rigid pieces onto ground objects and collections, or a floor |
+| <img src="doc/fork/images/icons/mod_drape.png" width="32" height="32" alt="Drape"> | Drape | Settles a mesh as cloth over collider objects and collections, with pinning and optional self collision |
 | <img src="doc/fork/images/icons/mod_shatter.png" width="32" height="32" alt="Shatter"> | Shatter | Breaks a closed mesh with stone, glass, wood, ceramic or ice patterns |
 | <img src="doc/fork/images/icons/mod_masonry.png" width="32" height="32" alt="Masonry"> | Masonry | Covers faces with brick, stone or paving patterns |
+| <img src="doc/fork/images/icons/mod_planks.png" width="32" height="32" alt="Planks"> | [Planks](doc/fork/PLANKS.md) | Floors and walls of boards on faces, and crates and barrels of boards |
+| <img src="doc/fork/images/icons/mod_roof.png" width="32" height="32" alt="Roof"> | [Roof](doc/fork/ROOF.md) | Builds roofs on outlines, or dresses modeled roofs |
+| <img src="doc/fork/images/icons/mod_carve.png" width="32" height="32" alt="Carve"> | [Carve](doc/fork/CARVE.md) | Displaces with two texture, pattern or attribute layers, masked |
+| <img src="doc/fork/images/icons/mod_materialize.png" width="32" height="32" alt="Materialize"> | [Materialize](doc/fork/MATERIALIZE.md) | Gives faces materials by a list of rules |
+| <img src="doc/fork/images/icons/mod_cleanup.png" width="32" height="32" alt="Cleanup"> | [Cleanup](doc/fork/CLEANUP.md) | Runs the Clean Up menu's steps and more in one go |
+| <img src="doc/fork/images/icons/mod_stonework.png" width="32" height="32" alt="Stonework"> | [Stonework](doc/fork/STONEWORK.md) | Fills a mesh with whole stones, stacked from the bottom up |
+| <img src="doc/fork/images/icons/mod_distribute.png" width="32" height="32" alt="Distribute"> | [Distribute](doc/fork/DISTRIBUTE.md) | Packs objects from a collection on the faces, so none of them touch |
+| <img src="doc/fork/images/icons/mod_edge_damage.png" width="32" height="32" alt="Edge Damage"> | [Edge Damage](doc/fork/EDGE_DAMAGE.md) | Wears and chips the edges and corners of closed meshes |
 | <img src="doc/fork/images/icons/mod_dissolve.png" width="32" height="32" alt="Dissolve"> | Dissolve | Removes points, edges or faces and merges the surrounding faces |
 
 **Selection and editing in the stack**
@@ -107,6 +203,7 @@ Array.*
 | <img src="doc/fork/images/icons/mod_poly_edit.png" width="32" height="32" alt="Poly Edit"> | Poly Edit | Moves, extrudes, insets, pokes or deletes the selected elements |
 | <img src="doc/fork/images/icons/mod_vol_select.png" width="32" height="32" alt="Volume Select"> | Volume Select | Writes a vertex group with the points inside a sphere, box or cylinder |
 | <img src="doc/fork/images/icons/mod_delete_mesh.png" width="32" height="32" alt="Delete Mesh"> | Delete Mesh | Deletes the points, edges or faces picked by a vertex group or an attribute |
+| <img src="doc/fork/images/icons/mod_blast.png" width="32" height="32" alt="Blast"> | [Blast](doc/fork/BLAST.md) | Removes small disconnected islands or keeps the N largest parts |
 
 Poly Select and Poly Edit work together. Select faces in Edit Mode, store them with Poly Select, then add Poly
 Edit above it. The faces Poly Edit makes become the new selection, so another Poly Edit can carry on from them.
@@ -146,11 +243,13 @@ Every step stays editable, like a history you can go back and change.
 
 | | Modifier | What it does |
 |---|---|---|
+| <img src="doc/fork/images/icons/mod_uv_scale.png" width="32" height="32" alt="UV Scale"> | [UV Scale](doc/fork/UV_SCALE.md) | Scales UVs globally or per island, or matches a world-space texel density between objects |
 | <img src="doc/fork/images/icons/mod_uvw_map.png" width="32" height="32" alt="UVW Map"> | UVW Map | Projects a UV map from a planar, cylindrical, spherical or box gizmo |
 | <img src="doc/fork/images/icons/mod_smart_uv_project.png" width="32" height="32" alt="Smart UV Project"> | Smart UV Project | Unwraps the mesh automatically and packs the islands |
 | <img src="doc/fork/images/icons/mod_mark_by_angle.png" width="32" height="32" alt="Mark by Angle"> | Mark by Angle | Marks sharp edges, seams, creases or bevel weights where faces meet at a steep angle |
 | <img src="doc/fork/images/icons/mod_material_by_element.png" width="32" height="32" alt="Material By Element"> | Material By Element | Gives faces material indices at random, by piece, in order or by direction |
 | <img src="doc/fork/images/icons/mod_data_channel.png" width="32" height="32" alt="Data Channel"> | Data Channel | Computes a value per point, such as convexity or edge length, remaps it and writes it out |
+| <img src="doc/fork/images/icons/mod_piece_id.png" width="32" height="32" alt="Piece ID"> | [Piece ID](doc/fork/PIECE_ID.md) | Writes which piece each face or point belongs to, from loose parts, edges, materials, face sets, a group, an attribute or the selection |
 | <img src="doc/fork/images/icons/mod_tension.png" width="32" height="32" alt="Tension"> | Tension | Stores how much the mesh is stretched or squashed compared to its rest shape |
 
 **Curves**
@@ -175,7 +274,7 @@ They follow the viewport's Gizmos ▸ Modifier toggle.
 
 ## Geometry Nodes
 
-69 new nodes for the Geometry Nodes editor. They're real nodes, not add-ons or node groups.
+70 new nodes for the Geometry Nodes editor. They're real nodes, not add-ons or node groups.
 
 ### Modeling nodes
 
@@ -201,6 +300,13 @@ more detail [further down](#modeling-nodes-in-detail).
 | <img src="doc/fork/images/icons/geo_mod_drape.png" width="32" height="32" alt="Drape"> | [Drape](doc/fork/NODES.md#drape) | Settles cloth over collider geometry, with a Pin field |
 | <img src="doc/fork/images/icons/geo_mod_shatter.png" width="32" height="32" alt="Shatter"> | [Shatter](doc/fork/NODES.md#shatter) | Breaks a closed mesh and outputs Piece Index and Interior fields |
 | <img src="doc/fork/images/icons/geo_mod_masonry.png" width="32" height="32" alt="Masonry"> | [Masonry](doc/fork/NODES.md#masonry) | Creates patterned blocks with Block Index and Mortar fields |
+| <img src="doc/fork/images/icons/geo_mod_planks.png" width="32" height="32" alt="Planks"> | [Planks](doc/fork/PLANKS.md) | Floors, walls, crates and barrels of boards, with Board Index, Random and Part fields |
+| <img src="doc/fork/images/icons/geo_mod_roof.png" width="32" height="32" alt="Roof"> | [Roof](doc/fork/ROOF.md) | Builds or covers roofs, with Part and Random fields |
+| <img src="doc/fork/images/icons/geo_mod_carve.png" width="32" height="32" alt="Carve"> | [Carve](doc/fork/CARVE.md) | Displaces with two pattern or value layers, with Height, Mask and Curvature fields |
+| <img src="doc/fork/images/icons/geo_mod_materialize.png" width="32" height="32" alt="Materialize"> | [Materialize](doc/fork/MATERIALIZE.md) | Gives a material to faces picked by one rule, with a Picked field |
+| <img src="doc/fork/images/icons/geo_mod_cleanup.png" width="32" height="32" alt="Cleanup"> | [Cleanup](doc/fork/CLEANUP.md) | Runs the Clean Up menu's steps and more in one go, on a selection |
+| <img src="doc/fork/images/icons/geo_mod_stonework.png" width="32" height="32" alt="Stonework"> | [Stonework](doc/fork/STONEWORK.md) | Fills a mesh with whole stones, with Stone ID and Random fields |
+| <img src="doc/fork/images/icons/geo_mod_distribute.png" width="32" height="32" alt="Distribute"> | [Distribute](doc/fork/DISTRIBUTE.md) | Packs instances on the faces, so none of them touch, with ID, Random, Color and Filler fields |
 
 ![The original thirteen modeling nodes side by side in the Geometry Nodes editor](doc/fork/images/nodes_modeling.png)
 
@@ -233,6 +339,7 @@ These nodes share their code with the new modifiers, so a node tree and a modifi
 | <img src="doc/fork/images/icons/mod_push.png" width="32" height="32" alt="Push"> | Push | Inflate or shrink a mesh along its normals |
 | <img src="doc/fork/images/icons/mod_melt.png" width="32" height="32" alt="Melt"> | Melt | Sag geometry and spread it out toward the ground |
 | <img src="doc/fork/images/icons/mod_uvw_map.png" width="32" height="32" alt="UVW Map"> | UVW Map | Project a UV map from a planar, cylindrical, spherical or box gizmo |
+| <img src="doc/fork/images/icons/geo_mod_uv_scale.png" width="32" height="32" alt="UV Scale"> | [UV Scale](doc/fork/UV_SCALE.md) | Scales an existing UV map globally or per island, or sets pixels per meter |
 | <img src="doc/fork/images/icons/mod_smart_uv_project.png" width="32" height="32" alt="Smart UV Project"> | Smart UV Project | Unwrap a mesh automatically: faces are projected from a few directions and packed |
 | <img src="doc/fork/images/icons/mod_mark_by_angle.png" width="32" height="32" alt="Mark by Angle"> | Mark by Angle | Mark sharp edges, seams, creases or bevel weights where faces meet at a steep angle |
 | <img src="doc/fork/images/icons/mod_material_by_element.png" width="32" height="32" alt="Material By Element"> | Material By Element | Give faces material indices at random, by piece, in order or by direction |
@@ -242,7 +349,7 @@ These nodes share their code with the new modifiers, so a node tree and a modifi
 | <img src="doc/fork/images/icons/mod_spline_morph.png" width="32" height="32" alt="Morph Curves"> | Morph Curves | Move curves toward the matching curves of a target |
 | <img src="doc/fork/images/icons/mod_relax_spline.png" width="32" height="32" alt="Relax Curves"> | Relax Curves | Smooth the shape of curves |
 
-![The 31 node versions of the new modifiers in the Geometry Nodes editor](doc/fork/images/nodes_modifier_ops.png)
+![The original 31 node versions of the new modifiers in the Geometry Nodes editor](doc/fork/images/nodes_modifier_ops.png)
 
 ### Classic modifiers as nodes
 
@@ -256,7 +363,7 @@ The classic modifiers that had no node now have one too.
 | <img src="doc/fork/images/icons/mod_curve.png" width="32" height="32" alt="Curve Deform"> | Curve Deform | Bend a mesh along a curve object, the same as the Curve modifier |
 | <img src="doc/fork/images/icons/mod_edgesplit.png" width="32" height="32" alt="Edge Split"> | Edge Split | Split the edges that are sharp or meet at a large angle, the same as the Edge Split modifier |
 | <img src="doc/fork/images/icons/mod_lattice.png" width="32" height="32" alt="Lattice Deform"> | Lattice Deform | Deform a mesh with a lattice object, the same as the Lattice modifier |
-| <img src="doc/fork/images/icons/mod_smooth.png" width="32" height="32" alt="Laplacian Smooth"> | Laplacian Smooth | Smooth a mesh while keeping its volume, the same as the Laplacian Smooth modifier |
+| <img src="doc/fork/images/icons/mod_laplacian_smooth.png" width="32" height="32" alt="Laplacian Smooth"> | Laplacian Smooth | Smooth a mesh while keeping its volume, the same as the Laplacian Smooth modifier |
 | <img src="doc/fork/images/icons/mod_mirror.png" width="32" height="32" alt="Mirror"> | Mirror | Mirror a mesh along its axes, with optional bisect and merge, the same as the Mirror modifier |
 | <img src="doc/fork/images/icons/mod_normaledit.png" width="32" height="32" alt="Normal Edit"> | Normal Edit | Set custom normals pointing away from a point or along a direction, the same as the Normal Edit modifier |
 | <img src="doc/fork/images/icons/mod_remesh.png" width="32" height="32" alt="Remesh Blocks"> | Remesh Blocks | Rebuild a mesh out of blocks or voxels, the same as the Remesh modifier |

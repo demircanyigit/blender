@@ -128,7 +128,7 @@ class Instance : public DrawEngine {
 
     shadow_ps_.sync();
     volume_ps_.sync(resources_);
-    outline_ps_.sync(resources_);
+    outline_ps_.sync(scene_state_, resources_);
     dof_ps_.sync(resources_, this->draw_ctx);
     anti_aliasing_ps_.sync(scene_state_, resources_);
 
@@ -152,6 +152,9 @@ class Instance : public DrawEngine {
         return scene_state_.material_override;
       case V3D_SHADING_VERTEX_COLOR:
         return scene_state_.material_attribute_color;
+      case V3D_SHADING_FACE_SET_COLOR:
+        /* The shader reads the face set color from the batch, see #material_data_get. */
+        return Material(float3(-2.0f));
       case V3D_SHADING_TEXTURE_COLOR:
         ATTR_FALLTHROUGH;
       case V3D_SHADING_MATERIAL_COLOR:
@@ -367,6 +370,9 @@ class Instance : public DrawEngine {
       if (object_state.color_type == V3D_SHADING_TEXTURE_COLOR) {
         batch = DRW_cache_mesh_surface_texpaint_single_get(ob_ref.object);
       }
+      else if (object_state.color_type == V3D_SHADING_FACE_SET_COLOR) {
+        batch = DRW_cache_mesh_surface_face_sets_get(ob_ref.object);
+      }
       else if (object_state.color_type == V3D_SHADING_VERTEX_COLOR) {
         if (ob_ref.object->mode & OB_MODE_VERTEX_PAINT) {
           batch = DRW_cache_mesh_surface_vertpaint_get(ob_ref.object);
@@ -389,6 +395,10 @@ class Instance : public DrawEngine {
 
     if (object_state.draw_shadow) {
       shadow_ps_.object_sync(scene_state_, ob_ref, handle, has_transparent_material);
+    }
+
+    if (outline_ps_.use_part_ids() && (ob_ref.object->dtx & OB_DRAW_IN_FRONT) == 0) {
+      outline_ps_.object_sync(ob_ref, handle);
     }
   }
 
@@ -551,7 +561,14 @@ class Instance : public DrawEngine {
     transparent_depth_ps_.draw(manager, view_, resources_);
 
     volume_ps_.draw(manager, view_, resources_);
-    outline_ps_.draw(manager, resources_);
+    outline_ps_.draw(manager,
+                     view_,
+                     resources_,
+                     resolution,
+                     opaque_ps_.gbuffer_normal_tx.is_valid() ?
+                         static_cast<gpu::Texture *>(opaque_ps_.gbuffer_normal_tx) :
+                         static_cast<gpu::Texture *>(resources_.missing_tx));
+    opaque_ps_.gbuffer_normal_tx.release();
     dof_ps_.draw(manager, view_, resources_, resolution);
     anti_aliasing_ps_.draw(draw_ctx, manager, view_, scene_state_, resources_, depth_in_front_tx);
 

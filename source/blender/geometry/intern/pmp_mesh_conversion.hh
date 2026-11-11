@@ -38,6 +38,7 @@ Mesh *surface_mesh_to_mesh(pmp::SurfaceMesh &surface, const Mesh &src_mesh);
 /** Resample point, face and corner attributes onto a rebuilt mesh by nearest-surface sampling. */
 void transfer_attributes_from_surface(const Mesh &src_mesh,
                                       Mesh &dst_mesh,
-                                      const bke::AttributeFilter &attribute_filter);
+                                      const bke::AttributeFilter &attribute_filter,
+                                      bool face_aware_corners = false);
 
 }  // namespace blender::geometry

@@ -12,6 +12,7 @@
 
 #include "GEO_foreach_geometry.hh"
 #include "GEO_mesh_drape.hh"
+#include "GEO_realize_instances.hh"
 
 #include "UI_resources.hh"
 
@@ -50,8 +51,12 @@ static void node_declare(NodeDeclarationBuilder &b)
   b.add_output<decl::Geometry>("Mesh").propagate_all().align_with_previous();
 
   b.add_input<decl::Geometry>("Collider")
-      .supported_type(GeometryComponent::Type::Mesh)
-      .description("Mesh the cloth lands on");
+      .supported_type({GeometryComponent::Type::Mesh, GeometryComponent::Type::Instance})
+      .description("Meshes the cloth lands on. Instances, like a whole collection, are used too");
+  b.add_input<decl::Float>("Cage")
+      .subtype(PROP_DISTANCE)
+      .description("Push the collider out along its normals by this much, so the cloth rests "
+                   "further away. Negative pulls it in");
   b.add_input<decl::Bool>("Floor").default_value(true).description(
       "Land on a flat floor under the lowest point of the cloth and the collider");
   b.add_input<decl::Bool>("Pin")
@@ -120,7 +125,12 @@ static void node_declare(NodeDeclarationBuilder &b)
 static void node_geo_exec(GeoNodeExecParams params)
 {
   GeometrySet geometry_set = params.extract_input<GeometrySet>("Mesh");
-  const GeometrySet collider_set = params.extract_input<GeometrySet>("Collider");
+  GeometrySet collider_set = params.extract_input<GeometrySet>("Collider");
+  if (collider_set.has_instances()) {
+    collider_set = geometry::realize_instances(collider_set,
+                                               geometry::RealizeInstancesOptions())
+                       .geometry;
+  }
   const Field<bool> pin_field = params.extract_input<Field<bool>>("Pin");
   const Space space = params.extract_input<Space>("Space");
 
@@ -144,6 +154,7 @@ static void node_geo_exec(GeoNodeExecParams params)
   /* The collider comes in the same space as the mesh. */
   settings.collider = collider_set.get_mesh();
   settings.collider_to_space = settings.mesh_to_space;
+  settings.collider_cage = params.extract_input<float>("Cage");
 
   std::mutex error_mutex;
   const char *error = nullptr;

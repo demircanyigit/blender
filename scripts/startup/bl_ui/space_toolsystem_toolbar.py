@@ -1160,7 +1160,7 @@ class _defs_edit_mesh:
         return dict(
             idname="builtin.multi_cut",
             label="Multi-Cut",
-            description="Cut faces point by point: click on edges and vertices, Ctrl+click for an edge loop, "
+            description="Cut faces point by point: click on faces, edges and vertices, Ctrl+click for an edge loop, "
             "Shift to snap, Enter or right-click to finish",
             cursor='KNIFE',
             icon="ops.mesh.multi_cut",

@@ -12,6 +12,7 @@
 
 #include "GEO_foreach_geometry.hh"
 #include "GEO_mesh_collapse.hh"
+#include "GEO_realize_instances.hh"
 
 #include "UI_resources.hh"
 
@@ -50,9 +51,13 @@ static void node_declare(NodeDeclarationBuilder &b)
   b.add_output<decl::Geometry>("Mesh").propagate_all().align_with_previous();
 
   b.add_input<decl::Geometry>("Ground")
-      .supported_type(GeometryComponent::Type::Mesh)
-      .description("Mesh the pieces land on. Without one, they land on a flat floor under the "
-                   "lowest point");
+      .supported_type({GeometryComponent::Type::Mesh, GeometryComponent::Type::Instance})
+      .description("Meshes the pieces land on. Instances, like a whole collection, are used too. "
+                   "Without any, they land on a flat floor under the lowest point");
+  b.add_input<decl::Float>("Cage")
+      .subtype(PROP_DISTANCE)
+      .description("Push the ground out along its normals by this much, so the pieces land "
+                   "further away. Negative pulls it in");
   b.add_input<decl::Bool>("Keep")
       .default_value(false)
       .hide_value()
@@ -102,7 +107,11 @@ static void node_declare(NodeDeclarationBuilder &b)
 static void node_geo_exec(GeoNodeExecParams params)
 {
   GeometrySet geometry_set = params.extract_input<GeometrySet>("Mesh");
-  const GeometrySet ground_set = params.extract_input<GeometrySet>("Ground");
+  GeometrySet ground_set = params.extract_input<GeometrySet>("Ground");
+  if (ground_set.has_instances()) {
+    ground_set = geometry::realize_instances(ground_set, geometry::RealizeInstancesOptions())
+                     .geometry;
+  }
   const Field<bool> keep_field = params.extract_input<Field<bool>>("Keep");
   const Space space = params.extract_input<Space>("Space");
 
@@ -122,6 +131,7 @@ static void node_geo_exec(GeoNodeExecParams params)
   /* The ground comes in the same space as the mesh. */
   settings.ground = ground_set.get_mesh();
   settings.ground_to_space = settings.mesh_to_space;
+  settings.ground_cage = params.extract_input<float>("Cage");
 
   std::mutex error_mutex;
   const char *error = nullptr;

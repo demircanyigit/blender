@@ -94,6 +94,7 @@ static const EnumPropertyItem prop_similar_types[] = {
      "Freestyle Face Marks",
      ""},
 #endif
+    {SIMFACE_FACE_SET, "FACE_SET", ICON_SIMILAR_FACE_SET, "Face Set", ""},
 
     {0, nullptr, 0, nullptr, nullptr},
 };
@@ -188,6 +189,7 @@ static wmOperatorStatus similar_face_select_exec(bContext *C, wmOperator *op)
   KDTree_3d *tree_3d = nullptr;
   KDTree_4d *tree_4d = nullptr;
   Set<int> sides_set;
+  Set<int> face_sets_set;
   Set<const Material *> materials_set;
   int face_data_value = SIMFACE_DATA_NONE;
 
@@ -239,6 +241,11 @@ static wmOperatorStatus similar_face_select_exec(bContext *C, wmOperator *op)
         }
         break;
       }
+      case SIMFACE_FACE_SET: {
+        custom_data_offset = CustomData_get_offset_named(
+            &bm->pdata, CD_PROP_INT32, ".sculpt_face_set");
+        break;
+      }
     }
 
     BMFace *face; /* Mesh face. */
@@ -285,6 +292,13 @@ static wmOperatorStatus similar_face_select_exec(bContext *C, wmOperator *op)
             if (!face_data_value_set(face, BM_ELEM_SMOOTH, &face_data_value)) {
               goto face_select_all;
             }
+            break;
+          }
+          case SIMFACE_FACE_SET: {
+            face_sets_set.add(
+                (custom_data_offset == -1) ?
+                    id_cast<const Mesh *>(ob->data)->face_sets_color_default :
+                    BM_ELEM_CD_GET_INT(face, custom_data_offset));
             break;
           }
           case SIMFACE_FREESTYLE: {
@@ -343,6 +357,11 @@ static wmOperatorStatus similar_face_select_exec(bContext *C, wmOperator *op)
         if ((face_data_value == SIMFACE_DATA_TRUE) && (custom_data_offset == -1)) {
           continue;
         }
+        break;
+      }
+      case SIMFACE_FACE_SET: {
+        custom_data_offset = CustomData_get_offset_named(
+            &bm->pdata, CD_PROP_INT32, ".sculpt_face_set");
         break;
       }
     }
@@ -431,6 +450,14 @@ static wmOperatorStatus similar_face_select_exec(bContext *C, wmOperator *op)
               select = true;
             }
             break;
+          case SIMFACE_FACE_SET: {
+            const int face_set = (custom_data_offset == -1) ?
+                                     id_cast<const Mesh *>(ob->data)
+                                         ->face_sets_color_default :
+                                     BM_ELEM_CD_GET_INT(face, custom_data_offset);
+            select = face_sets_set.contains(face_set);
+            break;
+          }
           case SIMFACE_FREESTYLE: {
 
             if (custom_data_offset == -1) {
@@ -1321,6 +1348,7 @@ static const EnumPropertyItem *select_similar_type_itemf(bContext *C,
       for (a = SIMFACE_MATERIAL; a <= a_end; a++) {
         RNA_enum_items_add_value(&item, &totitem, prop_similar_types, a);
       }
+      RNA_enum_items_add_value(&item, &totitem, prop_similar_types, SIMFACE_FACE_SET);
     }
     RNA_enum_item_end(&item, &totitem);
 

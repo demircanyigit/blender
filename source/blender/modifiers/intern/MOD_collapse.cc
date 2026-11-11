@@ -8,7 +8,10 @@
  * Let every mesh island fall as a rigid piece and keep the pose where the pieces came to rest.
  */
 
+#include <climits>
+
 #include "BLI_array.hh"
+#include "BLI_index_mask.hh"
 #include "BLI_math_matrix.hh"
 
 #include "BLT_translation.hh"
@@ -19,11 +22,15 @@
 #include "DNA_object_types.h"
 #include "DNA_screen_types.h"
 
+#include "BKE_attribute.hh"
 #include "BKE_deform.hh"
+#include "BKE_lib_id.hh"
 #include "BKE_lib_query.hh"
 #include "BKE_mesh.hh"
 #include "BKE_mesh_wrapper.hh"
 #include "BKE_modifier.hh"
+
+#include "BLO_read_write.hh"
 
 #include "DEG_depsgraph_build.hh"
 #include "DEG_depsgraph_query.hh"
@@ -35,7 +42,9 @@
 #include "RNA_prototypes.hh"
 
 #include "GEO_mesh_collapse.hh"
+#include "GEO_mesh_split_edges.hh"
 
+#include "MOD_colliders.hh"
 #include "MOD_modifiertypes.hh"
 #include "MOD_ui_common.hh"
 #include "MOD_util.hh"
@@ -60,17 +69,104 @@ static void foreach_ID_link(ModifierData *md, Object *ob, IDWalkFunc walk, void 
 {
   CollapseModifierData *cmd = reinterpret_cast<CollapseModifierData *>(md);
   walk(user_data, ob, reinterpret_cast<ID **>(&cmd->target), IDWALK_CB_NOP);
+  MOD_collider_sources_foreach_ID(cmd->colliders, ob, walk, user_data);
+}
+
+static void copy_data(const ModifierData *md, ModifierData *target, const int flag)
+{
+  BKE_modifier_copydata_generic(md, target, flag);
+  const CollapseModifierData &src = *reinterpret_cast<const CollapseModifierData *>(md);
+  CollapseModifierData &dst = *reinterpret_cast<CollapseModifierData *>(target);
+  MOD_collider_sources_copy(dst.colliders, src.colliders);
+}
+
+static void free_data(ModifierData *md)
+{
+  MOD_collider_sources_free(reinterpret_cast<CollapseModifierData *>(md)->colliders);
+}
+
+static void blend_write(BlendWriter *writer, const ID * /*owner*/, const ModifierData *md)
+{
+  const CollapseModifierData *cmd = reinterpret_cast<const CollapseModifierData *>(md);
+  writer->write_struct(cmd);
+  MOD_collider_sources_blend_write(writer, cmd->colliders);
+}
+
+static void blend_read(BlendDataReader *reader, ModifierData *md)
+{
+  MOD_collider_sources_blend_read(reader,
+                                  reinterpret_cast<CollapseModifierData *>(md)->colliders);
 }
 
 static void update_depsgraph(ModifierData *md, const ModifierUpdateDepsgraphContext *ctx)
 {
   const CollapseModifierData *cmd = reinterpret_cast<CollapseModifierData *>(md);
-  if (cmd->target != nullptr) {
-    DEG_add_object_relation(ctx->node, cmd->target, DEG_OB_COMP_TRANSFORM, "Collapse Modifier");
-    DEG_add_object_relation(ctx->node, cmd->target, DEG_OB_COMP_GEOMETRY, "Collapse Modifier");
-  }
+  MOD_colliders_update_depsgraph(cmd->target, cmd->colliders, ctx, "Collapse Modifier");
   /* Down is down in the world, so the object's turn and place matter. */
   DEG_add_depends_on_transform_relation(ctx->node, "Collapse Modifier");
+}
+
+/**
+ * The piece of each point, from an attribute. A face attribute first splits the mesh where faces
+ * of different pieces meet, so every point belongs to one piece; the split mesh is returned in
+ * `r_split` and must be used and freed by the caller. Returns false when there is no attribute.
+ */
+static bool pieces_from_attribute(const Mesh &mesh,
+                                  const StringRef name,
+                                  Mesh **r_split,
+                                  Array<int> &r_pieces)
+{
+  *r_split = nullptr;
+  const std::optional<bke::AttributeMetaData> meta = mesh.attributes().lookup_meta_data(name);
+  if (!meta) {
+    return false;
+  }
+  if (meta->domain == bke::AttrDomain::Point) {
+    r_pieces.reinitialize(mesh.verts_num);
+    mesh.attributes().lookup_or_default<int>(name, bke::AttrDomain::Point, 0).varray.materialize(
+        r_pieces);
+    return true;
+  }
+
+  /* Edges between faces of different pieces. */
+  const OffsetIndices<int> faces = mesh.faces();
+  const Span<int> corner_edges = mesh.corner_edges();
+  const VArraySpan<int> face_pieces = *mesh.attributes().lookup_or_default<int>(
+      name, bke::AttrDomain::Face, 0);
+  Array<int> first_face(mesh.edges_num, -1);
+  Array<bool> split(mesh.edges_num, false);
+  for (const int face : faces.index_range()) {
+    for (const int edge : corner_edges.slice(faces[face])) {
+      if (first_face[edge] == -1) {
+        first_face[edge] = face;
+      }
+      else if (face_pieces[first_face[edge]] != face_pieces[face]) {
+        split[edge] = true;
+      }
+    }
+  }
+  const Mesh *source = &mesh;
+  IndexMaskMemory memory;
+  const IndexMask split_mask = IndexMask::from_bools(split, memory);
+  if (!split_mask.is_empty()) {
+    *r_split = BKE_mesh_copy_for_eval(mesh);
+    geometry::split_edges(**r_split, split_mask);
+    source = *r_split;
+  }
+
+  /* A point takes the piece of its faces. Points without faces stay together as one piece. */
+  const OffsetIndices<int> split_faces = source->faces();
+  const Span<int> corner_verts = source->corner_verts();
+  const VArraySpan<int> split_pieces = *source->attributes().lookup_or_default<int>(
+      name, bke::AttrDomain::Face, 0);
+  r_pieces.reinitialize(source->verts_num);
+  r_pieces.fill(INT_MIN);
+  for (const int face : split_faces.index_range()) {
+    for (const int v : corner_verts.slice(split_faces[face])) {
+      r_pieces[v] = split_pieces[face];
+    }
+  }
+  return true;
 }
 
 static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh *mesh)
@@ -90,23 +186,33 @@ static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh 
   params.substeps = cmd.substeps;
   params.mesh_to_space = ctx->object->object_to_world();
 
-  if (cmd.target != nullptr && cmd.target != ctx->object && cmd.target->type == OB_MESH) {
-    Object *target_eval = DEG_get_evaluated(ctx->depsgraph, cmd.target);
-    Mesh *ground = BKE_modifier_get_evaluated_mesh_from_evaluated_object(target_eval);
-    if (ground != nullptr) {
-      BKE_mesh_wrapper_ensure_mdata(ground);
-      params.ground = ground;
-      params.ground_to_space = target_eval->object_to_world();
+  /* Every collider joined, already in world space. */
+  Mesh *ground = MOD_colliders_mesh(cmd.target, cmd.colliders, ctx);
+  params.ground = ground;
+  params.ground_to_space = float4x4::identity();
+  params.ground_cage = cmd.cage;
+
+  /* Pieces from an attribute, which may split the mesh first. */
+  Mesh *split = nullptr;
+  Array<int> pieces;
+  if (cmd.pieces == MOD_COLLAPSE_PIECES_ATTRIBUTE) {
+    if (pieces_from_attribute(*mesh, cmd.piece_name, &split, pieces)) {
+      params.pieces = pieces;
+    }
+    else {
+      BKE_modifier_set_warning(
+          ctx->object, md, "No attribute \"%s\", loose parts are used", cmd.piece_name);
     }
   }
+  const Mesh &input = split ? *split : *mesh;
 
   Array<bool> keep;
   const MDeformVert *dvert = nullptr;
   int defgrp_index = -1;
-  MOD_get_vgroup(ctx->object, mesh, cmd.vertex_group, &dvert, &defgrp_index);
+  MOD_get_vgroup(ctx->object, &input, cmd.vertex_group, &dvert, &defgrp_index);
   if (dvert != nullptr) {
     const bool invert = cmd.flag & MOD_COLLAPSE_INVERT_VGROUP;
-    keep.reinitialize(mesh->verts_num);
+    keep.reinitialize(input.verts_num);
     for (const int i : keep.index_range()) {
       keep[i] = (BKE_defvert_find_weight(&dvert[i], defgrp_index) > 0.0f) != invert;
     }
@@ -114,7 +220,13 @@ static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh 
   }
 
   const char *error = nullptr;
-  Mesh *result = geometry::mesh_collapse(*mesh, params, &error);
+  Mesh *result = geometry::mesh_collapse(input, params, &error);
+  if (ground != nullptr) {
+    BKE_id_free(nullptr, ground);
+  }
+  if (split != nullptr) {
+    BKE_id_free(nullptr, split);
+  }
   if (error != nullptr) {
     BKE_modifier_set_error(ctx->object, md, "%s", error);
   }
@@ -128,7 +240,13 @@ static void panel_draw(const bContext * /*C*/, Panel *panel)
   PointerRNA *ptr = modifier_panel_get_property_pointers(panel, &ob_ptr);
 
   layout.use_property_split_set(true);
+  layout.prop(ptr, "pieces", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+  if (RNA_enum_get(ptr, "pieces") == MOD_COLLAPSE_PIECES_ATTRIBUTE) {
+    layout.prop(ptr, "piece_name", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+  }
   layout.prop(ptr, "target", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+  MOD_collider_sources_draw(layout, ptr);
+  layout.prop(ptr, "cage", UI_ITEM_NONE, std::nullopt, ICON_NONE);
   modifier_vgroup_ui(layout, ptr, &ob_ptr, "vertex_group", "invert_vertex_group", IFACE_("Keep"));
 
   ui::Layout &col = layout.column(true);
@@ -163,7 +281,7 @@ ModifierTypeInfo modifierType_Collapse = {
     /*flags*/ eModifierTypeFlag_AcceptsMesh | eModifierTypeFlag_SupportsEditmode,
     /*icon*/ ICON_MOD_COLLAPSE,
 
-    /*copy_data*/ BKE_modifier_copydata_generic,
+    /*copy_data*/ copy_data,
 
     /*deform_verts*/ nullptr,
     /*deform_matrices*/ nullptr,
@@ -174,7 +292,7 @@ ModifierTypeInfo modifierType_Collapse = {
 
     /*init_data*/ init_data,
     /*required_data_mask*/ required_data_mask,
-    /*free_data*/ nullptr,
+    /*free_data*/ free_data,
     /*is_disabled*/ nullptr,
     /*update_depsgraph*/ update_depsgraph,
     /*depends_on_time*/ nullptr,
@@ -183,8 +301,8 @@ ModifierTypeInfo modifierType_Collapse = {
     /*foreach_tex_link*/ nullptr,
     /*free_runtime_data*/ nullptr,
     /*panel_register*/ panel_register,
-    /*blend_write*/ nullptr,
-    /*blend_read*/ nullptr,
+    /*blend_write*/ blend_write,
+    /*blend_read*/ blend_read,
     /*foreach_cache*/ nullptr,
     /*foreach_working_space_color*/ nullptr,
 };

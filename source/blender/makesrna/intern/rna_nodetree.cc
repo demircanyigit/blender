@@ -10338,10 +10338,18 @@ static void rna_def_nodes(BlenderRNA *brna)
   define("GeometryNode", "GeometryNodeSweep");
   define("GeometryNode", "GeometryNodeClipMesh");
   define("GeometryNode", "GeometryNodeDiceMesh");
+  define("GeometryNode", "GeometryNodeDivideMesh");
   define("GeometryNode", "GeometryNodeCollapseIslands");
   define("GeometryNode", "GeometryNodeDrapeMesh");
   define("GeometryNode", "GeometryNodeShatterMesh");
   define("GeometryNode", "GeometryNodeMasonryMesh");
+  define("GeometryNode", "GeometryNodePlanks");
+  define("GeometryNode", "GeometryNodeRoof");
+  define("GeometryNode", "GeometryNodeCarve");
+  define("GeometryNode", "GeometryNodeMaterialize");
+  define("GeometryNode", "GeometryNodeCleanupMesh");
+  define("GeometryNode", "GeometryNodeStonework");
+  define("GeometryNode", "GeometryNodeDistribute");
   define("GeometryNode", "GeometryNodeDissolveMesh");
   define("GeometryNode", "GeometryNodeSmoothMesh");
   define("GeometryNode", "GeometryNodeRelaxMesh");
@@ -10369,6 +10377,7 @@ static void rna_def_nodes(BlenderRNA *brna)
   define("GeometryNode", "GeometryNodeRemeshModifier");
   define("GeometryNode", "GeometryNodeCapHoles");
   define("GeometryNode", "GeometryNodeUVWMap");
+  define("GeometryNode", "GeometryNodeUVScale");
   define("GeometryNode", "GeometryNodeMeshTension");
   define("GeometryNode", "GeometryNodeRadialArray");
   define("GeometryNode", "GeometryNodeVolumeSelect");

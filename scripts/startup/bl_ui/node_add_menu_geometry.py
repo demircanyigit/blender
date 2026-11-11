@@ -555,9 +555,17 @@ class NODE_MT_gn_mesh_operations_base(node_add_menu.NodeMenu):
         self.node_operator(layout, "GeometryNodeClipMesh")
         self.node_operator(layout, "GeometryNodeCollapseIslands")
         self.node_operator(layout, "GeometryNodeDiceMesh")
+        self.node_operator(layout, "GeometryNodeDivideMesh")
         self.node_operator(layout, "GeometryNodeDrapeMesh")
         self.node_operator(layout, "GeometryNodeShatterMesh")
         self.node_operator(layout, "GeometryNodeMasonryMesh")
+        self.node_operator(layout, "GeometryNodeStonework")
+        self.node_operator(layout, "GeometryNodeDistribute")
+        self.node_operator(layout, "GeometryNodePlanks")
+        self.node_operator(layout, "GeometryNodeRoof")
+        self.node_operator(layout, "GeometryNodeCarve")
+        self.node_operator(layout, "GeometryNodeCleanupMesh")
+        self.node_operator(layout, "GeometryNodeMaterialize")
         self.node_operator(layout, "GeometryNodeDissolveMesh")
         self.node_operator(layout, "GeometryNodeSmoothMesh")
         self.node_operator(layout, "GeometryNodeRelaxMesh")
@@ -607,6 +615,7 @@ class NODE_MT_gn_mesh_operations_base(node_add_menu.NodeMenu):
             "GeometryNodeSymmetrize",
             "GeometryNodeUVWarp",
             "GeometryNodeUVWMap",
+            "GeometryNodeUVScale",
             "GeometryNodeWarp",
             "GeometryNodeWave",
             "GeometryNodeWeightedNormal",

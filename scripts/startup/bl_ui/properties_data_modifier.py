@@ -147,11 +147,12 @@ class OBJECT_MT_modifier_add_edit(ModifierAddMenu, Menu):
         if ob_type == 'MESH':
             self.operator_modifier_add(layout, 'UV_PROJECT')
             self.operator_modifier_add(layout, 'UV_WARP')
+            self.operator_modifier_add_new(layout, ('UV_SCALE',))
             self.operator_modifier_add(layout, 'VERTEX_WEIGHT_EDIT')
             self.operator_modifier_add(layout, 'VERTEX_WEIGHT_MIX')
             self.operator_modifier_add(layout, 'VERTEX_WEIGHT_PROXIMITY')
             self.operator_modifier_add_new(layout, (
-                'UVW_MAP', 'TENSION', 'VOLUME_SELECT', 'MATERIAL_BY_ELEMENT', 'DATA_CHANNEL', 'EDIT_POLY', 'POLY_SELECT', 'POLY_EDIT',
+                'UVW_MAP', 'TENSION', 'VOLUME_SELECT', 'MATERIAL_BY_ELEMENT', 'MATERIALIZE', 'DATA_CHANNEL', 'PIECE_ID', 'EDIT_POLY', 'POLY_SELECT', 'POLY_EDIT',
                 'ELEMENT_ORDER', 'ELEMENT_PIVOT', 'SMART_UV_PROJECT',
             ))
         if ob_type == 'GREASEPENCIL':
@@ -198,7 +199,7 @@ class OBJECT_MT_modifier_add_generate(ModifierAddMenu, Menu):
             self.operator_modifier_add_new(layout, (
                 'SLICE', 'CAP_HOLES', 'RADIAL_ARRAY', 'FACE_EXTRUDE', 'DELETE_MESH', 'QUADRANGULATE',
                 'PANELIZE', 'INSET', 'POKE', 'BEAUTIFY_FACES', 'ROTATE_EDGES', 'SYMMETRIZE',
-                'VORONOI_FRACTURE', 'DICE', 'COLLAPSE', 'DRAPE', 'SHATTER', 'MASONRY', 'DISSOLVE',
+                'VORONOI_FRACTURE', 'DICE', 'COLLAPSE', 'DRAPE', 'SHATTER', 'MASONRY', 'STONEWORK', 'DISTRIBUTE', 'PLANKS', 'ROOF', 'EDGE_DAMAGE', 'DIVIDE', 'JOIN', 'BLAST', 'DISSOLVE', 'CLEANUP',
             ))
         if ob_type == 'CURVES':
             self.operator_modifier_add_new(layout, ('NORMALIZE_SPLINE', 'CHAMFER_SPLINE', 'SWEEP'))
@@ -264,7 +265,7 @@ class OBJECT_MT_modifier_add_deform(ModifierAddMenu, Menu):
             self.operator_modifier_add(layout, 'LAPLACIANSMOOTH')
             self.operator_modifier_add(layout, 'SURFACE_DEFORM')
             self.operator_modifier_add_new(layout, (
-                'RELAX', 'SHAPE_KEY_INBETWEEN', 'RANDOMIZE_ELEMENTS', 'EXPLODED_VIEW', 'PUSH',
+                'RELAX', 'SHAPE_KEY_INBETWEEN', 'RANDOMIZE_ELEMENTS', 'EXPLODED_VIEW', 'PUSH', 'CARVE',
             ))
         if ob_type == 'CURVES':
             self.operator_modifier_add_new(layout, ('RELAX_SPLINE', 'SPLINE_MORPH'))
@@ -334,6 +335,162 @@ class OBJECT_MT_modifier_add_color(ModifierAddMenu, Menu):
         layout.template_modifier_asset_menu_items(catalog_path=self.bl_label)
 
 
+def _collider_modifier_from_context(context, name):
+    owner = context.object
+    modifier = owner.modifiers.get(name) if owner else None
+    return modifier if modifier and modifier.type in {'DRAPE', 'COLLAPSE'} else None
+
+
+class OBJECT_OT_collider_source_add(Operator):
+    bl_idname = "object.collider_source_add"
+    bl_label = "Add Collider"
+    bl_description = "Add an object or collection to land on"
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    modifier: bpy.props.StringProperty(options={'HIDDEN'})
+    source_type: bpy.props.EnumProperty(items=(
+        ('OBJECT', "Object", "One mesh object", 0),
+        ('COLLECTION', "Collection", "Every mesh object in a collection", 1),
+    ))
+
+    def execute(self, context):
+        modifier = _collider_modifier_from_context(context, self.modifier)
+        if modifier is None:
+            return {'CANCELLED'}
+        if len(modifier.colliders) >= 512:
+            self.report({'WARNING'}, "At most 512 colliders")
+            return {'CANCELLED'}
+        modifier.colliders.new(source_type=self.source_type)
+        return {'FINISHED'}
+
+
+class OBJECT_OT_collider_source_remove(Operator):
+    bl_idname = "object.collider_source_remove"
+    bl_label = "Remove Collider"
+    bl_description = "Remove this collider, keeping its object or collection"
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    modifier: bpy.props.StringProperty(options={'HIDDEN'})
+    index: bpy.props.IntProperty(default=-1, options={'HIDDEN'})
+
+    def execute(self, context):
+        modifier = _collider_modifier_from_context(context, self.modifier)
+        if modifier is None or not 0 <= self.index < len(modifier.colliders):
+            return {'CANCELLED'}
+        modifier.colliders.remove(modifier.colliders[self.index])
+        return {'FINISHED'}
+
+
+class OBJECT_OT_collider_source_add_selected(Operator):
+    bl_idname = "object.collider_source_add_selected"
+    bl_label = "Add Selected Colliders"
+    bl_description = "Add the selected mesh objects as colliders, without the active object"
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    modifier: bpy.props.StringProperty(options={'HIDDEN'})
+
+    def execute(self, context):
+        modifier = _collider_modifier_from_context(context, self.modifier)
+        if modifier is None:
+            return {'CANCELLED'}
+        single = modifier.collider if modifier.type == 'DRAPE' else modifier.target
+        existing = {source.object for source in modifier.colliders
+                    if source.source_type == 'OBJECT' and source.object is not None}
+        existing.add(single)
+        added = 0
+        for obj in context.selected_objects:
+            if obj == context.object or obj.type != 'MESH' or obj in existing:
+                continue
+            if len(modifier.colliders) >= 512:
+                self.report({'WARNING'}, "At most 512 colliders")
+                break
+            source = modifier.colliders.new(source_type='OBJECT')
+            source.object = obj
+            existing.add(obj)
+            added += 1
+        if not added:
+            self.report({'INFO'}, "No other selected mesh objects")
+            return {'CANCELLED'}
+        return {'FINISHED'}
+
+
+def _join_modifier_from_context(context, name):
+    owner = context.object
+    modifier = owner.modifiers.get(name) if owner else None
+    return modifier if modifier and modifier.type == 'JOIN' else None
+
+
+class OBJECT_OT_join_modifier_source_add(Operator):
+    bl_idname = "object.join_modifier_source_add"
+    bl_label = "Add Join Source"
+    bl_description = "Add an object or collection to this Join modifier"
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    modifier: bpy.props.StringProperty(options={'HIDDEN'})
+    source_type: bpy.props.EnumProperty(items=(
+        ('OBJECT', "Object", "Join one evaluated mesh object", 0),
+        ('COLLECTION', "Collection", "Join mesh objects in a collection", 1),
+    ))
+
+    def execute(self, context):
+        modifier = _join_modifier_from_context(context, self.modifier)
+        if modifier is None:
+            return {'CANCELLED'}
+        if len(modifier.sources) >= 512:
+            self.report({'WARNING'}, "Join supports at most 512 source entries")
+            return {'CANCELLED'}
+        modifier.sources.new(source_type=self.source_type)
+        return {'FINISHED'}
+
+
+class OBJECT_OT_join_modifier_source_remove(Operator):
+    bl_idname = "object.join_modifier_source_remove"
+    bl_label = "Remove Join Source"
+    bl_description = "Remove this source from Join without deleting its object or collection"
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    modifier: bpy.props.StringProperty(options={'HIDDEN'})
+    index: bpy.props.IntProperty(default=-1, options={'HIDDEN'})
+
+    def execute(self, context):
+        modifier = _join_modifier_from_context(context, self.modifier)
+        if modifier is None or not 0 <= self.index < len(modifier.sources):
+            return {'CANCELLED'}
+        modifier.sources.remove(modifier.sources[self.index])
+        return {'FINISHED'}
+
+
+class OBJECT_OT_join_modifier_source_add_selected(Operator):
+    bl_idname = "object.join_modifier_source_add_selected"
+    bl_label = "Add Selected Objects to Join"
+    bl_description = "Add selected mesh objects as individual sources, excluding the receiving object"
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    modifier: bpy.props.StringProperty(options={'HIDDEN'})
+
+    def execute(self, context):
+        modifier = _join_modifier_from_context(context, self.modifier)
+        if modifier is None:
+            return {'CANCELLED'}
+        existing = {source.object for source in modifier.sources
+                    if source.source_type == 'OBJECT' and source.object is not None}
+        added = 0
+        for obj in context.selected_objects:
+            if obj == context.object or obj.type != 'MESH' or obj in existing:
+                continue
+            if len(modifier.sources) >= 512:
+                self.report({'WARNING'}, "Join source-entry limit reached")
+                break
+            source = modifier.sources.new(source_type='OBJECT')
+            source.object = obj
+            existing.add(obj)
+            added += 1
+        if not added:
+            self.report({'INFO'}, "No additional selected mesh objects")
+            return {'CANCELLED'}
+        return {'FINISHED'}
+
+
 class AddModifierMenu(Operator):
     bl_idname = "object.add_modifier_menu"
     bl_label = "Add Modifier"
@@ -349,6 +506,12 @@ class AddModifierMenu(Operator):
 
 
 classes = (
+    OBJECT_OT_join_modifier_source_add,
+    OBJECT_OT_join_modifier_source_remove,
+    OBJECT_OT_join_modifier_source_add_selected,
+    OBJECT_OT_collider_source_add,
+    OBJECT_OT_collider_source_remove,
+    OBJECT_OT_collider_source_add_selected,
     DATA_PT_modifiers,
     OBJECT_MT_modifier_add,
     OBJECT_MT_modifier_add_edit,

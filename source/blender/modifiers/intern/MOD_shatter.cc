@@ -30,6 +30,7 @@
 #include "RNA_access.hh"
 #include "RNA_prototypes.hh"
 
+#include "GEO_mesh_sim_cache.hh"
 #include "GEO_mesh_shatter.hh"
 #include "GEO_randomize.hh"
 
@@ -63,7 +64,7 @@ static void update_depsgraph(ModifierData *md, const ModifierUpdateDepsgraphCont
   }
 }
 
-static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh *mesh)
+static Mesh *modify_mesh_compute(ModifierData *md, const ModifierEvalContext *ctx, Mesh *mesh)
 {
   const ShatterModifierData &smd = *reinterpret_cast<ShatterModifierData *>(md);
   if (mesh->faces_num == 0) {
@@ -163,6 +164,19 @@ static void panel_draw(const bContext * /*C*/, Panel *panel)
 static void panel_register(ARegionType *region_type)
 {
   modifier_panel_register(region_type, eModifierType_Shatter, panel_draw);
+}
+
+/* Taken from the cache when nothing it depends on changed, see #MOD_cached_modify_mesh. */
+static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh *mesh)
+{
+  const ShatterModifierData &smd = *reinterpret_cast<ShatterModifierData *>(md);
+  return MOD_cached_modify_mesh(
+      md, ctx, mesh, modify_mesh_compute, [&](geometry::SimCacheHasher &hasher) {
+        if (smd.impact != nullptr) {
+          hasher.add(smd.impact->object_to_world());
+          hasher.add(ctx->object->object_to_world());
+        }
+      });
 }
 
 ModifierTypeInfo modifierType_Shatter = {

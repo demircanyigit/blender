@@ -41,6 +41,8 @@ struct MeshDrapeParams {
   /** What the cloth lands on. May be null. */
   const Mesh *collider = nullptr;
   float4x4 collider_to_space = float4x4::identity();
+  /** The collider is pushed out along its normals by this much. Negative pulls it in. */
+  float collider_cage = 0.0f;
   /** Per point: these stay where they are. May be empty. */
   Span<bool> pin;
 };

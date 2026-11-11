@@ -128,7 +128,7 @@ static Vector<float3> object_points(const Object &self, const Object &points_ob)
   return points;
 }
 
-static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh *mesh)
+static Mesh *modify_mesh_compute(ModifierData *md, const ModifierEvalContext *ctx, Mesh *mesh)
 {
   const VoronoiFractureModifierData &vmd = *reinterpret_cast<VoronoiFractureModifierData *>(md);
   if (mesh->faces_num == 0) {
@@ -225,6 +225,17 @@ static void panel_draw_VoronoiFracture(const bContext * /*C*/, Panel *panel)
 static void panel_register_VoronoiFracture(ARegionType *region_type)
 {
   modifier_panel_register(region_type, eModifierType_VoronoiFracture, panel_draw_VoronoiFracture);
+}
+
+/* Taken from the cache when nothing it depends on changed, see #MOD_cached_modify_mesh. Points
+ * from another object are not checked for changes, so then it is not cached. */
+static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh *mesh)
+{
+  const VoronoiFractureModifierData &vmd = *reinterpret_cast<VoronoiFractureModifierData *>(md);
+  if (vmd.source == MOD_VORONOI_SOURCE_OBJECT && vmd.points_object != nullptr) {
+    return modify_mesh_compute(md, ctx, mesh);
+  }
+  return MOD_cached_modify_mesh(md, ctx, mesh, modify_mesh_compute);
 }
 
 ModifierTypeInfo modifierType_VoronoiFracture = {

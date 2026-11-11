@@ -496,9 +496,11 @@ static wmOperatorStatus viewpersportho_exec(bContext *C, wmOperator * /*op*/)
   if ((RV3D_LOCK_FLAGS(rv3d) & RV3D_LOCK_ANY_TRANSFORM) == 0) {
     if (rv3d->persp != RV3D_ORTHO) {
       rv3d->persp = RV3D_ORTHO;
+      rv3d->rflag |= RV3D_USER_ORTHO;
     }
     else {
       rv3d->persp = RV3D_PERSP;
+      rv3d->rflag &= ~RV3D_USER_ORTHO;
     }
     rv3d->rflag &= ~RV3D_WAS_CAMOB;
     ED_region_tag_redraw(region);

@@ -50,6 +50,7 @@ set(SRC
   intern/mesh_extractors/extract_mesh_vbo_orco.cc
   intern/mesh_extractors/extract_mesh_vbo_paint_overlay_flag.cc
   intern/mesh_extractors/extract_mesh_vbo_pos.cc
+  intern/mesh_extractors/extract_mesh_vbo_part_id.cc
   intern/mesh_extractors/extract_mesh_vbo_sculpt_data.cc
   intern/mesh_extractors/extract_mesh_vbo_select_idx.cc
   intern/mesh_extractors/extract_mesh_vbo_skin_roots.cc
@@ -615,6 +616,8 @@ set(GLSL_SRC
   engines/workbench/shaders/workbench_effect_dof_resolve_frag.glsl
   engines/workbench/shaders/workbench_effect_dof_lib.glsl
   engines/workbench/shaders/workbench_effect_outline_frag.glsl
+  engines/workbench/shaders/workbench_part_id_frag.glsl
+  engines/workbench/shaders/workbench_part_id_vert.glsl
   engines/workbench/shaders/workbench_effect_smaa_frag.glsl
   engines/workbench/shaders/workbench_effect_smaa_vert.glsl
   engines/workbench/shaders/workbench_effect_taa_frag.glsl

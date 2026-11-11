@@ -1,0 +1,7 @@
+Project: meshoptimizer
+URL: https://github.com/zeux/meshoptimizer
+Version: 1.3 (9e1f07b)
+License: MIT (LICENSE.md)
+
+Only the allocator, vertex remapping and simplification translation units are built.
+The upstream source files are otherwise unmodified.

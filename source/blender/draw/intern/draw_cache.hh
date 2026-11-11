@@ -75,6 +75,9 @@ gpu::Batch *DRW_cache_mesh_surface_texpaint_single_get(Object *ob);
 Span<gpu::Batch *> DRW_cache_mesh_surface_material_colors_get(Object *ob);
 gpu::Batch *DRW_cache_mesh_surface_vertpaint_get(Object *ob);
 gpu::Batch *DRW_cache_mesh_surface_sculptcolors_get(Object *ob);
+/** Surface colored by face set, as the color attribute of the Workbench shader. */
+gpu::Batch *DRW_cache_mesh_surface_face_sets_get(Object *ob);
+gpu::Batch *DRW_cache_mesh_surface_part_ids_get(Object *ob);
 gpu::Batch *DRW_cache_mesh_surface_weights_get(Object *ob);
 gpu::Batch *DRW_cache_mesh_surface_mesh_analysis_get(Object *ob);
 gpu::Batch *DRW_cache_mesh_face_wireframe_get(Object *ob);

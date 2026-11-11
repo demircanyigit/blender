@@ -158,17 +158,28 @@ class OBJECT_OT_modifier_list_add(Operator):
         ob, active = _active(context)
         if ob is None:
             return {'CANCELLED'}
-        index = list(ob.modifiers).index(active) if active else -1
+        # Every selected object gets it, each after its own active modifier.
+        targets = {ob}
+        targets.update(context.selected_editable_objects or ())
+        before = {}
+        for it in targets:
+            it_active = it.modifiers.active
+            before[it] = (
+                len(it.modifiers),
+                list(it.modifiers).index(it_active) if it_active else -1,
+                it_active,
+            )
         try:
-            result = bpy.ops.object.modifier_add(type=self.type)
+            result = bpy.ops.object.modifier_add(type=self.type, use_selected_objects=True)
         except (RuntimeError, TypeError) as ex:
             self.report({'ERROR'}, str(ex))
             return {'CANCELLED'}
         if 'FINISHED' not in result:
             return {'CANCELLED'}
-        new = ob.modifiers.active
-        if active is not None and new is not None and new != active:
-            _move_to(ob, new, index + 1)
+        for it, (count, index, it_active) in before.items():
+            new = it.modifiers.active
+            if len(it.modifiers) > count and it_active is not None and new is not None and new != it_active:
+                _move_to(it, new, index + 1)
         return {'FINISHED'}
 
 
@@ -649,17 +660,19 @@ class OBJECT_MT_modifier_list_color(ModifierListAddMenu, Menu):
 
 # Mesh modifiers of the list view's menu, in columns. Each column is sorted by label.
 MESH_CATEGORIES_TOP = (
-    ("Model", (
-        'BEVEL', 'BOOLEAN', 'CAP_HOLES', 'COLLAPSE', 'DICE', 'DRAPE', 'FACE_EXTRUDE', 'INSET', 'MASONRY', 'MIRROR', 'PANELIZE', 'POKE',
-        'SCREW', 'SHATTER', 'SKIN', 'SLICE', 'SOLIDIFY', 'SYMMETRIZE', 'VOLUME_TO_MESH', 'VORONOI_FRACTURE', 'WELD',
-        'WIREFRAME',
+    ("Edit", (
+        'BEVEL', 'BOOLEAN', 'CAP_HOLES', 'CLEANUP', 'COLLAPSE', 'DICE', 'EDGE_DAMAGE', 'FACE_EXTRUDE', 'INSET', 'JOIN',
+        'MIRROR', 'POKE', 'SHATTER', 'SLICE', 'SOLIDIFY', 'SYMMETRIZE', 'VORONOI_FRACTURE', 'WELD',
+    )),
+    ("Build", (
+        'DISTRIBUTE', 'DRAPE', 'MASONRY', 'PANELIZE', 'PLANKS', 'ROOF', 'SCREW', 'SKIN', 'STONEWORK', 'VOLUME_TO_MESH', 'WIREFRAME',
     )),
     ("Topology", (
-        'SUBSURF', 'MULTIRES', 'DECIMATE', 'DISSOLVE', 'REMESH', 'ISOTROPIC_REMESH', 'QUADRIFLOW_REMESH',
+        'SUBSURF', 'MULTIRES', 'DECIMATE', 'DIVIDE', 'DISSOLVE', 'REMESH', 'ISOTROPIC_REMESH', 'QUADRIFLOW_REMESH',
         'TRIANGULATE', 'QUADRANGULATE', 'BEAUTIFY_FACES', 'ROTATE_EDGES', 'EDGE_SPLIT',
     )),
     ("Elements", (
-        'ARRAY', 'RADIAL_ARRAY', 'BUILD', 'MASK', 'DELETE_MESH', 'EXPLODED_VIEW',
+        'ARRAY', 'RADIAL_ARRAY', 'BLAST', 'BUILD', 'MASK', 'DELETE_MESH', 'EXPLODED_VIEW',
         'RANDOMIZE_ELEMENTS', 'ELEMENT_ORDER', 'ELEMENT_PIVOT',
     )),
     ("Deform", (
@@ -667,16 +680,17 @@ MESH_CATEGORIES_TOP = (
         'LAPLACIANDEFORM', 'FFD_2', 'FFD_3', 'FFD_4', 'SHAPE_KEY_INBETWEEN',
     )),
     ("Shape", (
-        'BEND', 'TWIST', 'TAPER', 'STRETCH', 'SIMPLE_DEFORM', 'CAST', 'DISPLACE', 'NOISE', 'PUSH',
+        'BEND', 'TWIST', 'TAPER', 'STRETCH', 'SIMPLE_DEFORM', 'CAST', 'CARVE', 'DISPLACE', 'NOISE', 'PUSH',
         'MELT', 'WARP', 'WAVE',
     )),
 )
 MESH_CATEGORIES_BOTTOM = (
     ("Smooth", ('SMOOTH', 'CORRECTIVE_SMOOTH', 'LAPLACIANSMOOTH', 'RELAX')),
     ("Normals", ('NORMAL_EDIT', 'WEIGHTED_NORMAL', 'MARK_BY_ANGLE')),
-    ("UV & Data", (
-        'UV_PROJECT', 'UVW_MAP', 'UV_WARP', 'SMART_UV_PROJECT', 'DATA_TRANSFER', 'DATA_CHANNEL',
-        'MATERIAL_BY_ELEMENT', 'TENSION', 'MESH_CACHE', 'MESH_SEQUENCE_CACHE',
+    ("UV", ('UV_PROJECT', 'UVW_MAP', 'UV_WARP', 'UV_SCALE', 'SMART_UV_PROJECT')),
+    ("Data", (
+        'DATA_TRANSFER', 'DATA_CHANNEL', 'PIECE_ID',
+        'MATERIAL_BY_ELEMENT', 'MATERIALIZE', 'TENSION', 'MESH_CACHE', 'MESH_SEQUENCE_CACHE',
         'VERTEX_WEIGHT_EDIT', 'VERTEX_WEIGHT_MIX', 'VERTEX_WEIGHT_PROXIMITY',
     )),
     ("Select", ('EDIT_POLY', 'POLY_SELECT', 'POLY_EDIT', 'VOLUME_SELECT')),
@@ -706,12 +720,13 @@ class OBJECT_MT_modifier_list_add(ModifierListAddMenu, Menu):
         """All mesh modifiers at once, one row of columns with short groups stacked."""
         groups = dict(MESH_CATEGORIES_TOP + MESH_CATEGORIES_BOTTOM)
         columns = (
-            ("Model",),
+            ("Edit",),
+            ("Build",),
             ("Topology", "Smooth"),
             ("Elements", "Select", "Normals"),
             ("Deform",),
             ("Shape",),
-            ("UV & Data",),
+            ("UV", "Data"),
             ("Physics", "Geometry Nodes"),
         )
         row = layout.row()

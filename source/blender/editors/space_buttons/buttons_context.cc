@@ -147,6 +147,27 @@ static bool buttons_context_path_world(ButsContextPath *path)
   return false;
 }
 
+/* The All Materials tab: the material picked in its list, from all the materials of the file.
+ * Returns true without adding a material when none is picked, so the tab stays visible. */
+static bool buttons_context_path_all_materials(ButsContextPath *path, SpaceProperties *sbuts)
+{
+  PointerRNA *ptr = &path->ptr[path->len - 1];
+
+  /* A pinned material. */
+  if (RNA_struct_is_a(ptr->type, RNA_Material)) {
+    return true;
+  }
+  if (buttons_context_path_scene(path)) {
+    if (sbuts->browse_material) {
+      path->ptr[path->len] = RNA_id_pointer_create(&sbuts->browse_material->id);
+      path->len++;
+    }
+    return true;
+  }
+
+  return false;
+}
+
 static bool buttons_context_path_collection(const bContext *C,
                                             ButsContextPath *path,
                                             wmWindow *window)
@@ -636,6 +657,7 @@ static bool buttons_context_path(
               BCONTEXT_OUTPUT,
               BCONTEXT_VIEW_LAYER,
               BCONTEXT_WORLD,
+              BCONTEXT_ALL_MATERIALS,
               BCONTEXT_STRIP,
               BCONTEXT_STRIP_MODIFIER))
     {
@@ -666,6 +688,9 @@ static bool buttons_context_path(
       break;
     case BCONTEXT_WORLD:
       found = buttons_context_path_world(path);
+      break;
+    case BCONTEXT_ALL_MATERIALS:
+      found = buttons_context_path_all_materials(path, sbuts);
       break;
     case BCONTEXT_COLLECTION: /* This is for Line Art collection flags */
       found = buttons_context_path_collection(C, path, window);
@@ -728,7 +753,7 @@ static bool buttons_shading_context(const bContext *C, int mainb)
   BKE_view_layer_synced_ensure(scene, view_layer);
   Object *ob = BKE_view_layer_active_object_get(view_layer);
 
-  if (ELEM(mainb, BCONTEXT_MATERIAL, BCONTEXT_WORLD, BCONTEXT_TEXTURE)) {
+  if (ELEM(mainb, BCONTEXT_MATERIAL, BCONTEXT_ALL_MATERIALS, BCONTEXT_WORLD, BCONTEXT_TEXTURE)) {
     return true;
   }
   if (mainb == BCONTEXT_DATA && ob && ELEM(ob->type, OB_LAMP, OB_CAMERA)) {

@@ -30,8 +30,13 @@ struct MeshCollapseParams {
   /** What the pieces land on. When null, a flat floor under the lowest point. */
   const Mesh *ground = nullptr;
   float4x4 ground_to_space = float4x4::identity();
+  /** The ground is pushed out along its normals by this much. Negative pulls it in. */
+  float ground_cage = 0.0f;
   /** Per point: pieces with any of these points stay where they are. May be empty. */
   Span<bool> keep;
+  /** Per point: points with the same number fall as one piece. When empty, every mesh island is
+   * a piece. */
+  Span<int> pieces;
 };
 
 /** More pieces than this are refused, the solve would take too long. */

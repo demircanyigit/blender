@@ -29,6 +29,8 @@
 
 #include "DEG_depsgraph_query.hh"
 
+#include "BLI_array.hh"
+#include "GEO_decimate_backends.hh"
 #include "GEO_randomize.hh"
 
 #include "bmesh.hh"
@@ -56,8 +58,13 @@ static void required_data_mask(ModifierData *md, CustomData_MeshMasks *r_cddata_
 {
   DecimateModifierData *dmd = reinterpret_cast<DecimateModifierData *>(md);
 
+  if (dmd->backend != MOD_DECIMATE_BACKEND_BLENDER) {
+    r_cddata_masks->lmask |= CD_MASK_PROP_FLOAT2;
+  }
   /* Ask for vertex-groups if we need them. */
-  if (dmd->defgrp_name[0] != '\0' && (dmd->defgrp_factor > 0.0f)) {
+  if (dmd->defgrp_name[0] != '\0' &&
+      (dmd->defgrp_factor > 0.0f || dmd->backend != MOD_DECIMATE_BACKEND_BLENDER))
+  {
     r_cddata_masks->vmask |= CD_MASK_MDEFORMVERT;
   }
 }
@@ -99,9 +106,17 @@ static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh 
   /* Set up front so we don't show invalid info in the UI. */
   updateFaceCount(ctx, dmd, mesh->faces_num);
 
+  const float collapse_ratio = dmd->target_mode == 1 ?
+                                   std::min(1.0f,
+                                            float(dmd->target_face_count) /
+                                                std::max(1, int(mesh->corner_tris().size()))) :
+                                   dmd->percent;
+  const bool alternative = dmd->mode == MOD_DECIM_MODE_COLLAPSE &&
+                           dmd->backend != MOD_DECIMATE_BACKEND_BLENDER;
+
   switch (dmd->mode) {
     case MOD_DECIM_MODE_COLLAPSE:
-      if (dmd->percent == 1.0f) {
+      if (collapse_ratio >= 1.0f) {
         return mesh;
       }
       calc_face_normal = true;
@@ -125,13 +140,15 @@ static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh 
       return mesh;
   }
 
-  if (dmd->face_count <= 3) {
+  if (!alternative && dmd->face_count <= 3) {
     BKE_modifier_set_error(ctx->object, md, "Modifier requires more than 3 input faces");
     return mesh;
   }
 
   if (dmd->mode == MOD_DECIM_MODE_COLLAPSE) {
-    if (dmd->defgrp_name[0] && (dmd->defgrp_factor > 0.0f)) {
+    if (dmd->defgrp_name[0] &&
+        (dmd->defgrp_factor > 0.0f || dmd->backend != MOD_DECIMATE_BACKEND_BLENDER))
+    {
       const MDeformVert *dvert;
       int defgrp_index;
 
@@ -157,6 +174,42 @@ static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh 
     }
   }
 
+  if (alternative) {
+    geometry::DecimateBackendParams params;
+    params.backend = geometry::DecimateBackend(dmd->backend);
+    params.target_faces = dmd->target_mode == 1 ? dmd->target_face_count :
+                                                  int(mesh->corner_tris().size() * collapse_ratio);
+    params.error_limit = dmd->error_limit;
+    params.feature_angle = dmd->feature_angle;
+    params.uv_weight = dmd->uv_weight;
+    params.normal_weight = dmd->normal_weight;
+    params.virtual_distance = dmd->virtual_distance;
+    params.max_normal_change = dmd->max_normal_change;
+    params.max_aspect_ratio = dmd->max_aspect_ratio;
+    params.uv_map = dmd->uv_map;
+    params.preserve_boundary = dmd->backend_flags & MOD_DECIMATE_KEEP_BOUNDARY;
+    params.preserve_uv = dmd->backend_flags & MOD_DECIMATE_KEEP_UV;
+    params.preserve_materials = dmd->backend_flags & MOD_DECIMATE_KEEP_MATERIALS;
+    params.preserve_sharp = dmd->backend_flags & MOD_DECIMATE_KEEP_SHARP;
+    params.merge_coincident = dmd->backend_flags & MOD_DECIMATE_MERGE_COINCIDENT;
+    Array<bool> selected;
+    if (vweights) {
+      selected.reinitialize(mesh->verts_num);
+      for (const int i : selected.index_range()) {
+        selected[i] = vweights[i] > 0.0f;
+      }
+      params.selection = VArray<bool>::from_span(selected);
+      MEM_delete(vweights);
+    }
+    std::string message;
+    result = geometry::decimate_with_backend(*mesh, params, message);
+    if (!message.empty()) {
+      BKE_modifier_set_error(ctx->object, md, "%s", message.c_str());
+    }
+    updateFaceCount(ctx, dmd, result ? result->faces_num : mesh->faces_num);
+    return result ? result : mesh;
+  }
+
   BMeshCreateParams create_params{};
   BMeshFromMeshParams convert_params{};
   convert_params.calc_face_normal = calc_face_normal;
@@ -173,7 +226,7 @@ static Mesh *modify_mesh(ModifierData *md, const ModifierEvalContext *ctx, Mesh 
       const int symmetry_axis = (dmd->flag & MOD_DECIM_FLAG_SYMMETRY) ? dmd->symmetry_axis : -1;
       const float symmetry_eps = 0.00002f;
       BM_mesh_decimate_collapse(bm,
-                                dmd->percent,
+                                collapse_ratio,
                                 vweights,
                                 dmd->defgrp_factor,
                                 do_triangulate,
@@ -233,24 +286,64 @@ static void panel_draw(const bContext * /*C*/, Panel *panel)
   layout.use_property_split_set(true);
 
   if (decimate_type == MOD_DECIM_MODE_COLLAPSE) {
-    layout.prop(ptr, "ratio", ui::ITEM_R_SLIDER, std::nullopt, ICON_NONE);
+    layout.prop(ptr, "backend", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+    layout.prop(ptr, "target_mode", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+    if (RNA_enum_get(ptr, "target_mode") == 0) {
+      layout.prop(ptr, "ratio", ui::ITEM_R_SLIDER, std::nullopt, ICON_NONE);
+    }
+    else {
+      layout.prop(ptr, "target_face_count", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+    }
+    const int backend = RNA_enum_get(ptr, "backend");
+    if (backend != MOD_DECIMATE_BACKEND_BLENDER) {
+      for (const char *property : {"use_preserve_boundary",
+                                   "use_preserve_uv",
+                                   "use_preserve_materials",
+                                   "use_preserve_sharp",
+                                   "use_merge_coincident",
+                                   "feature_angle",
+                                   "uv_map"})
+      {
+        layout.prop(ptr, property, UI_ITEM_NONE, std::nullopt, ICON_NONE);
+      }
+      if (backend != MOD_DECIMATE_BACKEND_CGAL) {
+        layout.prop(ptr, "error_limit", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+      }
+      if (backend == MOD_DECIMATE_BACKEND_MESHOPT) {
+        layout.prop(ptr, "uv_weight", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+        layout.prop(ptr, "normal_weight", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+      }
+      if (backend == MOD_DECIMATE_BACKEND_PMP) {
+        layout.prop(ptr, "max_aspect_ratio", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+        layout.prop(ptr, "max_normal_change", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+      }
+      if (backend == MOD_DECIMATE_BACKEND_WILD) {
+        layout.prop(ptr, "virtual_distance", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+      }
+      modifier_vgroup_ui(
+          layout, ptr, &ob_ptr, "vertex_group", "invert_vertex_group", std::nullopt);
+      layout.label(IFACE_("Output uses triangles"), ICON_NONE);
+    }
+    else {
 
-    ui::Layout &row = layout.row(true, IFACE_("Symmetry"));
-    row.use_property_decorate_set(false);
-    ui::Layout *sub = &row.row(true);
-    sub->prop(ptr, "use_symmetry", UI_ITEM_NONE, "", ICON_NONE);
-    sub = &sub->row(true);
-    sub->active_set(RNA_boolean_get(ptr, "use_symmetry"));
-    sub->prop(ptr, "symmetry_axis", ui::ITEM_R_EXPAND, std::nullopt, ICON_NONE);
-    row.decorator(ptr, "symmetry_axis", 0);
+      ui::Layout &row = layout.row(true, IFACE_("Symmetry"));
+      row.use_property_decorate_set(false);
+      ui::Layout *sub = &row.row(true);
+      sub->prop(ptr, "use_symmetry", UI_ITEM_NONE, "", ICON_NONE);
+      sub = &sub->row(true);
+      sub->active_set(RNA_boolean_get(ptr, "use_symmetry"));
+      sub->prop(ptr, "symmetry_axis", ui::ITEM_R_EXPAND, std::nullopt, ICON_NONE);
+      row.decorator(ptr, "symmetry_axis", 0);
 
-    layout.prop(ptr, "use_collapse_triangulate", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+      layout.prop(ptr, "use_collapse_triangulate", UI_ITEM_NONE, std::nullopt, ICON_NONE);
 
-    modifier_vgroup_ui(layout, ptr, &ob_ptr, "vertex_group", "invert_vertex_group", std::nullopt);
-    sub = &layout.row(true);
-    bool has_vertex_group = RNA_string_length(ptr, "vertex_group") != 0;
-    sub->active_set(has_vertex_group);
-    sub->prop(ptr, "vertex_group_factor", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+      modifier_vgroup_ui(
+          layout, ptr, &ob_ptr, "vertex_group", "invert_vertex_group", std::nullopt);
+      sub = &layout.row(true);
+      bool has_vertex_group = RNA_string_length(ptr, "vertex_group") != 0;
+      sub->active_set(has_vertex_group);
+      sub->prop(ptr, "vertex_group_factor", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+    }
   }
   else if (decimate_type == MOD_DECIM_MODE_UNSUBDIV) {
     layout.prop(ptr, "iterations", UI_ITEM_NONE, std::nullopt, ICON_NONE);

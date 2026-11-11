@@ -90,6 +90,8 @@ class ShaderCache {
 
   /* Outline */
   StaticShader outline = {"workbench_effect_outline"};
+  StaticShader part_id = {"workbench_part_id"};
+  StaticShader part_id_clipped = {"workbench_part_id_clipped"};
 
   /* Dof */
   StaticShader dof_prepare = {"workbench_effect_dof_prepare"};
@@ -175,6 +177,10 @@ struct SceneState {
   bool draw_curvature = false;
   bool draw_shadows = false;
   bool draw_outline = false;
+  /** Outline around loose parts, materials or face sets, not only objects. */
+  bool draw_part_ids = false;
+  /** #WB_OUTLINE_OBJECT and the other bits, read by the outline shader. */
+  int outline_flag = 0;
   bool draw_dof = false;
   bool draw_aa = false;
 
@@ -509,17 +515,44 @@ class VolumePass {
                       float3 world_size);
 };
 
+/* Bits of #WorldData.outline_flag, same as in the outline shader. */
+#define WB_OUTLINE_OBJECT 1
+#define WB_OUTLINE_PARTS 2
+#define WB_EDGE_DEPTH 4
+#define WB_EDGE_CREASE 8
+#define WB_EDGE_HARD 16
+
 class OutlinePass {
  private:
   bool enabled_ = false;
+  bool use_part_ids_ = false;
+  bool use_clipping_ = false;
+  int part_type_ = 0;
 
   PassSimple ps_ = PassSimple("Workbench.Outline");
   Framebuffer fb_ = Framebuffer("Workbench.Outline");
 
+  /* Loose part, material or face set of each mesh pixel. */
+  PassMain part_ps_ = PassMain("Workbench.Outline.PartIds");
+  Framebuffer part_fb_ = Framebuffer("Workbench.Outline.PartIds");
+  TextureFromPool part_id_tx_ = "wb_part_id_tx";
+  /* Shading normals of the opaque pass, for hard edges. */
+  TextureRef normal_tx_;
+
  public:
   void init(const SceneState &scene_state);
-  void sync(SceneResources &resources);
-  void draw(Manager &manager, SceneResources &resources);
+  void sync(const SceneState &scene_state, SceneResources &resources);
+  void object_sync(ObjectRef &ob_ref, ResourceHandleRange handle);
+  void draw(Manager &manager,
+            View &view,
+            SceneResources &resources,
+            int2 resolution,
+            gpu::Texture *normal_tx);
+
+  bool use_part_ids() const
+  {
+    return enabled_ && use_part_ids_;
+  }
 };
 
 class DofPass {

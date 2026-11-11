@@ -10,6 +10,7 @@
 | [Clip](#clip) | Mesh ▸ Operations | Cuts a mesh with a plane and removes one side |
 | [Dice](#dice) | Mesh ▸ Operations | Cuts a mesh into a grid of pieces along its bounding box |
 | [Dissolve](#dissolve) | Mesh ▸ Operations | Removes points, edges or faces without leaving holes |
+| [Divide Mesh](#divide-mesh) | Mesh ▸ Operations | Cuts the faces with a grid, keeping the mesh connected |
 | [Smooth](#smooth) | Mesh ▸ Operations | Smooths the surface |
 | [Relax](#relax) | Mesh ▸ Operations | Evens out the points along the surface |
 | [QuadriFlow Remesh](#quadriflow-remesh) | Mesh ▸ Operations | Rebuilds a mesh out of quads |
@@ -19,6 +20,14 @@
 | [Drape](#drape) | Mesh ▸ Operations | Settles a cloth mesh over a collider |
 | [Shatter](#shatter) | Mesh ▸ Operations | Breaks a mesh with material-specific patterns |
 | [Masonry](#masonry) | Mesh ▸ Operations | Covers faces with brick, stone or paving patterns |
+| [Planks](PLANKS.md) | Mesh ▸ Operations | Floors and walls of boards, crates and barrels |
+| [Roof](ROOF.md) | Mesh ▸ Operations | Builds roofs on outlines, or covers modeled roofs |
+| [Carve](CARVE.md) | Mesh ▸ Operations | Displaces with two pattern or value layers, masked |
+| [Materialize](MATERIALIZE.md) | Mesh ▸ Operations | Gives a material to faces picked by a rule |
+| [Cleanup](CLEANUP.md) | Mesh ▸ Operations | Runs the Clean Up menu's steps and more in one go |
+| [Stonework](STONEWORK.md) | Mesh ▸ Operations | Fills a mesh with whole stones, stacked from the bottom up |
+| [Distribute](DISTRIBUTE.md) | Mesh ▸ Operations | Packs instances on the faces by their measured sides, so none of them touch |
+| [UV Scale](UV_SCALE.md) | Mesh ▸ Operations | Scales UVs or matches a target texel density |
 
 Inputs marked **field** can take a different value per element, for example from Random Value.
 Other inputs take one value, and linking a field to them shows a red link.
@@ -203,6 +212,19 @@ Limits:
   the mesh as it is.
 - Pieces at the edge of a curved shape can be very small.
 
+## Divide Mesh
+
+Cuts the faces of a mesh with a grid of planes, like the Divide modifier. Nothing is removed,
+filled or split apart: the mesh stays one connected surface with more faces.
+
+| Input | Default | Meaning |
+|---|---|---|
+| Mesh | | Mesh to cut |
+| Size | 0.5 | Distance between the cuts along each axis |
+| Offset | 0 | Moves the grid of cuts |
+| Rotation | 0 | Turns the grid of cuts around the offset |
+| X, Y, Z | On | Which axes are cut across |
+
 ## Dissolve
 
 Removes parts of a mesh and merges the faces around them, without leaving holes. Uses the same code
@@ -355,17 +377,30 @@ Limits:
 
 ## Collapse Islands
 
-Drops each connected mesh island as a rigid piece. Ground takes collider geometry; with no ground,
-the node uses a floor under the mesh. Keep is a point field that holds islands in place. Space,
-Time, Gravity, Push, Seed, Friction, Bounce and Quality control the settling. The output is Mesh.
+Drops each connected mesh island as a rigid piece. Ground takes collider geometry, instances
+included, so a Collection Info node can give a whole collection; with no ground, the node uses a
+floor under the mesh. Cage pushes the ground out along its normals, so the pieces land further
+away; negative pulls it in. Keep is a point field that holds islands in place. Space, Time,
+Gravity, Push, Seed, Friction, Bounce and Quality control the settling. The output is Mesh.
 This computes a settled result during evaluation rather than creating a rigid-body simulation cache.
+
+The Collapse modifier has a Ground object, and a list below it for more objects and collections,
+with Add Object, Add Collection and Add Selected Objects buttons. It also has Cage. Its **Pieces**
+option drops loose parts (**Islands**) or faces and points with the same number in an attribute
+(**Attribute**, `piece` by default). A face attribute splits the mesh where different pieces meet.
+See [Piece ID](PIECE_ID.md).
 
 ## Drape
 
-Settles a mesh as cloth over Collider geometry. Pin is a point field for fixed points. Floor adds a
-floor plane. Space, Time, Gravity, Stiffness, Bending, Shrink, Pressure, Thickness, Friction,
-Self Collision and Quality control the solver. The output is Mesh. Subdivide the input first to
-provide enough points to bend; higher quality and self collision increase evaluation cost.
+Settles a mesh as cloth over Collider geometry, instances included, so a Collection Info node can
+give a whole collection. Cage pushes the collider out along its normals, so the cloth rests further
+away; negative pulls it in. Pin is a point field for fixed points. Floor adds a floor plane. Space,
+Time, Gravity, Stiffness, Bending, Shrink, Pressure, Thickness, Friction, Self Collision and
+Quality control the solver. The output is Mesh. Subdivide the input first to provide enough points
+to bend; higher quality and self collision increase evaluation cost.
+
+The Drape modifier has a Collider object, and a list below it for more objects and collections,
+with Add Object, Add Collection and Add Selected Objects buttons. It also has Cage.
 
 ## Shatter
 

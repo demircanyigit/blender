@@ -25,6 +25,7 @@
 #include "DNA_object_force_types.h"
 #include "DNA_pointcloud_types.h"
 #include "DNA_scene_types.h"
+#include "DNA_texture_types.h"
 
 #include "BLI_array_utils.hh"
 #include "BLI_bitmap.h"
@@ -3821,6 +3822,194 @@ void OBJECT_OT_grease_pencil_dash_modifier_segment_move(wmOperatorType *ot)
   edit_modifier_properties(ot);
 
   ot->prop = RNA_def_enum(ot->srna, "type", segment_move, 0, "Type", "");
+}
+
+/** \} */
+
+/* ------------------------------------------------------------------- */
+/** \name Materialize Modifier
+ * \{ */
+
+static bool materialize_rule_poll(bContext *C)
+{
+  return edit_modifier_poll_generic(C, RNA_MaterializeModifier, 0, false, false);
+}
+
+static wmOperatorStatus materialize_rule_add_exec(bContext *C, wmOperator *op)
+{
+  Object *ob = context_active_object(C);
+  auto *mmd = reinterpret_cast<MaterializeModifierData *>(
+      edit_modifier_property_get(op, ob, eModifierType_Materialize));
+  if (mmd == nullptr) {
+    return OPERATOR_CANCELLED;
+  }
+
+  MaterializeModifierRule *new_rules = MEM_new_array<MaterializeModifierRule>(mmd->rules_num + 1,
+                                                                             __func__);
+  const int new_index = std::clamp(mmd->active_rule + 1, 0, mmd->rules_num);
+  if (mmd->rules_num != 0) {
+    memcpy(new_rules, mmd->rules, sizeof(MaterializeModifierRule) * new_index);
+    memcpy(new_rules + new_index + 1,
+           mmd->rules + new_index,
+           sizeof(MaterializeModifierRule) * (mmd->rules_num - new_index));
+  }
+  MaterializeModifierRule *rule = &new_rules[new_index];
+  *rule = MaterializeModifierRule();
+  STRNCPY_UTF8(rule->name, DATA_("Rule"));
+  BLI_uniquename_cb(
+      [&](const StringRef name) {
+        for (const MaterializeModifierRule &other : mmd->rules_span()) {
+          if (STREQ(other.name, name.data())) {
+            return true;
+          }
+        }
+        return false;
+      },
+      '.',
+      rule->name);
+
+  MEM_SAFE_DELETE(mmd->rules);
+  mmd->rules = new_rules;
+  mmd->rules_num++;
+  mmd->active_rule = new_index;
+
+  DEG_id_tag_update(&ob->id, ID_RECALC_GEOMETRY | ID_RECALC_SYNC_TO_EVAL);
+  DEG_relations_tag_update(CTX_data_main(C));
+  WM_event_add_notifier(C, NC_OBJECT | ND_MODIFIER, ob);
+  return OPERATOR_FINISHED;
+}
+
+static wmOperatorStatus materialize_rule_add_invoke(bContext *C,
+                                                    wmOperator *op,
+                                                    const wmEvent * /*event*/)
+{
+  if (edit_modifier_invoke_properties(C, op)) {
+    return materialize_rule_add_exec(C, op);
+  }
+  return OPERATOR_CANCELLED;
+}
+
+void OBJECT_OT_materialize_rule_add(wmOperatorType *ot)
+{
+  ot->name = "Add Rule";
+  ot->description = "Add a rule after the active one";
+  ot->idname = "OBJECT_OT_materialize_rule_add";
+
+  ot->poll = materialize_rule_poll;
+  ot->invoke = materialize_rule_add_invoke;
+  ot->exec = materialize_rule_add_exec;
+
+  ot->flag = OPTYPE_REGISTER | OPTYPE_UNDO | OPTYPE_INTERNAL;
+  edit_modifier_properties(ot);
+}
+
+static void materialize_rule_free(MaterializeModifierRule *rule)
+{
+  for (Material **material : {&rule->material, &rule->only_on}) {
+    if (*material) {
+      id_us_min(&(*material)->id);
+    }
+  }
+  if (rule->texture) {
+    id_us_min(&rule->texture->id);
+  }
+}
+
+static wmOperatorStatus materialize_rule_remove_exec(bContext *C, wmOperator *op)
+{
+  Object *ob = context_active_object(C);
+  auto *mmd = reinterpret_cast<MaterializeModifierData *>(
+      edit_modifier_property_get(op, ob, eModifierType_Materialize));
+  if (mmd == nullptr) {
+    return OPERATOR_CANCELLED;
+  }
+  if (!mmd->rules_span().index_range().contains(mmd->active_rule)) {
+    return OPERATOR_CANCELLED;
+  }
+  dna::array::remove_index(
+      &mmd->rules, &mmd->rules_num, &mmd->active_rule, mmd->active_rule, materialize_rule_free);
+
+  DEG_id_tag_update(&ob->id, ID_RECALC_GEOMETRY | ID_RECALC_SYNC_TO_EVAL);
+  DEG_relations_tag_update(CTX_data_main(C));
+  WM_event_add_notifier(C, NC_OBJECT | ND_MODIFIER, ob);
+  return OPERATOR_FINISHED;
+}
+
+static wmOperatorStatus materialize_rule_remove_invoke(bContext *C,
+                                                       wmOperator *op,
+                                                       const wmEvent * /*event*/)
+{
+  if (edit_modifier_invoke_properties(C, op)) {
+    return materialize_rule_remove_exec(C, op);
+  }
+  return OPERATOR_CANCELLED;
+}
+
+void OBJECT_OT_materialize_rule_remove(wmOperatorType *ot)
+{
+  ot->name = "Remove Rule";
+  ot->description = "Remove the active rule";
+  ot->idname = "OBJECT_OT_materialize_rule_remove";
+
+  ot->poll = materialize_rule_poll;
+  ot->invoke = materialize_rule_remove_invoke;
+  ot->exec = materialize_rule_remove_exec;
+
+  ot->flag = OPTYPE_REGISTER | OPTYPE_UNDO | OPTYPE_INTERNAL;
+  edit_modifier_properties(ot);
+}
+
+static wmOperatorStatus materialize_rule_move_exec(bContext *C, wmOperator *op)
+{
+  Object *ob = context_active_object(C);
+  auto *mmd = reinterpret_cast<MaterializeModifierData *>(
+      edit_modifier_property_get(op, ob, eModifierType_Materialize));
+  if (mmd == nullptr || mmd->rules_num < 2) {
+    return OPERATOR_CANCELLED;
+  }
+  const int direction = RNA_enum_get(op->ptr, "type");
+  const int target = mmd->active_rule + direction;
+  if (target < 0 || target >= mmd->rules_num) {
+    return OPERATOR_CANCELLED;
+  }
+  std::swap(mmd->rules[mmd->active_rule], mmd->rules[target]);
+  mmd->active_rule = target;
+
+  DEG_id_tag_update(&ob->id, ID_RECALC_GEOMETRY | ID_RECALC_SYNC_TO_EVAL);
+  WM_event_add_notifier(C, NC_OBJECT | ND_MODIFIER, ob);
+  return OPERATOR_FINISHED;
+}
+
+static wmOperatorStatus materialize_rule_move_invoke(bContext *C,
+                                                     wmOperator *op,
+                                                     const wmEvent * /*event*/)
+{
+  if (edit_modifier_invoke_properties(C, op)) {
+    return materialize_rule_move_exec(C, op);
+  }
+  return OPERATOR_CANCELLED;
+}
+
+void OBJECT_OT_materialize_rule_move(wmOperatorType *ot)
+{
+  static const EnumPropertyItem move_items[] = {
+      {-1, "UP", 0, "Up", ""},
+      {1, "DOWN", 0, "Down", ""},
+      {0, nullptr, 0, nullptr, nullptr},
+  };
+
+  ot->name = "Move Rule";
+  ot->description = "Move the active rule up or down. Later rules win";
+  ot->idname = "OBJECT_OT_materialize_rule_move";
+
+  ot->poll = materialize_rule_poll;
+  ot->invoke = materialize_rule_move_invoke;
+  ot->exec = materialize_rule_move_exec;
+
+  ot->flag = OPTYPE_REGISTER | OPTYPE_UNDO | OPTYPE_INTERNAL;
+  edit_modifier_properties(ot);
+
+  ot->prop = RNA_def_enum(ot->srna, "type", move_items, 0, "Type", "");
 }
 
 /** \} */

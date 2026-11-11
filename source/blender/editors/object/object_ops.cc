@@ -145,6 +145,9 @@ void operatortypes_object()
   WM_operatortype_append(OBJECT_OT_geometry_nodes_input_attribute_toggle);
   WM_operatortype_append(OBJECT_OT_geometry_node_tree_copy_assign);
   WM_operatortype_append(OBJECT_OT_grease_pencil_dash_modifier_segment_add);
+  WM_operatortype_append(OBJECT_OT_materialize_rule_add);
+  WM_operatortype_append(OBJECT_OT_materialize_rule_remove);
+  WM_operatortype_append(OBJECT_OT_materialize_rule_move);
   WM_operatortype_append(OBJECT_OT_grease_pencil_dash_modifier_segment_remove);
   WM_operatortype_append(OBJECT_OT_grease_pencil_dash_modifier_segment_move);
   WM_operatortype_append(OBJECT_OT_grease_pencil_time_modifier_segment_add);
