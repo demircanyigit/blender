@@ -339,7 +339,14 @@ class Grid : Overlay {
       float3 camera_offs = drw_view_position - dist * drw_view_forward;
       grid_ubo_.offset = camera_offs.xy();
     }
-    else { /* Orthographic. */
+    else if (abs(drw_view_forward.z) > 1e-4f) {
+      /* Orthographic: center the grid where the middle of the view meets the floor, so it stays
+       * on screen away from the origin. */
+      float3 camera_offs = drw_view_position -
+                           drw_view_forward * (drw_view_position.z / drw_view_forward.z);
+      grid_ubo_.offset = camera_offs.xy();
+    }
+    else { /* Orthographic, looking along the floor. */
       float3 camera_offs = drw_view_position -
                            drw_view_forward * dot(drw_view_position, drw_view_forward);
       grid_ubo_.offset = camera_offs.xy();

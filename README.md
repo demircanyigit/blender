@@ -266,9 +266,9 @@ Every step stays editable, like a history you can go back and change.
 The active modifier can be edited in the viewport:
 
 - **Bend, Twist, Taper, Stretch, UVW Map, Volume Select and Radial Array:** a handle moves the center, a dial
-  sets the angle, and arrows set the limits.
-- **Slice:** a handle for the plane and an arrow for its distance.
-- **FFD:** a handle on every control point, with the cage drawn between them.
+  sets the angle, and markers set the limits, with a line between them.
+- **Slice:** a handle for the plane and a marker for its distance.
+- **FFD:** a dot on every control point, with the cage drawn between them, also while dragging.
 
 They follow the viewport's Gizmos ▸ Modifier toggle.
 
