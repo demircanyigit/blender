@@ -1,20 +1,114 @@
 # About this fork
 
-An unofficial fork based on the Blender `v5.1.0` tag. It adds 63 modifiers and a list view of the
+An unofficial fork based on the Blender `v5.1.0` tag. It adds 65 modifiers and a list view of the
 modifier stack, new geometry nodes, the Toolbox and Shelf editors, more color attribute options for
 the Solid shading mode, and the classic 2.79 look with colored icons and embossed widgets. It isn't
 made or supported by the Blender Foundation. The [main read-me](../../README.md) lists everything.
 
-- [MASONRY.md](MASONRY.md): continuous brick layouts over beveled walls
-- [UV_SCALE.md](UV_SCALE.md): UV scaling and matching texel density between objects
-- [NODES.md](NODES.md): what each node does, its inputs and its limits
-- [VIEWPORT_COLORS.md](VIEWPORT_COLORS.md): the material options
-- [ALL_MATERIALS.md](ALL_MATERIALS.md): the All Materials tab and giving a material to all selected objects
-- [FACE_SETS.md](FACE_SETS.md): seeing and setting face sets in Object and Edit Mode
-- [SOLID_OUTLINES.md](SOLID_OUTLINES.md): outlines around parts, materials and face sets, and edge lines
-- [TOON_SHADING.md](TOON_SHADING.md): toon lighting in Solid mode
-- [CLASSIC_UI.md](CLASSIC_UI.md): the node icons and the emboss
-- [BUILD_WINDOWS.md](BUILD_WINDOWS.md): how to build it
+**Modifiers: model and topology**
+
+- [Isotropic Remesh](ISOTROPIC_REMESH.md)
+- [QuadriFlow Remesh](QUADRIFLOW_REMESH.md)
+- [Voronoi Fracture](VORONOI_FRACTURE.md)
+- [Slice](SLICE.md)
+- [Cap Holes](CAP_HOLES.md)
+- [Face Extrude](FACE_EXTRUDE.md)
+- [Inset](INSET.md)
+- [Panelize](PANELIZE.md)
+- [Poke](POKE.md)
+- [Quadrangulate](QUADRANGULATE.md)
+- [Beautify Faces](BEAUTIFY_FACES.md)
+- [Rotate Edges](ROTATE_EDGES.md)
+- [Symmetrize](SYMMETRIZE.md)
+- [Sweep](SWEEP.md)
+- [Dice](DICE.md)
+- [Divide](DIVIDE.md)
+- [Join](JOIN.md)
+- [Collapse](COLLAPSE.md)
+- [Drape](DRAPE.md)
+- [Shatter](SHATTER.md)
+- [Masonry](MASONRY.md)
+- [Planks](PLANKS.md)
+- [Roof](ROOF.md)
+- [Carve](CARVE.md)
+- [Materialize](MATERIALIZE.md)
+- [Cleanup](CLEANUP.md)
+- [Stonework](STONEWORK.md)
+- [Distribute](DISTRIBUTE.md)
+- [Edge Damage](EDGE_DAMAGE.md)
+- [Dissolve](DISSOLVE.md)
+- [Decimate algorithms](DECIMATE.md)
+
+**Modifiers: selection and editing in the stack**
+
+- [Edit Poly](EDIT_POLY.md)
+- [Poly Select](POLY_SELECT.md)
+- [Poly Edit](POLY_EDIT.md)
+- [Volume Select](VOLUME_SELECT.md)
+- [Delete Mesh](DELETE_MESH.md)
+- [Blast](BLAST.md)
+
+**Modifiers: elements**
+
+- [Radial Array](RADIAL_ARRAY.md)
+- [Exploded View](EXPLODED_VIEW.md)
+- [Randomize Elements](RANDOMIZE_ELEMENTS.md)
+- [Element Order](ELEMENT_ORDER.md)
+- [Store Element Pivot](STORE_ELEMENT_PIVOT.md)
+
+**Modifiers: deform and shape**
+
+- [Bend, Twist, Taper and Stretch](BEND_TWIST_TAPER_STRETCH.md)
+- [FFD](FFD.md)
+- [Noise](NOISE.md)
+- [Push](PUSH.md)
+- [Melt](MELT.md)
+- [Relax](RELAX.md)
+- [Shape Key In-between](SHAPE_KEY_INBETWEEN.md)
+
+**Modifiers: UV, normals and data**
+
+- [UV Scale](UV_SCALE.md)
+- [UVW Map](UVW_MAP.md)
+- [Smart UV Project](SMART_UV_PROJECT.md)
+- [Mark by Angle](MARK_BY_ANGLE.md)
+- [Material By Element](MATERIAL_BY_ELEMENT.md)
+- [Data Channel](DATA_CHANNEL.md)
+- [Piece ID](PIECE_ID.md)
+- [Tension](TENSION.md)
+
+**Modifiers: curves**
+
+- [Normalize Spline](NORMALIZE_SPLINE.md)
+- [Relax Spline](RELAX_SPLINE.md)
+- [Chamfer Spline](CHAMFER_SPLINE.md)
+- [Spline Morph](SPLINE_MORPH.md)
+
+**Working with modifiers**
+
+- [Modifier List](MODIFIER_LIST.md)
+- [Modifier gizmos](MODIFIER_GIZMOS.md)
+
+**Tools and editors**
+
+- [Multi-Cut](MULTI_CUT.md)
+- [Face sets in Object and Edit Mode](FACE_SETS.md)
+- [All Materials](ALL_MATERIALS.md)
+- [Orthographic view](ORTHOGRAPHIC.md)
+- [Toolbox](TOOLBOX.md)
+- [Shelf and Quick Favorites icons](SHELF.md)
+
+**Viewport and look**
+
+- [Outlines and edge lines](SOLID_OUTLINES.md)
+- [Toon shading](TOON_SHADING.md)
+- [Color attributes in Solid shading](VIEWPORT_COLORS.md)
+- [The classic look](CLASSIC_UI.md)
+
+**Nodes and building**
+
+- [What each node does, its inputs and its limits](NODES.md)
+- [Building on Windows](BUILD_WINDOWS.md)
 
 Windows builds are on the [Releases page](https://github.com/demircanyigit/blender/releases). For
 other systems you need to compile it yourself, and only Windows has been tried.

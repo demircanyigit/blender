@@ -21,9 +21,10 @@ Files that use these additions won't work properly in official Blender. See
 
 | Area | What's new |
 |---|---|
-| [Modifiers](#modifiers) | 63 new modifiers, a Modifier List view of the stack, viewport gizmos |
-| [Geometry Nodes](#geometry-nodes) | 75 new nodes: 17 modeling nodes, plus node versions of the new and classic modifiers |
-| [Toolbox and Shelf](#toolbox-and-shelf) | Two new editors for your own buttons, and icons in Quick Favorites |
+| [Modifiers](#modifiers) | 65 new modifiers, a [Modifier List](doc/fork/MODIFIER_LIST.md) view of the stack, [viewport gizmos](doc/fork/MODIFIER_GIZMOS.md) |
+| [Geometry Nodes](#geometry-nodes) | 77 new nodes: 24 modeling nodes, plus node versions of the new and classic modifiers |
+| [Tools](#tools) | [Multi-Cut](doc/fork/MULTI_CUT.md), [face set tools](doc/fork/FACE_SETS.md), Select Similar ▸ Face Set, [orthographic view fixes](doc/fork/ORTHOGRAPHIC.md) |
+| [Toolbox and Shelf](#toolbox-and-shelf) | Two new editors for your own buttons, the [Toolbox](doc/fork/TOOLBOX.md) and the [Shelf](doc/fork/SHELF.md), and icons in Quick Favorites |
 | [Classic look](#classic-look) | Colored 2.79-style icons, embossed widgets, square vertices |
 | [Solid shading](#color-attributes-in-solid-shading) | Color attributes mixed into the material color, [outlines around parts and edge lines](doc/fork/SOLID_OUTLINES.md), [toon lighting](doc/fork/TOON_SHADING.md) |
 | [Materials](doc/fork/ALL_MATERIALS.md) | An All Materials tab for every material in the file, and giving a material to all selected objects |
@@ -45,7 +46,7 @@ materials, seams, sharp edges or angles, and turns them into vertex groups or ma
 Similar has Face Set too. The Piece ID modifier has the main buttons when it makes pieces from
 face sets.
 
-**Orthographic stays orthographic**: with Auto Perspective on, a view you switched to
+**[Orthographic stays orthographic](doc/fork/ORTHOGRAPHIC.md)**: with Auto Perspective on, a view you switched to
 orthographic yourself (Numpad 5) no longer goes back to perspective when you rotate or Alt-drag
 it out of a front, side or top view. Numpad 5 again goes back to perspective.
 
@@ -115,13 +116,13 @@ for global or per-island UV scaling, or a target in pixels per meter. Both accou
 scale and scene units when matching density, and use the new checker-tile icons.
 
 
-The source branch now includes seven more modifiers: **Dice, Edit Poly, Collapse, Drape, Shatter,
-Masonry and Dissolve**, plus **Collapse Islands, Drape, Shatter and Masonry** Geometry Nodes.
+The source branch now includes seven more modifiers: **[Dice](doc/fork/DICE.md), [Edit Poly](doc/fork/EDIT_POLY.md), [Collapse](doc/fork/COLLAPSE.md), [Drape](doc/fork/DRAPE.md), [Shatter](doc/fork/SHATTER.md),
+[Masonry](doc/fork/MASONRY.md) and [Dissolve](doc/fork/DISSOLVE.md)**, plus **Collapse Islands, Drape, Shatter and Masonry** Geometry Nodes.
 Dice and Dissolve now share their geometry algorithms with their modifier versions.
 
-- **Edit Poly** lets you edit a stored mesh in the stack and optionally follow upstream point movement.
-- **Multi Cut** adds an interactive mesh cutting tool to Edit Mode.
-- **Modifier List favorites** can be reordered and shown in one, two or three columns.
+- **[Edit Poly](doc/fork/EDIT_POLY.md)** lets you edit a stored mesh in the stack and optionally follow upstream point movement.
+- **[Multi-Cut](doc/fork/MULTI_CUT.md)** adds an interactive mesh cutting tool to Edit Mode.
+- **[Modifier List](doc/fork/MODIFIER_LIST.md) favorites** can be reordered and shown in one, two or three columns.
 - The new modifiers and nodes have their own colored icons, included with the source.
 
 These additions are in the source branch; the Windows download may be an earlier build.
@@ -131,7 +132,7 @@ These additions are in the source branch; the Windows download may be an earlier
 ### Modifier List
 
 The Modifiers tab has a second way to show the stack. The button in its header switches between the usual
-**Stack** of panels and a **List**:
+**Stack** of panels and a **List**. Everything about it is on [its own page](doc/fork/MODIFIER_LIST.md).
 
 - <img src="doc/fork/images/icons/modlist_view_list.png" width="32" height="32" alt="View List"> <img src="doc/fork/images/icons/modlist_view_stack.png" width="32" height="32" alt="View Stack"> **The list:** one row per modifier, with its icon, name and on/off toggles. Only the active modifier shows its
   settings, under the list, so long stacks stay short.
@@ -151,7 +152,7 @@ The Modifiers tab has a second way to show the stack. The button in its header s
 
 ### New modifiers
 
-All 57 work like the built-in ones: they're in the Add Modifier menu with their own icons, they can be applied,
+All 65 work like the built-in ones: they're in the Add Modifier menu with their own icons, they can be applied,
 and most of them also work in Edit Mode.
 
 ![Voronoi Fracture with Exploded View, a tower made with Poly Select and four Poly Edits, Panelize on a sphere, and Radial Array](doc/fork/images/modifiers_modeling.png)
@@ -163,27 +164,27 @@ Array.*
 
 | | Modifier | What it does |
 |---|---|---|
-| <img src="doc/fork/images/icons/mod_isotropic_remesh.png" width="32" height="32" alt="Isotropic Remesh"> | Isotropic Remesh | Rebuilds the mesh out of even, near-equilateral triangles that follow its surface |
-| <img src="doc/fork/images/icons/mod_quadify.png" width="32" height="32" alt="QuadriFlow Remesh"> | QuadriFlow Remesh | Rebuilds the mesh out of quads that follow its shape |
-| <img src="doc/fork/images/icons/mod_voronoi_fracture.png" width="32" height="32" alt="Voronoi Fracture"> | Voronoi Fracture | Cuts a closed mesh into solid pieces, from random points or the points of another object |
-| <img src="doc/fork/images/icons/mod_slice.png" width="32" height="32" alt="Slice"> | Slice | Cuts the mesh with a plane and removes one side, optionally filling the cut |
-| <img src="doc/fork/images/icons/mod_cap_holes.png" width="32" height="32" alt="Cap Holes"> | Cap Holes | Closes the holes of the mesh with new faces |
-| <img src="doc/fork/images/icons/mod_face_extrude.png" width="32" height="32" alt="Face Extrude"> | Face Extrude | Extrudes faces along their normals and scales them |
-| <img src="doc/fork/images/icons/mod_inset.png" width="32" height="32" alt="Inset"> | Inset | Insets faces, each on its own or as one region |
-| <img src="doc/fork/images/icons/mod_panelize.png" width="32" height="32" alt="Panelize"> | Panelize | Splits the faces into panels with a gap and a chamfer between them |
-| <img src="doc/fork/images/icons/mod_poke.png" width="32" height="32" alt="Poke"> | Poke | Splits each face into a fan of triangles around its center |
-| <img src="doc/fork/images/icons/mod_quadrangulate.png" width="32" height="32" alt="Quadrangulate"> | Quadrangulate | Joins pairs of triangles into quads |
-| <img src="doc/fork/images/icons/mod_beautify.png" width="32" height="32" alt="Beautify Faces"> | Beautify Faces | Flips the edges between triangles so they're more even |
-| <img src="doc/fork/images/icons/mod_rotate_edges.png" width="32" height="32" alt="Rotate Edges"> | Rotate Edges | Turns the edges between faces to connect the other corners |
-| <img src="doc/fork/images/icons/mod_symmetrize.png" width="32" height="32" alt="Symmetrize"> | Symmetrize | Makes one side of the mesh a mirror of the other |
-| <img src="doc/fork/images/icons/mod_sweep.png" width="32" height="32" alt="Sweep"> | Sweep | Makes a mesh by moving a shape along curves |
-| <img src="doc/fork/images/icons/mod_dice.png" width="32" height="32" alt="Dice"> | Dice | Cuts a mesh into a grid of solid pieces, by count or size |
+| <img src="doc/fork/images/icons/mod_isotropic_remesh.png" width="32" height="32" alt="Isotropic Remesh"> | [Isotropic Remesh](doc/fork/ISOTROPIC_REMESH.md) | Rebuilds the mesh out of even, near-equilateral triangles that follow its surface |
+| <img src="doc/fork/images/icons/mod_quadify.png" width="32" height="32" alt="QuadriFlow Remesh"> | [QuadriFlow Remesh](doc/fork/QUADRIFLOW_REMESH.md) | Rebuilds the mesh out of quads that follow its shape |
+| <img src="doc/fork/images/icons/mod_voronoi_fracture.png" width="32" height="32" alt="Voronoi Fracture"> | [Voronoi Fracture](doc/fork/VORONOI_FRACTURE.md) | Cuts a closed mesh into solid pieces, from random points or the points of another object |
+| <img src="doc/fork/images/icons/mod_slice.png" width="32" height="32" alt="Slice"> | [Slice](doc/fork/SLICE.md) | Cuts the mesh with a plane and removes one side, optionally filling the cut |
+| <img src="doc/fork/images/icons/mod_cap_holes.png" width="32" height="32" alt="Cap Holes"> | [Cap Holes](doc/fork/CAP_HOLES.md) | Closes the holes of the mesh with new faces |
+| <img src="doc/fork/images/icons/mod_face_extrude.png" width="32" height="32" alt="Face Extrude"> | [Face Extrude](doc/fork/FACE_EXTRUDE.md) | Extrudes faces along their normals and scales them |
+| <img src="doc/fork/images/icons/mod_inset.png" width="32" height="32" alt="Inset"> | [Inset](doc/fork/INSET.md) | Insets faces, each on its own or as one region |
+| <img src="doc/fork/images/icons/mod_panelize.png" width="32" height="32" alt="Panelize"> | [Panelize](doc/fork/PANELIZE.md) | Splits the faces into panels with a gap and a chamfer between them |
+| <img src="doc/fork/images/icons/mod_poke.png" width="32" height="32" alt="Poke"> | [Poke](doc/fork/POKE.md) | Splits each face into a fan of triangles around its center |
+| <img src="doc/fork/images/icons/mod_quadrangulate.png" width="32" height="32" alt="Quadrangulate"> | [Quadrangulate](doc/fork/QUADRANGULATE.md) | Joins pairs of triangles into quads |
+| <img src="doc/fork/images/icons/mod_beautify.png" width="32" height="32" alt="Beautify Faces"> | [Beautify Faces](doc/fork/BEAUTIFY_FACES.md) | Flips the edges between triangles so they're more even |
+| <img src="doc/fork/images/icons/mod_rotate_edges.png" width="32" height="32" alt="Rotate Edges"> | [Rotate Edges](doc/fork/ROTATE_EDGES.md) | Turns the edges between faces to connect the other corners |
+| <img src="doc/fork/images/icons/mod_symmetrize.png" width="32" height="32" alt="Symmetrize"> | [Symmetrize](doc/fork/SYMMETRIZE.md) | Makes one side of the mesh a mirror of the other |
+| <img src="doc/fork/images/icons/mod_sweep.png" width="32" height="32" alt="Sweep"> | [Sweep](doc/fork/SWEEP.md) | Makes a mesh by moving a shape along curves |
+| <img src="doc/fork/images/icons/mod_dice.png" width="32" height="32" alt="Dice"> | [Dice](doc/fork/DICE.md) | Cuts a mesh into a grid of solid pieces, by count or size |
 | <img src="doc/fork/images/icons/mod_divide.png" width="32" height="32" alt="Divide"> | [Divide](doc/fork/DIVIDE.md) | Divides polygon surfaces into connected grid-like sections with adjustable size, offset and rotation |
 | <img src="doc/fork/images/icons/mod_join.png" width="32" height="32" alt="Join"> | [Join](doc/fork/JOIN.md) | Combines evaluated meshes from objects and collections without Boolean operations, with an ID per object and per parent |
-| <img src="doc/fork/images/icons/mod_collapse.png" width="32" height="32" alt="Collapse"> | Collapse | Drops loose parts, or pieces from an attribute, as rigid pieces onto ground objects and collections, or a floor |
-| <img src="doc/fork/images/icons/mod_drape.png" width="32" height="32" alt="Drape"> | Drape | Settles a mesh as cloth over collider objects and collections, with pinning and optional self collision |
-| <img src="doc/fork/images/icons/mod_shatter.png" width="32" height="32" alt="Shatter"> | Shatter | Breaks a closed mesh with stone, glass, wood, ceramic or ice patterns |
-| <img src="doc/fork/images/icons/mod_masonry.png" width="32" height="32" alt="Masonry"> | Masonry | Covers faces with brick, stone or paving patterns |
+| <img src="doc/fork/images/icons/mod_collapse.png" width="32" height="32" alt="Collapse"> | [Collapse](doc/fork/COLLAPSE.md) | Drops loose parts, or pieces from an attribute, as rigid pieces onto ground objects and collections, or a floor |
+| <img src="doc/fork/images/icons/mod_drape.png" width="32" height="32" alt="Drape"> | [Drape](doc/fork/DRAPE.md) | Settles a mesh as cloth over collider objects and collections, with pinning and optional self collision |
+| <img src="doc/fork/images/icons/mod_shatter.png" width="32" height="32" alt="Shatter"> | [Shatter](doc/fork/SHATTER.md) | Breaks a closed mesh with stone, glass, wood, ceramic or ice patterns |
+| <img src="doc/fork/images/icons/mod_masonry.png" width="32" height="32" alt="Masonry"> | [Masonry](doc/fork/MASONRY.md) | Covers faces with brick, stone or paving patterns |
 | <img src="doc/fork/images/icons/mod_planks.png" width="32" height="32" alt="Planks"> | [Planks](doc/fork/PLANKS.md) | Floors and walls of boards on faces, and crates and barrels of boards |
 | <img src="doc/fork/images/icons/mod_roof.png" width="32" height="32" alt="Roof"> | [Roof](doc/fork/ROOF.md) | Builds roofs on outlines, or dresses modeled roofs |
 | <img src="doc/fork/images/icons/mod_carve.png" width="32" height="32" alt="Carve"> | [Carve](doc/fork/CARVE.md) | Displaces with two texture, pattern or attribute layers, masked |
@@ -192,17 +193,17 @@ Array.*
 | <img src="doc/fork/images/icons/mod_stonework.png" width="32" height="32" alt="Stonework"> | [Stonework](doc/fork/STONEWORK.md) | Fills a mesh with whole stones, stacked from the bottom up |
 | <img src="doc/fork/images/icons/mod_distribute.png" width="32" height="32" alt="Distribute"> | [Distribute](doc/fork/DISTRIBUTE.md) | Packs objects from a collection on the faces, so none of them touch |
 | <img src="doc/fork/images/icons/mod_edge_damage.png" width="32" height="32" alt="Edge Damage"> | [Edge Damage](doc/fork/EDGE_DAMAGE.md) | Wears and chips the edges and corners of closed meshes |
-| <img src="doc/fork/images/icons/mod_dissolve.png" width="32" height="32" alt="Dissolve"> | Dissolve | Removes points, edges or faces and merges the surrounding faces |
+| <img src="doc/fork/images/icons/mod_dissolve.png" width="32" height="32" alt="Dissolve"> | [Dissolve](doc/fork/DISSOLVE.md) | Removes points, edges or faces and merges the surrounding faces |
 
 **Selection and editing in the stack**
 
 | | Modifier | What it does |
 |---|---|---|
-| <img src="doc/fork/images/icons/mod_edit_poly.png" width="32" height="32" alt="Edit Poly"> | Edit Poly | Edits a stored mesh at this point in the stack, with optional upstream point movement |
-| <img src="doc/fork/images/icons/mod_poly_select.png" width="32" height="32" alt="Poly Select"> | Poly Select | Stores a selection of points, edges or faces in the stack, for the modifiers after it |
-| <img src="doc/fork/images/icons/mod_poly_edit.png" width="32" height="32" alt="Poly Edit"> | Poly Edit | Moves, extrudes, insets, pokes or deletes the selected elements |
-| <img src="doc/fork/images/icons/mod_vol_select.png" width="32" height="32" alt="Volume Select"> | Volume Select | Writes a vertex group with the points inside a sphere, box or cylinder |
-| <img src="doc/fork/images/icons/mod_delete_mesh.png" width="32" height="32" alt="Delete Mesh"> | Delete Mesh | Deletes the points, edges or faces picked by a vertex group or an attribute |
+| <img src="doc/fork/images/icons/mod_edit_poly.png" width="32" height="32" alt="Edit Poly"> | [Edit Poly](doc/fork/EDIT_POLY.md) | Edits a stored mesh at this point in the stack, with optional upstream point movement |
+| <img src="doc/fork/images/icons/mod_poly_select.png" width="32" height="32" alt="Poly Select"> | [Poly Select](doc/fork/POLY_SELECT.md) | Stores a selection of points, edges or faces in the stack, for the modifiers after it |
+| <img src="doc/fork/images/icons/mod_poly_edit.png" width="32" height="32" alt="Poly Edit"> | [Poly Edit](doc/fork/POLY_EDIT.md) | Moves, extrudes, insets, pokes or deletes the selected elements |
+| <img src="doc/fork/images/icons/mod_vol_select.png" width="32" height="32" alt="Volume Select"> | [Volume Select](doc/fork/VOLUME_SELECT.md) | Writes a vertex group with the points inside a sphere, box or cylinder |
+| <img src="doc/fork/images/icons/mod_delete_mesh.png" width="32" height="32" alt="Delete Mesh"> | [Delete Mesh](doc/fork/DELETE_MESH.md) | Deletes the points, edges or faces picked by a vertex group or an attribute |
 | <img src="doc/fork/images/icons/mod_blast.png" width="32" height="32" alt="Blast"> | [Blast](doc/fork/BLAST.md) | Removes small disconnected islands or keeps the N largest parts |
 
 Poly Select and Poly Edit work together. Select faces in Edit Mode, store them with Poly Select, then add Poly
@@ -213,23 +214,23 @@ Every step stays editable, like a history you can go back and change.
 
 | | Modifier | What it does |
 |---|---|---|
-| <img src="doc/fork/images/icons/mod_radial_array.png" width="32" height="32" alt="Radial Array"> | Radial Array | Arranges copies of the mesh around an axis |
-| <img src="doc/fork/images/icons/mod_exploded_view.png" width="32" height="32" alt="Exploded View"> | Exploded View | Pushes faces, islands or other elements apart, with a factor you can animate |
-| <img src="doc/fork/images/icons/mod_randomize_elements.png" width="32" height="32" alt="Randomize Elements"> | Randomize Elements | Gives each face, island or other element a random rotation, scale, offset, UVs or color |
-| <img src="doc/fork/images/icons/mod_element_order.png" width="32" height="32" alt="Element Order"> | Element Order | Reorders faces or islands, so Build and other order-based effects run the way you want |
-| <img src="doc/fork/images/icons/mod_element_pivot.png" width="32" height="32" alt="Store Element Pivot"> | Store Element Pivot | Writes the center and axes of each island or other element to point attributes |
+| <img src="doc/fork/images/icons/mod_radial_array.png" width="32" height="32" alt="Radial Array"> | [Radial Array](doc/fork/RADIAL_ARRAY.md) | Arranges copies of the mesh around an axis |
+| <img src="doc/fork/images/icons/mod_exploded_view.png" width="32" height="32" alt="Exploded View"> | [Exploded View](doc/fork/EXPLODED_VIEW.md) | Pushes faces, islands or other elements apart, with a factor you can animate |
+| <img src="doc/fork/images/icons/mod_randomize_elements.png" width="32" height="32" alt="Randomize Elements"> | [Randomize Elements](doc/fork/RANDOMIZE_ELEMENTS.md) | Gives each face, island or other element a random rotation, scale, offset, UVs or color |
+| <img src="doc/fork/images/icons/mod_element_order.png" width="32" height="32" alt="Element Order"> | [Element Order](doc/fork/ELEMENT_ORDER.md) | Reorders faces or islands, so Build and other order-based effects run the way you want |
+| <img src="doc/fork/images/icons/mod_element_pivot.png" width="32" height="32" alt="Store Element Pivot"> | [Store Element Pivot](doc/fork/STORE_ELEMENT_PIVOT.md) | Writes the center and axes of each island or other element to point attributes |
 
 **Deform and shape**
 
 | | Modifier | What it does |
 |---|---|---|
-| <img src="doc/fork/images/icons/mod_bend.png" width="32" height="32" alt="Bend"> <img src="doc/fork/images/icons/mod_twist.png" width="32" height="32" alt="Twist"> <img src="doc/fork/images/icons/mod_taper.png" width="32" height="32" alt="Taper"> <img src="doc/fork/images/icons/mod_stretch.png" width="32" height="32" alt="Stretch"> | Bend, Twist, Taper, Stretch | Deform the mesh around a gizmo axis, with limits |
-| <img src="doc/fork/images/icons/mod_ffd_2.png" width="32" height="32" alt="FFD 2x2x2"> <img src="doc/fork/images/icons/mod_ffd_3.png" width="32" height="32" alt="FFD 3x3x3"> <img src="doc/fork/images/icons/mod_ffd_4.png" width="32" height="32" alt="FFD 4x4x4"> | FFD 2x2x2, 3x3x3, 4x4x4 | Bend the shape with a box of control points that you move in the viewport |
-| <img src="doc/fork/images/icons/mod_noise_deform.png" width="32" height="32" alt="Noise"> | Noise | Moves the points by fractal noise on X, Y and Z, without a texture |
-| <img src="doc/fork/images/icons/mod_push.png" width="32" height="32" alt="Push"> | Push | Inflates or shrinks the mesh along its normals |
-| <img src="doc/fork/images/icons/mod_melt.png" width="32" height="32" alt="Melt"> | Melt | Sags the shape and spreads it out toward the ground |
-| <img src="doc/fork/images/icons/mod_relax.png" width="32" height="32" alt="Relax"> | Relax | Evens out the spacing of the points while keeping them on the surface |
-| <img src="doc/fork/images/icons/mod_shapekey_inbetween.png" width="32" height="32" alt="Shape Key In-between"> | Shape Key In-between | Morphs through a sequence of shape keys with one value |
+| <img src="doc/fork/images/icons/mod_bend.png" width="32" height="32" alt="Bend"> <img src="doc/fork/images/icons/mod_twist.png" width="32" height="32" alt="Twist"> <img src="doc/fork/images/icons/mod_taper.png" width="32" height="32" alt="Taper"> <img src="doc/fork/images/icons/mod_stretch.png" width="32" height="32" alt="Stretch"> | [Bend, Twist, Taper, Stretch](doc/fork/BEND_TWIST_TAPER_STRETCH.md) | Deform the mesh around a gizmo axis, with limits |
+| <img src="doc/fork/images/icons/mod_ffd_2.png" width="32" height="32" alt="FFD 2x2x2"> <img src="doc/fork/images/icons/mod_ffd_3.png" width="32" height="32" alt="FFD 3x3x3"> <img src="doc/fork/images/icons/mod_ffd_4.png" width="32" height="32" alt="FFD 4x4x4"> | [FFD 2x2x2, 3x3x3, 4x4x4](doc/fork/FFD.md) | Bend the shape with a box of control points that you move in the viewport |
+| <img src="doc/fork/images/icons/mod_noise_deform.png" width="32" height="32" alt="Noise"> | [Noise](doc/fork/NOISE.md) | Moves the points by fractal noise on X, Y and Z, without a texture |
+| <img src="doc/fork/images/icons/mod_push.png" width="32" height="32" alt="Push"> | [Push](doc/fork/PUSH.md) | Inflates or shrinks the mesh along its normals |
+| <img src="doc/fork/images/icons/mod_melt.png" width="32" height="32" alt="Melt"> | [Melt](doc/fork/MELT.md) | Sags the shape and spreads it out toward the ground |
+| <img src="doc/fork/images/icons/mod_relax.png" width="32" height="32" alt="Relax"> | [Relax](doc/fork/RELAX.md) | Evens out the spacing of the points while keeping them on the surface |
+| <img src="doc/fork/images/icons/mod_shapekey_inbetween.png" width="32" height="32" alt="Shape Key In-between"> | [Shape Key In-between](doc/fork/SHAPE_KEY_INBETWEEN.md) | Morphs through a sequence of shape keys with one value |
 
 ![Bend, Twist, Taper and Noise on four bars](doc/fork/images/modifiers_deform.png)
 
@@ -244,37 +245,37 @@ Every step stays editable, like a history you can go back and change.
 | | Modifier | What it does |
 |---|---|---|
 | <img src="doc/fork/images/icons/mod_uv_scale.png" width="32" height="32" alt="UV Scale"> | [UV Scale](doc/fork/UV_SCALE.md) | Scales UVs globally or per island, or matches a world-space texel density between objects |
-| <img src="doc/fork/images/icons/mod_uvw_map.png" width="32" height="32" alt="UVW Map"> | UVW Map | Projects a UV map from a planar, cylindrical, spherical or box gizmo |
-| <img src="doc/fork/images/icons/mod_smart_uv_project.png" width="32" height="32" alt="Smart UV Project"> | Smart UV Project | Unwraps the mesh automatically and packs the islands |
-| <img src="doc/fork/images/icons/mod_mark_by_angle.png" width="32" height="32" alt="Mark by Angle"> | Mark by Angle | Marks sharp edges, seams, creases or bevel weights where faces meet at a steep angle |
-| <img src="doc/fork/images/icons/mod_material_by_element.png" width="32" height="32" alt="Material By Element"> | Material By Element | Gives faces material indices at random, by piece, in order or by direction |
-| <img src="doc/fork/images/icons/mod_data_channel.png" width="32" height="32" alt="Data Channel"> | Data Channel | Computes a value per point, such as convexity or edge length, remaps it and writes it out |
+| <img src="doc/fork/images/icons/mod_uvw_map.png" width="32" height="32" alt="UVW Map"> | [UVW Map](doc/fork/UVW_MAP.md) | Projects a UV map from a planar, cylindrical, spherical or box gizmo |
+| <img src="doc/fork/images/icons/mod_smart_uv_project.png" width="32" height="32" alt="Smart UV Project"> | [Smart UV Project](doc/fork/SMART_UV_PROJECT.md) | Unwraps the mesh automatically and packs the islands |
+| <img src="doc/fork/images/icons/mod_mark_by_angle.png" width="32" height="32" alt="Mark by Angle"> | [Mark by Angle](doc/fork/MARK_BY_ANGLE.md) | Marks sharp edges, seams, creases or bevel weights where faces meet at a steep angle |
+| <img src="doc/fork/images/icons/mod_material_by_element.png" width="32" height="32" alt="Material By Element"> | [Material By Element](doc/fork/MATERIAL_BY_ELEMENT.md) | Gives faces material indices at random, by piece, in order or by direction |
+| <img src="doc/fork/images/icons/mod_data_channel.png" width="32" height="32" alt="Data Channel"> | [Data Channel](doc/fork/DATA_CHANNEL.md) | Computes a value per point, such as convexity or edge length, remaps it and writes it out |
 | <img src="doc/fork/images/icons/mod_piece_id.png" width="32" height="32" alt="Piece ID"> | [Piece ID](doc/fork/PIECE_ID.md) | Writes which piece each face or point belongs to, from loose parts, edges, materials, face sets, a group, an attribute or the selection |
-| <img src="doc/fork/images/icons/mod_tension.png" width="32" height="32" alt="Tension"> | Tension | Stores how much the mesh is stretched or squashed compared to its rest shape |
+| <img src="doc/fork/images/icons/mod_tension.png" width="32" height="32" alt="Tension"> | [Tension](doc/fork/TENSION.md) | Stores how much the mesh is stretched or squashed compared to its rest shape |
 
 **Curves**
 
 | | Modifier | What it does |
 |---|---|---|
-| <img src="doc/fork/images/icons/mod_normalize_spline.png" width="32" height="32" alt="Normalize Spline"> | Normalize Spline | Respaces the points of the curves evenly |
-| <img src="doc/fork/images/icons/mod_relax_spline.png" width="32" height="32" alt="Relax Spline"> | Relax Spline | Smooths the curves |
-| <img src="doc/fork/images/icons/mod_chamfer_spline.png" width="32" height="32" alt="Chamfer Spline"> | Chamfer Spline | Cuts the corners of the curves, straight or rounded |
-| <img src="doc/fork/images/icons/mod_spline_morph.png" width="32" height="32" alt="Spline Morph"> | Spline Morph | Moves the curves toward the curves of another object |
+| <img src="doc/fork/images/icons/mod_normalize_spline.png" width="32" height="32" alt="Normalize Spline"> | [Normalize Spline](doc/fork/NORMALIZE_SPLINE.md) | Respaces the points of the curves evenly |
+| <img src="doc/fork/images/icons/mod_relax_spline.png" width="32" height="32" alt="Relax Spline"> | [Relax Spline](doc/fork/RELAX_SPLINE.md) | Smooths the curves |
+| <img src="doc/fork/images/icons/mod_chamfer_spline.png" width="32" height="32" alt="Chamfer Spline"> | [Chamfer Spline](doc/fork/CHAMFER_SPLINE.md) | Cuts the corners of the curves, straight or rounded |
+| <img src="doc/fork/images/icons/mod_spline_morph.png" width="32" height="32" alt="Spline Morph"> | [Spline Morph](doc/fork/SPLINE_MORPH.md) | Moves the curves toward the curves of another object |
 
 ### Viewport gizmos
 
-The active modifier can be edited in the viewport:
+The active modifier can be edited in the viewport. More on [the gizmos page](doc/fork/MODIFIER_GIZMOS.md).
 
 - **Bend, Twist, Taper, Stretch, UVW Map, Volume Select and Radial Array:** a handle moves the center, a dial
   sets the angle, and markers set the limits, with a line between them.
 - **Slice:** a handle for the plane and a marker for its distance.
 - **FFD:** a dot on every control point, with the cage drawn between them, also while dragging.
 
-They follow the viewport's Gizmos ▸ Modifier toggle.
+They follow the viewport's Gizmos ▸ Active Modifier toggle.
 
 ## Geometry Nodes
 
-70 new nodes for the Geometry Nodes editor. They're real nodes, not add-ons or node groups.
+77 new nodes for the Geometry Nodes editor. They're real nodes, not add-ons or node groups.
 
 ### Modeling nodes
 
@@ -316,38 +317,38 @@ These nodes share their code with the new modifiers, so a node tree and a modifi
 
 | | Node | What it does |
 |---|---|---|
-| <img src="doc/fork/images/icons/mod_cap_holes.png" width="32" height="32" alt="Cap Holes"> | Cap Holes | Close the holes of a mesh with new faces |
-| <img src="doc/fork/images/icons/mod_face_extrude.png" width="32" height="32" alt="Face Extrude"> | Face Extrude | Extrude faces along their normals and scale them |
-| <img src="doc/fork/images/icons/mod_inset.png" width="32" height="32" alt="Inset"> | Inset | Inset faces, each on its own or as one region |
-| <img src="doc/fork/images/icons/mod_panelize.png" width="32" height="32" alt="Panelize"> | Panelize | Split faces into panels with a gap and a chamfer between them |
-| <img src="doc/fork/images/icons/mod_poke.png" width="32" height="32" alt="Poke"> | Poke | Split faces into a fan of triangles around their center |
-| <img src="doc/fork/images/icons/mod_quadrangulate.png" width="32" height="32" alt="Quadrangulate"> | Quadrangulate | Join pairs of triangles into quads, the same as Triangles to Quads in edit mode |
-| <img src="doc/fork/images/icons/mod_beautify.png" width="32" height="32" alt="Beautify Faces"> | Beautify Faces | Flip the edges between triangles so they are more even |
-| <img src="doc/fork/images/icons/mod_rotate_edges.png" width="32" height="32" alt="Rotate Edges"> | Rotate Edges | Turn the edges between faces to connect the other corners |
-| <img src="doc/fork/images/icons/mod_symmetrize.png" width="32" height="32" alt="Symmetrize"> | Symmetrize | Make one side of a mesh a mirror of the other |
-| <img src="doc/fork/images/icons/mod_radial_array.png" width="32" height="32" alt="Radial Array"> | Radial Array | Copies of a mesh arranged around an axis |
-| <img src="doc/fork/images/icons/mod_exploded_view.png" width="32" height="32" alt="Exploded View"> | Exploded View | Push faces, islands or other elements apart, with a factor that can be animated |
-| <img src="doc/fork/images/icons/mod_randomize_elements.png" width="32" height="32" alt="Randomize Elements"> | Randomize Elements | Random rotation, scale and offset, UVs or color for each face, island or other element |
-| <img src="doc/fork/images/icons/mod_element_order.png" width="32" height="32" alt="Element Order"> | Element Order | Reorder faces or islands, keeping the faces of each element together |
-| <img src="doc/fork/images/icons/mod_element_pivot.png" width="32" height="32" alt="Element Pivot"> | Element Pivot | The center and axes of the island or other element of each point |
-| <img src="doc/fork/images/icons/mod_bend.png" width="32" height="32" alt="Bend"> | Bend | Bend geometry around a gizmo, with limits |
-| <img src="doc/fork/images/icons/mod_twist.png" width="32" height="32" alt="Twist"> | Twist | Twist geometry around the axis of a gizmo, with limits |
-| <img src="doc/fork/images/icons/mod_taper.png" width="32" height="32" alt="Taper"> | Taper | Scale geometry more along the axis of a gizmo |
-| <img src="doc/fork/images/icons/mod_stretch.png" width="32" height="32" alt="Stretch"> | Stretch | Stretch geometry along the axis of a gizmo and thin it in the middle |
-| <img src="doc/fork/images/icons/mod_ffd_3.png" width="32" height="32" alt="FFD"> | FFD | Bend geometry with a box lattice of 2, 3 or 4 control points per side |
-| <img src="doc/fork/images/icons/mod_noise_deform.png" width="32" height="32" alt="Noise Deform"> | Noise Deform | Move points by a fractal noise on X, Y and Z |
-| <img src="doc/fork/images/icons/mod_push.png" width="32" height="32" alt="Push"> | Push | Inflate or shrink a mesh along its normals |
-| <img src="doc/fork/images/icons/mod_melt.png" width="32" height="32" alt="Melt"> | Melt | Sag geometry and spread it out toward the ground |
-| <img src="doc/fork/images/icons/mod_uvw_map.png" width="32" height="32" alt="UVW Map"> | UVW Map | Project a UV map from a planar, cylindrical, spherical or box gizmo |
+| <img src="doc/fork/images/icons/mod_cap_holes.png" width="32" height="32" alt="Cap Holes"> | [Cap Holes](doc/fork/CAP_HOLES.md) | Close the holes of a mesh with new faces |
+| <img src="doc/fork/images/icons/mod_face_extrude.png" width="32" height="32" alt="Face Extrude"> | [Face Extrude](doc/fork/FACE_EXTRUDE.md) | Extrude faces along their normals and scale them |
+| <img src="doc/fork/images/icons/mod_inset.png" width="32" height="32" alt="Inset"> | [Inset](doc/fork/INSET.md) | Inset faces, each on its own or as one region |
+| <img src="doc/fork/images/icons/mod_panelize.png" width="32" height="32" alt="Panelize"> | [Panelize](doc/fork/PANELIZE.md) | Split faces into panels with a gap and a chamfer between them |
+| <img src="doc/fork/images/icons/mod_poke.png" width="32" height="32" alt="Poke"> | [Poke](doc/fork/POKE.md) | Split faces into a fan of triangles around their center |
+| <img src="doc/fork/images/icons/mod_quadrangulate.png" width="32" height="32" alt="Quadrangulate"> | [Quadrangulate](doc/fork/QUADRANGULATE.md) | Join pairs of triangles into quads, the same as Triangles to Quads in edit mode |
+| <img src="doc/fork/images/icons/mod_beautify.png" width="32" height="32" alt="Beautify Faces"> | [Beautify Faces](doc/fork/BEAUTIFY_FACES.md) | Flip the edges between triangles so they are more even |
+| <img src="doc/fork/images/icons/mod_rotate_edges.png" width="32" height="32" alt="Rotate Edges"> | [Rotate Edges](doc/fork/ROTATE_EDGES.md) | Turn the edges between faces to connect the other corners |
+| <img src="doc/fork/images/icons/mod_symmetrize.png" width="32" height="32" alt="Symmetrize"> | [Symmetrize](doc/fork/SYMMETRIZE.md) | Make one side of a mesh a mirror of the other |
+| <img src="doc/fork/images/icons/mod_radial_array.png" width="32" height="32" alt="Radial Array"> | [Radial Array](doc/fork/RADIAL_ARRAY.md) | Copies of a mesh arranged around an axis |
+| <img src="doc/fork/images/icons/mod_exploded_view.png" width="32" height="32" alt="Exploded View"> | [Exploded View](doc/fork/EXPLODED_VIEW.md) | Push faces, islands or other elements apart, with a factor that can be animated |
+| <img src="doc/fork/images/icons/mod_randomize_elements.png" width="32" height="32" alt="Randomize Elements"> | [Randomize Elements](doc/fork/RANDOMIZE_ELEMENTS.md) | Random rotation, scale and offset, UVs or color for each face, island or other element |
+| <img src="doc/fork/images/icons/mod_element_order.png" width="32" height="32" alt="Element Order"> | [Element Order](doc/fork/ELEMENT_ORDER.md) | Reorder faces or islands, keeping the faces of each element together |
+| <img src="doc/fork/images/icons/mod_element_pivot.png" width="32" height="32" alt="Element Pivot"> | [Element Pivot](doc/fork/STORE_ELEMENT_PIVOT.md) | The center and axes of the island or other element of each point |
+| <img src="doc/fork/images/icons/mod_bend.png" width="32" height="32" alt="Bend"> | [Bend](doc/fork/BEND_TWIST_TAPER_STRETCH.md) | Bend geometry around a gizmo, with limits |
+| <img src="doc/fork/images/icons/mod_twist.png" width="32" height="32" alt="Twist"> | [Twist](doc/fork/BEND_TWIST_TAPER_STRETCH.md) | Twist geometry around the axis of a gizmo, with limits |
+| <img src="doc/fork/images/icons/mod_taper.png" width="32" height="32" alt="Taper"> | [Taper](doc/fork/BEND_TWIST_TAPER_STRETCH.md) | Scale geometry more along the axis of a gizmo |
+| <img src="doc/fork/images/icons/mod_stretch.png" width="32" height="32" alt="Stretch"> | [Stretch](doc/fork/BEND_TWIST_TAPER_STRETCH.md) | Stretch geometry along the axis of a gizmo and thin it in the middle |
+| <img src="doc/fork/images/icons/mod_ffd_3.png" width="32" height="32" alt="FFD"> | [FFD](doc/fork/FFD.md) | Bend geometry with a box lattice of 2, 3 or 4 control points per side |
+| <img src="doc/fork/images/icons/mod_noise_deform.png" width="32" height="32" alt="Noise Deform"> | [Noise Deform](doc/fork/NOISE.md) | Move points by a fractal noise on X, Y and Z |
+| <img src="doc/fork/images/icons/mod_push.png" width="32" height="32" alt="Push"> | [Push](doc/fork/PUSH.md) | Inflate or shrink a mesh along its normals |
+| <img src="doc/fork/images/icons/mod_melt.png" width="32" height="32" alt="Melt"> | [Melt](doc/fork/MELT.md) | Sag geometry and spread it out toward the ground |
+| <img src="doc/fork/images/icons/mod_uvw_map.png" width="32" height="32" alt="UVW Map"> | [UVW Map](doc/fork/UVW_MAP.md) | Project a UV map from a planar, cylindrical, spherical or box gizmo |
 | <img src="doc/fork/images/icons/geo_mod_uv_scale.png" width="32" height="32" alt="UV Scale"> | [UV Scale](doc/fork/UV_SCALE.md) | Scales an existing UV map globally or per island, or sets pixels per meter |
-| <img src="doc/fork/images/icons/mod_smart_uv_project.png" width="32" height="32" alt="Smart UV Project"> | Smart UV Project | Unwrap a mesh automatically: faces are projected from a few directions and packed |
-| <img src="doc/fork/images/icons/mod_mark_by_angle.png" width="32" height="32" alt="Mark by Angle"> | Mark by Angle | Mark sharp edges, seams, creases or bevel weights where faces meet at a steep angle |
-| <img src="doc/fork/images/icons/mod_material_by_element.png" width="32" height="32" alt="Material By Element"> | Material By Element | Give faces material indices at random, by piece, in order or by direction |
-| <img src="doc/fork/images/icons/mod_data_channel.png" width="32" height="32" alt="Data Channel"> | Data Channel | Compute a value per point, such as convexity or edge length, and remap it |
-| <img src="doc/fork/images/icons/mod_tension.png" width="32" height="32" alt="Mesh Tension"> | Mesh Tension | How much the edges around each point are stretched or squashed compared to a rest shape |
-| <img src="doc/fork/images/icons/mod_vol_select.png" width="32" height="32" alt="Volume Select"> | Volume Select | Select the points inside a sphere, box or cylinder, with a soft falloff |
-| <img src="doc/fork/images/icons/mod_spline_morph.png" width="32" height="32" alt="Morph Curves"> | Morph Curves | Move curves toward the matching curves of a target |
-| <img src="doc/fork/images/icons/mod_relax_spline.png" width="32" height="32" alt="Relax Curves"> | Relax Curves | Smooth the shape of curves |
+| <img src="doc/fork/images/icons/mod_smart_uv_project.png" width="32" height="32" alt="Smart UV Project"> | [Smart UV Project](doc/fork/SMART_UV_PROJECT.md) | Unwrap a mesh automatically: faces are projected from a few directions and packed |
+| <img src="doc/fork/images/icons/mod_mark_by_angle.png" width="32" height="32" alt="Mark by Angle"> | [Mark by Angle](doc/fork/MARK_BY_ANGLE.md) | Mark sharp edges, seams, creases or bevel weights where faces meet at a steep angle |
+| <img src="doc/fork/images/icons/mod_material_by_element.png" width="32" height="32" alt="Material By Element"> | [Material By Element](doc/fork/MATERIAL_BY_ELEMENT.md) | Give faces material indices at random, by piece, in order or by direction |
+| <img src="doc/fork/images/icons/mod_data_channel.png" width="32" height="32" alt="Data Channel"> | [Data Channel](doc/fork/DATA_CHANNEL.md) | Compute a value per point, such as convexity or edge length, and remap it |
+| <img src="doc/fork/images/icons/mod_tension.png" width="32" height="32" alt="Mesh Tension"> | [Mesh Tension](doc/fork/TENSION.md) | How much the edges around each point are stretched or squashed compared to a rest shape |
+| <img src="doc/fork/images/icons/mod_vol_select.png" width="32" height="32" alt="Volume Select"> | [Volume Select](doc/fork/VOLUME_SELECT.md) | Select the points inside a sphere, box or cylinder, with a soft falloff |
+| <img src="doc/fork/images/icons/mod_spline_morph.png" width="32" height="32" alt="Morph Curves"> | [Morph Curves](doc/fork/SPLINE_MORPH.md) | Move curves toward the matching curves of a target |
+| <img src="doc/fork/images/icons/mod_relax_spline.png" width="32" height="32" alt="Relax Curves"> | [Relax Curves](doc/fork/RELAX_SPLINE.md) | Smooth the shape of curves |
 
 ![The original 31 node versions of the new modifiers in the Geometry Nodes editor](doc/fork/images/nodes_modifier_ops.png)
 
@@ -567,11 +568,28 @@ Without a texture it gives the same result as the modifier.
 
 ![A sphere displaced along its normals and a plane displaced along a direction](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/displace.png)
 
+## Tools
+
+New tools and tool changes outside the modifiers and nodes.
+
+| | Tool | What it does |
+|---|---|---|
+| <img src="doc/fork/images/icons/tool_multi_cut.png" width="32" height="32" alt="Multi-Cut"> | [Multi-Cut](doc/fork/MULTI_CUT.md) | A toolbar tool in Edit Mode that cuts faces point by point, slices along a dragged line and inserts edge loops with Ctrl+click |
+| <img src="doc/fork/images/icons/face_set_new.png" width="32" height="32" alt="New Face Set"> | [Face set tools](doc/fork/FACE_SETS.md#setting-them) | Face ▸ Face Sets in Edit Mode, also in the right-click menu: make, assign, merge, select, hide and clear face sets |
+| <img src="doc/fork/images/icons/face_sets_from_loose_parts.png" width="32" height="32" alt="Face Sets From"> | [Face Sets From](doc/fork/FACE_SETS.md#face-sets-from) | Make face sets from loose parts, materials, seams, sharp edges or angles |
+| <img src="doc/fork/images/icons/face_sets_to_materials.png" width="32" height="32" alt="Face Sets to Materials"> <img src="doc/fork/images/icons/face_sets_to_vertex_groups.png" width="32" height="32" alt="Face Sets to Vertex Groups"> | [To Materials, To Vertex Groups](doc/fork/FACE_SETS.md#setting-them) | Turn face sets into materials or vertex groups |
+| <img src="doc/fork/images/icons/similar_face_set.png" width="32" height="32" alt="Select Similar Face Set"> | [Select Similar ▸ Face Set](doc/fork/FACE_SETS.md#select-similar) | Select the faces in the same face sets as the selected ones |
+| <img src="doc/fork/images/icons/all_materials.png" width="32" height="32" alt="All Materials"> | [All Materials](doc/fork/ALL_MATERIALS.md) | A Properties tab with every material in the file, and giving a material to all selected objects |
+| <img src="doc/fork/images/icons/gizmo.png" width="32" height="32" alt="Modifier Gizmos"> | [Modifier gizmos](doc/fork/MODIFIER_GIZMOS.md) | Handles in the viewport for the active modifier |
+| <img src="doc/fork/images/icons/op_persp_ortho.png" width="32" height="32" alt="Orthographic"> | [Orthographic view](doc/fork/ORTHOGRAPHIC.md) | Orthographic stays orthographic when you rotate, and the grid stays on screen |
+
 ## Toolbox and Shelf
 
 Two new editors hold buttons you pick yourself. Choose them from any area's Editor Type menu.
 
 ### <img src="doc/fork/images/icons/tool_settings.png" width="32" height="32" alt="Toolbox"> Toolbox
+
+More on [the Toolbox page](doc/fork/TOOLBOX.md).
 
 A column of large buttons in sections, with tabs down the right side.
 
@@ -587,6 +605,8 @@ A column of large buttons in sections, with tabs down the right side.
 The contents are saved in `toolbox.json` in your user settings, so they're the same in every file.
 
 ### <img src="doc/fork/images/icons/shelf.png" width="32" height="32" alt="Shelf"> Shelf
+
+More on [the Shelf page](doc/fork/SHELF.md).
 
 A thin strip of icon buttons. It's an editor of its own, and also a strip at the top of the 3D Viewport that you
 toggle with **Alt Y**.
@@ -607,7 +627,7 @@ Items in Quick Favorites (**Q**) show their icons. The icon is picked automatica
 
 The fork brings back the Blender 2.79 look:
 
-- **Colored icons:** more than 600 new icons drawn in the 2.79 style. Every Geometry Node and every new modifier
+- **Colored icons:** more than 1,000 new icons drawn in the 2.79 style. Every Geometry Node and every new modifier
   has one, and so do the tools and many operators, such as the Merge, Parent, Select Similar and import and
   export menus.
 - **Emboss:** buttons, menus, tooltips, panel headers, tabs and nodes have a light top edge and a dark bottom
@@ -632,7 +652,7 @@ Material.
 
 ## More
 
-- [What to know before using it](doc/fork/README.md)
+- [What to know before using it](doc/fork/README.md), with a list of every page
 - [All node inputs and limits](doc/fork/NODES.md)
 - [Material options](doc/fork/VIEWPORT_COLORS.md)
 - [The classic look](doc/fork/CLASSIC_UI.md)
