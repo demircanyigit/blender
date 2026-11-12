@@ -410,6 +410,29 @@ static void cursor_point_draw(
       immVertex3f(attr_pos, +size_b, -size_b, 0.0f);
       immEnd();
       break;
+    case SCE_SNAP_TO_BOUNDS:
+      /* A box corner. */
+      immBegin(GPU_PRIM_LINE_LOOP, 4);
+      immVertex3f(attr_pos, -size_b, -size_b, 0.0f);
+      immVertex3f(attr_pos, -size_b, +size_b, 0.0f);
+      immVertex3f(attr_pos, +size_b, +size_b, 0.0f);
+      immVertex3f(attr_pos, +size_b, -size_b, 0.0f);
+      immEnd();
+      immBegin(GPU_PRIM_LINES, 4);
+      immVertex3f(attr_pos, -size_b, 0.0f, 0.0f);
+      immVertex3f(attr_pos, +size_b, 0.0f, 0.0f);
+      immVertex3f(attr_pos, 0.0f, -size_b, 0.0f);
+      immVertex3f(attr_pos, 0.0f, +size_b, 0.0f);
+      immEnd();
+      break;
+    case SCE_SNAP_TO_ALIGN:
+      immBegin(GPU_PRIM_LINES, 4);
+      immVertex3f(attr_pos, -size_b, 0.0f, 0.0f);
+      immVertex3f(attr_pos, +size_b, 0.0f, 0.0f);
+      immVertex3f(attr_pos, 0.0f, -size_b, 0.0f);
+      immVertex3f(attr_pos, 0.0f, +size_b, 0.0f);
+      immEnd();
+      break;
     case SCE_SNAP_TO_FACE_MIDPOINT:
       imm_draw_circle_wire_3d(attr_pos, 0.0f, 0.0f, 1.0f, 24);
       immBegin(GPU_PRIM_POINTS, 1);

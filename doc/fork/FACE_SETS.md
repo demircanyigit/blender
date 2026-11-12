@@ -16,8 +16,7 @@ line between sets, set the outline to **Face Set**, see [SOLID_OUTLINES.md](SOLI
 aren't meshes show their material color. In Sculpt Mode the mesh shows its material color too,
 because Sculpt Mode shows the sets with its own overlay.
 
-**Face Set** takes the place of the **Object** button in that row. Object color still works for
-files and scripts that use it (`shading.color_type = 'OBJECT'`).
+Next to it, **[Island](ISLAND_COLOR.md)** gives each loose part its own color.
 
 ## Setting them
 
@@ -62,6 +61,13 @@ time you assign one, with every other face in the default set.
 Select > Select Similar has **Face Set** <img src="images/icons/similar_face_set.png" width="32" height="32" alt="Face Set"> in Face select mode. It
 selects every face in the same sets as the selected faces, on all meshes in Edit Mode.
 
+### Separate
+
+Mesh > Separate (P) has **By Face Sets** <img src="images/icons/op_separate_face_sets.png" width="32" height="32" alt="By Face Sets">. Each face set
+becomes its own object, like By Material does for materials. The last face set stays in the
+original object. It works in Edit Mode and Object Mode. A mesh with one face set or none is left
+as it is.
+
 ### Piece ID
 
 When the Piece ID modifier's **From** is **Face Sets**, its panel shows **New**, **Select**,
@@ -85,4 +91,5 @@ bpy.ops.mesh.face_set_randomize_colors()
 bpy.ops.mesh.face_sets_to_vertex_groups()
 bpy.ops.mesh.face_sets_to_materials()
 bpy.ops.mesh.select_similar(type='FACE_SET')
+bpy.ops.mesh.separate(type='FACE_SETS')
 ```

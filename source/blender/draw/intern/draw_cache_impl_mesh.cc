@@ -829,6 +829,14 @@ gpu::Batch *DRW_mesh_batch_cache_get_surface_face_sets(Mesh &mesh)
   return cache.batch.surface_face_sets;
 }
 
+gpu::Batch *DRW_mesh_batch_cache_get_surface_islands(Mesh &mesh)
+{
+  MeshBatchCache &cache = *mesh_batch_cache_get(mesh);
+  cache.batch_requested |= MBC_SURFACE_ISLANDS;
+  DRW_batch_request(&cache.batch.surface_islands);
+  return cache.batch.surface_islands;
+}
+
 gpu::Batch *DRW_mesh_batch_cache_get_surface_part_ids(Mesh &mesh)
 {
   MeshBatchCache &cache = *mesh_batch_cache_get(mesh);
@@ -1341,6 +1349,13 @@ void DRW_mesh_batch_cache_create_requested(TaskGraph &task_graph,
                          list,
                          IBOType::Tris,
                          {VBOType::Position, VBOType::PartId}});
+    }
+    if (batches_to_create & MBC_SURFACE_ISLANDS) {
+      batch_info.append({*cache.batch.surface_islands,
+                         GPU_PRIM_TRIS,
+                         list,
+                         IBOType::Tris,
+                         {VBOType::CornerNormal, VBOType::Position, VBOType::IslandColor}});
     }
     if (batches_to_create & MBC_SCULPT_OVERLAYS) {
       batch_info.append({*cache.batch.sculpt_overlays,

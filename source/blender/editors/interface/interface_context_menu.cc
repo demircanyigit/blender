@@ -482,6 +482,53 @@ static void ui_but_user_menu_add_items(bContext *C, Button *but, bUserMenu *um)
   }
 }
 
+void block_user_menu_icons_fill(bContext *C, Block *block)
+{
+  /* Most of the time every favorite has its icon, so check that first: it's cheap. */
+  uint um_array_len;
+  bUserMenu **um_array = ED_screen_user_menus_find(C, &um_array_len);
+  bool missing = false;
+  for (int um_index = 0; um_index < um_array_len && !missing; um_index++) {
+    if (bUserMenu *um = um_array[um_index]) {
+      for (const bUserMenuItem &umi : um->items) {
+        if (umi.type != USER_MENU_TYPE_SEP && umi.icon_name[0] == '\0') {
+          missing = true;
+          break;
+        }
+      }
+    }
+  }
+  if (missing) {
+    for (const std::unique_ptr<Button> &but : block->buttons) {
+      /* Properties are left out, finding their path is slow and every button would pay it. */
+      if (but->icon == ICON_NONE || but->rnaprop != nullptr) {
+        continue;
+      }
+      if (!but->optype && !button_menutype_get(but.get()) &&
+          !button_operatortype_get_from_enum_menu(but.get(), nullptr))
+      {
+        continue;
+      }
+      for (int um_index = 0; um_index < um_array_len; um_index++) {
+        bUserMenu *um = um_array[um_index];
+        if (um == nullptr) {
+          continue;
+        }
+        bUserMenuItem *umi = ui_but_user_menu_find(C, but.get(), um);
+        if (umi && umi->icon_name[0] == '\0') {
+          ui_but_shelf_icon_set(C, but.get(), umi);
+          if (umi->icon_name[0]) {
+            U.runtime.is_dirty = true;
+          }
+        }
+      }
+    }
+  }
+  if (um_array) {
+    MEM_delete(um_array);
+  }
+}
+
 /** The Shelf takes operators and toggles. */
 static bool ui_but_is_shelf_compatible(bContext *C, Button *but)
 {

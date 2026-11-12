@@ -2093,6 +2093,10 @@ void block_end_ex(const bContext *C,
 
   block_update_from_old(C, block);
 
+  if (C) {
+    block_user_menu_icons_fill(const_cast<bContext *>(C), block);
+  }
+
   /* inherit flags from 'old' buttons that was drawn here previous, based
    * on matching buttons, we need this to make button event handling non
    * blocking, while still allowing buttons to be remade each redraw as it

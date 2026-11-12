@@ -662,6 +662,12 @@ struct View3DShading {
   float toon_rim_color[3] = {1.0f, 1.0f, 1.0f};
   float toon_rim_width = 0.2f;
 
+  /** Squares of the checker color across one UV unit. */
+  float checker_scale = 8.0f;
+  /** #eV3DShadingCheckerType. */
+  char checker_type = 0;
+  char _pad_checker[3] = {};
+
   struct IDProperty *prop = nullptr;
   void *_pad2 = nullptr;
 };

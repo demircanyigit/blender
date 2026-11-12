@@ -11,8 +11,11 @@
 
 #include "BLI_atomic_disjoint_set.hh"
 
+#include "BLI_map.hh"
+
 #include "BKE_attribute.hh"
 #include "BKE_mesh.hh"
+#include "BKE_paint.hh"
 
 #include "draw_subdivision.hh"
 #include "extract_mesh.hh"
@@ -118,6 +121,82 @@ gpu::VertBufPtr extract_part_ids_subdiv(const MeshRenderData &mr,
   threading::parallel_for(IndexRange(subdiv_corners_num), 4096, [&](const IndexRange range) {
     for (const int i : range) {
       vbo_data[i] = ids[subdiv_loop_face_index[i]];
+    }
+  });
+  return vbo;
+}
+
+static const GPUVertFormat &get_island_color_format()
+{
+  static const GPUVertFormat format = []() {
+    GPUVertFormat format{};
+    GPU_vertformat_attr_add(&format, "icol", gpu::VertAttrType::UNORM_8_8_8_8);
+    /* Read as the color attribute by the Workbench shaders. */
+    GPU_vertformat_alias_add(&format, "ac");
+    return format;
+  }();
+  return format;
+}
+
+/** Per face: a color for its loose part. Parts are numbered in face order, so the colors stay
+ * the same when the mesh changes elsewhere. */
+static Array<uchar4> island_colors_per_face(const MeshRenderData &mr)
+{
+  const Array<int3> ids = part_ids_per_face(mr);
+  Map<int, int> part_numbers;
+  Array<uchar4> colors(ids.size());
+  for (const int face : ids.index_range()) {
+    const int number = part_numbers.lookup_or_add(ids[face].x, part_numbers.size());
+    uchar color[4];
+    BKE_paint_face_set_overlay_color_get(number + 1, 0, color);
+    colors[face] = uchar4(color[0], color[1], color[2], 255);
+  }
+  return colors;
+}
+
+gpu::VertBufPtr extract_island_colors(const MeshRenderData &mr)
+{
+  gpu::VertBufPtr vbo = gpu::VertBufPtr(
+      GPU_vertbuf_create_with_format(get_island_color_format()));
+  GPU_vertbuf_data_alloc(*vbo, mr.corners_num);
+  MutableSpan<uchar4> vbo_data = vbo->data<uchar4>();
+
+  const Array<uchar4> colors = island_colors_per_face(mr);
+  if (mr.extract_type == MeshExtractType::BMesh) {
+    BMesh &bm = *mr.bm;
+    threading::parallel_for(IndexRange(bm.totface), 2048, [&](const IndexRange range) {
+      for (const int face_index : range) {
+        const BMFace &face = *BM_face_at_index(&bm, face_index);
+        const IndexRange face_range(BM_elem_index_get(BM_FACE_FIRST_LOOP(&face)), face.len);
+        vbo_data.slice(face_range).fill(colors[face_index]);
+      }
+    });
+  }
+  else {
+    threading::parallel_for(IndexRange(mr.faces_num), 2048, [&](const IndexRange range) {
+      for (const int face_index : range) {
+        vbo_data.slice(mr.faces[face_index]).fill(colors[face_index]);
+      }
+    });
+  }
+  return vbo;
+}
+
+gpu::VertBufPtr extract_island_colors_subdiv(const MeshRenderData &mr,
+                                             const DRWSubdivCache &subdiv_cache)
+{
+  const int subdiv_corners_num = subdiv_cache.num_subdiv_loops;
+  gpu::VertBufPtr vbo = gpu::VertBufPtr(
+      GPU_vertbuf_create_with_format(get_island_color_format()));
+  GPU_vertbuf_data_alloc(*vbo, subdiv_full_vbo_size(mr, subdiv_cache));
+  MutableSpan<uchar4> vbo_data = vbo->data<uchar4>();
+  vbo_data.fill(uchar4(255));
+
+  const Array<uchar4> colors = island_colors_per_face(mr);
+  const Span<int> subdiv_loop_face_index(subdiv_cache.subdiv_loop_face_index, subdiv_corners_num);
+  threading::parallel_for(IndexRange(subdiv_corners_num), 4096, [&](const IndexRange range) {
+    for (const int i : range) {
+      vbo_data[i] = colors[subdiv_loop_face_index[i]];
     }
   });
   return vbo;

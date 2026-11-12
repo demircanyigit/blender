@@ -83,6 +83,9 @@ static bool operator!=(const View3DShading &a, const View3DShading &b)
   {
     return true;
   }
+  if (a.checker_type != b.checker_type || a.checker_scale != b.checker_scale) {
+    return true;
+  }
   if (a.xray_alpha != b.xray_alpha) {
     return true;
   }
@@ -344,19 +347,23 @@ ObjectState::ObjectState(const DRWContext *draw_ctx,
     return mesh_has_uv_map_attribute(mesh);
   };
 
-  if (color_type == V3D_SHADING_TEXTURE_COLOR && (!has_uv() || ob->dt < OB_TEXTURE)) {
+  if (ELEM(color_type, V3D_SHADING_TEXTURE_COLOR, V3D_SHADING_CHECKER_COLOR) &&
+      (!has_uv() || ob->dt < OB_TEXTURE))
+  {
     color_type = V3D_SHADING_MATERIAL_COLOR;
   }
   else if (color_type == V3D_SHADING_VERTEX_COLOR && !has_color()) {
     color_type = V3D_SHADING_MATERIAL_COLOR;
   }
   /* Only meshes have face sets. Sculpt Mode shows them with its own overlay. */
-  else if (color_type == V3D_SHADING_FACE_SET_COLOR && (ob->type != OB_MESH || sculpt_pbvh)) {
+  else if (ELEM(color_type, V3D_SHADING_FACE_SET_COLOR, V3D_SHADING_ISLAND_COLOR) &&
+           (ob->type != OB_MESH || sculpt_pbvh))
+  {
     color_type = V3D_SHADING_MATERIAL_COLOR;
   }
 
   if (sculpt_pbvh) {
-    if (color_type == V3D_SHADING_TEXTURE_COLOR &&
+    if (ELEM(color_type, V3D_SHADING_TEXTURE_COLOR, V3D_SHADING_CHECKER_COLOR) &&
         bke::object::pbvh_get(*ob)->type() != bke::pbvh::Type::Mesh)
     {
       /* Force use of material color for sculpt. */
@@ -415,6 +422,10 @@ ObjectState::ObjectState(const DRWContext *draw_ctx,
         }
       }
     }
+  }
+
+  if (color_type == V3D_SHADING_CHECKER_COLOR) {
+    image_paint_override = resources.checker_texture;
   }
 
   use_per_material_batches = image_paint_override.gpu.texture == nullptr &&

@@ -215,6 +215,7 @@ gpu::Batch *DRW_mesh_batch_cache_get_surface_weights(Mesh &mesh);
 gpu::Batch *DRW_mesh_batch_cache_get_sculpt_overlays(Mesh &mesh);
 gpu::Batch *DRW_mesh_batch_cache_get_surface_face_sets(Mesh &mesh);
 gpu::Batch *DRW_mesh_batch_cache_get_surface_part_ids(Mesh &mesh);
+gpu::Batch *DRW_mesh_batch_cache_get_surface_islands(Mesh &mesh);
 gpu::Batch *DRW_mesh_batch_cache_get_surface_viewer_attribute(Mesh &mesh);
 
 /** \} */

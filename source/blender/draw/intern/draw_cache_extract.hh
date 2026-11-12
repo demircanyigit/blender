@@ -114,6 +114,8 @@ enum class VBOType : int8_t {
   PaintOverlayFlag,
   /** Loose part, material index and face set of the face of each corner. */
   PartId,
+  /** A color per loose part, for the Island solid color. */
+  IslandColor,
 };
 
 /**
@@ -196,6 +198,8 @@ struct MeshBatchList {
   gpu::Batch *surface_face_sets;
   /* Surface with the loose part, material and face set of each face, for outlines. */
   gpu::Batch *surface_part_ids;
+  /* Surface with a color per loose part as color attribute, for the Island solid color. */
+  gpu::Batch *surface_islands;
 };
 
 #define MBC_BATCH_LEN (sizeof(MeshBatchList) / sizeof(void *))
@@ -239,6 +243,7 @@ enum DRWBatchFlag : uint64_t {
   MBC_PAINT_OVERLAY_SURFACE = (uint64_t(1u) << MBC_BATCH_INDEX(paint_overlay_surface)),
   MBC_SURFACE_FACE_SETS = (uint64_t(1u) << MBC_BATCH_INDEX(surface_face_sets)),
   MBC_SURFACE_PART_IDS = (uint64_t(1u) << MBC_BATCH_INDEX(surface_part_ids)),
+  MBC_SURFACE_ISLANDS = (uint64_t(1u) << MBC_BATCH_INDEX(surface_islands)),
   MBC_SURFACE_PER_MAT = (uint64_t(1u) << MBC_BATCH_LEN),
 };
 ENUM_OPERATORS(DRWBatchFlag);

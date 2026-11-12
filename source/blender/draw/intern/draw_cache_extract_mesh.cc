@@ -245,6 +245,9 @@ void mesh_buffer_cache_create_requested(TaskGraph & /*task_graph*/,
       case VBOType::PartId:
         created_vbos[i] = extract_part_ids(mr);
         break;
+      case VBOType::IslandColor:
+        created_vbos[i] = extract_island_colors(mr);
+        break;
       case VBOType::Orco:
         created_vbos[i] = extract_orco(mr);
         break;
@@ -477,6 +480,9 @@ void mesh_buffer_cache_create_requested_subdiv(MeshBatchCache &cache,
   }
   if (vbos_to_create.contains(VBOType::PartId)) {
     buffers.vbos.add_new(VBOType::PartId, extract_part_ids_subdiv(mr, subdiv_cache));
+  }
+  if (vbos_to_create.contains(VBOType::IslandColor)) {
+    buffers.vbos.add_new(VBOType::IslandColor, extract_island_colors_subdiv(mr, subdiv_cache));
   }
   if (vbos_to_create.contains(VBOType::UVs)) {
     /* Make sure UVs are computed before edituv stuffs. */

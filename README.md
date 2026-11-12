@@ -21,15 +21,36 @@ Files that use these additions won't work properly in official Blender. See
 
 | Area | What's new |
 |---|---|
-| [Modifiers](#modifiers) | 65 new modifiers, a [Modifier List](doc/fork/MODIFIER_LIST.md) view of the stack, [viewport gizmos](doc/fork/MODIFIER_GIZMOS.md) |
+| [Modifiers](#modifiers) | 74 new modifiers, a [Modifier List](doc/fork/MODIFIER_LIST.md) view of the stack, [viewport gizmos](doc/fork/MODIFIER_GIZMOS.md) |
 | [Geometry Nodes](#geometry-nodes) | 77 new nodes: 24 modeling nodes, plus node versions of the new and classic modifiers |
-| [Tools](#tools) | [Multi-Cut](doc/fork/MULTI_CUT.md), [face set tools](doc/fork/FACE_SETS.md), Select Similar ▸ Face Set, [orthographic view fixes](doc/fork/ORTHOGRAPHIC.md) |
+| [Tools](#tools) | [Multi-Cut](doc/fork/MULTI_CUT.md), [face set tools](doc/fork/FACE_SETS.md), Select Similar ▸ Face Set, [orthographic view fixes](doc/fork/ORTHOGRAPHIC.md), [Bounds and Align snapping](doc/fork/SNAPPING.md) |
 | [Toolbox and Shelf](#toolbox-and-shelf) | Two new editors for your own buttons, the [Toolbox](doc/fork/TOOLBOX.md) and the [Shelf](doc/fork/SHELF.md), and icons in Quick Favorites |
 | [Classic look](#classic-look) | Colored 2.79-style icons, embossed widgets, square vertices |
-| [Solid shading](#color-attributes-in-solid-shading) | Color attributes mixed into the material color, [outlines around parts and edge lines](doc/fork/SOLID_OUTLINES.md), [toon lighting](doc/fork/TOON_SHADING.md) |
+| [Solid shading](#color-attributes-in-solid-shading) | Color attributes mixed into the material color, [outlines around parts and edge lines](doc/fork/SOLID_OUTLINES.md), [toon lighting](doc/fork/TOON_SHADING.md), a [UV checker](doc/fork/UV_CHECKER.md), an [Island](doc/fork/ISLAND_COLOR.md) color, [eight more studio lights](doc/fork/STUDIO_LIGHTS.md) |
 | [Materials](doc/fork/ALL_MATERIALS.md) | An All Materials tab for every material in the file, and giving a material to all selected objects |
 
 ## Latest additions
+
+**Snapping**: [Bounds](doc/fork/SNAPPING.md) snaps to the corners and middles of other objects' bounding boxes,
+and [Align](doc/fork/SNAPPING.md#align) lines up what you move with other points along X, Y and Z, with dotted guides.
+Solid shading has [eight more studio lights](doc/fork/STUDIO_LIGHTS.md).
+
+**Trim and Tile**: [Trim](doc/fork/TRIM.md) lays copies of a pattern object along drawn edges, for scalloped bands,
+moldings and borders, and [Tile](doc/fork/TILE.md) wraps the mesh into one tile so it repeats without seams.
+[Sweep](doc/fork/SWEEP.md) now also follows the edges of a mesh, with resampling and smoothing.
+
+**Normals**: [Normal Transfer](doc/fork/NORMAL_TRANSFER.md) copies the shading normals of another object and fades
+out with distance, [Normal Smooth](doc/fork/NORMAL_SMOOTH.md) smooths them, [Normals from Face Sets](doc/fork/NORMAL_FACE_SETS.md)
+makes the shading hard where face sets meet, and [Normal Shape](doc/fork/NORMAL_SHAPE.md) shades a bush like one soft ball.
+
+**UVs that follow the stack**: the [Unwrap](doc/fork/UV_UNWRAP.md) modifier unwraps from the seams, for example
+seams made by Mark by Angle, and [Pack UVs](doc/fork/UV_PACK.md) packs the islands. A **[Checker](doc/fork/UV_CHECKER.md)**
+color in Solid shading, with Color, Gray and UV patterns, shows the UVs without a material, to check
+stretching and texel density with UV Scale. An **[Island](doc/fork/ISLAND_COLOR.md)** color gives each loose part its
+own color.
+
+**[Conform](doc/fork/CONFORM.md)**: lays a mesh onto the surface of another object, keeping its thickness. For roads
+over terrain, straps and decals.
 
 **[Toon shading](doc/fork/TOON_SHADING.md)**: Solid mode has a Toon lighting choice with bands,
 softness, a shadow color, and switches for a hard highlight and a rim light. The light is fixed
@@ -152,7 +173,7 @@ The Modifiers tab has a second way to show the stack. The button in its header s
 
 ### New modifiers
 
-All 65 work like the built-in ones: they're in the Add Modifier menu with their own icons, they can be applied,
+All 74 work like the built-in ones: they're in the Add Modifier menu with their own icons, they can be applied,
 and most of them also work in Edit Mode.
 
 ![Voronoi Fracture with Exploded View, a tower made with Poly Select and four Poly Edits, Panelize on a sphere, and Radial Array](doc/fork/images/modifiers_modeling.png)
@@ -177,7 +198,8 @@ Array.*
 | <img src="doc/fork/images/icons/mod_beautify.png" width="32" height="32" alt="Beautify Faces"> | [Beautify Faces](doc/fork/BEAUTIFY_FACES.md) | Flips the edges between triangles so they're more even |
 | <img src="doc/fork/images/icons/mod_rotate_edges.png" width="32" height="32" alt="Rotate Edges"> | [Rotate Edges](doc/fork/ROTATE_EDGES.md) | Turns the edges between faces to connect the other corners |
 | <img src="doc/fork/images/icons/mod_symmetrize.png" width="32" height="32" alt="Symmetrize"> | [Symmetrize](doc/fork/SYMMETRIZE.md) | Makes one side of the mesh a mirror of the other |
-| <img src="doc/fork/images/icons/mod_sweep.png" width="32" height="32" alt="Sweep"> | [Sweep](doc/fork/SWEEP.md) | Makes a mesh by moving a shape along curves |
+| <img src="doc/fork/images/icons/mod_sweep.png" width="32" height="32" alt="Sweep"> | [Sweep](doc/fork/SWEEP.md) | Makes a mesh by moving a shape along curves or the edges of a mesh, with resampling and smoothing |
+| <img src="doc/fork/images/icons/mod_trim.png" width="32" height="32" alt="Trim"> | [Trim](doc/fork/TRIM.md) | Lays copies of a pattern object along the edges of the mesh, like a scalloped band |
 | <img src="doc/fork/images/icons/mod_dice.png" width="32" height="32" alt="Dice"> | [Dice](doc/fork/DICE.md) | Cuts a mesh into a grid of solid pieces, by count or size |
 | <img src="doc/fork/images/icons/mod_divide.png" width="32" height="32" alt="Divide"> | [Divide](doc/fork/DIVIDE.md) | Divides polygon surfaces into connected grid-like sections with adjustable size, offset and rotation |
 | <img src="doc/fork/images/icons/mod_join.png" width="32" height="32" alt="Join"> | [Join](doc/fork/JOIN.md) | Combines evaluated meshes from objects and collections without Boolean operations, with an ID per object and per parent |
@@ -215,6 +237,7 @@ Every step stays editable, like a history you can go back and change.
 | | Modifier | What it does |
 |---|---|---|
 | <img src="doc/fork/images/icons/mod_radial_array.png" width="32" height="32" alt="Radial Array"> | [Radial Array](doc/fork/RADIAL_ARRAY.md) | Arranges copies of the mesh around an axis |
+| <img src="doc/fork/images/icons/mod_tile.png" width="32" height="32" alt="Tile"> | [Tile](doc/fork/TILE.md) | Wraps the mesh into one tile so it repeats without seams |
 | <img src="doc/fork/images/icons/mod_exploded_view.png" width="32" height="32" alt="Exploded View"> | [Exploded View](doc/fork/EXPLODED_VIEW.md) | Pushes faces, islands or other elements apart, with a factor you can animate |
 | <img src="doc/fork/images/icons/mod_randomize_elements.png" width="32" height="32" alt="Randomize Elements"> | [Randomize Elements](doc/fork/RANDOMIZE_ELEMENTS.md) | Gives each face, island or other element a random rotation, scale, offset, UVs or color |
 | <img src="doc/fork/images/icons/mod_element_order.png" width="32" height="32" alt="Element Order"> | [Element Order](doc/fork/ELEMENT_ORDER.md) | Reorders faces or islands, so Build and other order-based effects run the way you want |
@@ -231,6 +254,7 @@ Every step stays editable, like a history you can go back and change.
 | <img src="doc/fork/images/icons/mod_melt.png" width="32" height="32" alt="Melt"> | [Melt](doc/fork/MELT.md) | Sags the shape and spreads it out toward the ground |
 | <img src="doc/fork/images/icons/mod_relax.png" width="32" height="32" alt="Relax"> | [Relax](doc/fork/RELAX.md) | Evens out the spacing of the points while keeping them on the surface |
 | <img src="doc/fork/images/icons/mod_shapekey_inbetween.png" width="32" height="32" alt="Shape Key In-between"> | [Shape Key In-between](doc/fork/SHAPE_KEY_INBETWEEN.md) | Morphs through a sequence of shape keys with one value |
+| <img src="doc/fork/images/icons/mod_conform.png" width="32" height="32" alt="Conform"> | [Conform](doc/fork/CONFORM.md) | Lays the mesh onto the surface of another object, keeping its thickness |
 
 ![Bend, Twist, Taper and Noise on four bars](doc/fork/images/modifiers_deform.png)
 
@@ -247,7 +271,13 @@ Every step stays editable, like a history you can go back and change.
 | <img src="doc/fork/images/icons/mod_uv_scale.png" width="32" height="32" alt="UV Scale"> | [UV Scale](doc/fork/UV_SCALE.md) | Scales UVs globally or per island, or matches a world-space texel density between objects |
 | <img src="doc/fork/images/icons/mod_uvw_map.png" width="32" height="32" alt="UVW Map"> | [UVW Map](doc/fork/UVW_MAP.md) | Projects a UV map from a planar, cylindrical, spherical or box gizmo |
 | <img src="doc/fork/images/icons/mod_smart_uv_project.png" width="32" height="32" alt="Smart UV Project"> | [Smart UV Project](doc/fork/SMART_UV_PROJECT.md) | Unwraps the mesh automatically and packs the islands |
+| <img src="doc/fork/images/icons/mod_uv_unwrap.png" width="32" height="32" alt="Unwrap"> | [Unwrap](doc/fork/UV_UNWRAP.md) | Unwraps the mesh from its seams and packs the islands, so the UVs follow the stack |
+| <img src="doc/fork/images/icons/mod_uv_pack.png" width="32" height="32" alt="Pack UVs"> | [Pack UVs](doc/fork/UV_PACK.md) | Packs the islands of a UV map into the 0 to 1 square |
 | <img src="doc/fork/images/icons/mod_mark_by_angle.png" width="32" height="32" alt="Mark by Angle"> | [Mark by Angle](doc/fork/MARK_BY_ANGLE.md) | Marks sharp edges, seams, creases or bevel weights where faces meet at a steep angle |
+| <img src="doc/fork/images/icons/mod_normal_transfer.png" width="32" height="32" alt="Normal Transfer"> | [Normal Transfer](doc/fork/NORMAL_TRANSFER.md) | Copies the shading normals of another object, fading out with distance |
+| <img src="doc/fork/images/icons/mod_normal_smooth.png" width="32" height="32" alt="Normal Smooth"> | [Normal Smooth](doc/fork/NORMAL_SMOOTH.md) | Smooths the shading normals without moving the mesh |
+| <img src="doc/fork/images/icons/mod_normal_face_sets.png" width="32" height="32" alt="Normals from Face Sets"> | [Normals from Face Sets](doc/fork/NORMAL_FACE_SETS.md) | Makes the shading hard where face sets meet and smooth inside each one |
+| <img src="doc/fork/images/icons/mod_normal_shape.png" width="32" height="32" alt="Normal Shape"> | [Normal Shape](doc/fork/NORMAL_SHAPE.md) | Points the shading normals as if the mesh were a sphere, cylinder or box |
 | <img src="doc/fork/images/icons/mod_material_by_element.png" width="32" height="32" alt="Material By Element"> | [Material By Element](doc/fork/MATERIAL_BY_ELEMENT.md) | Gives faces material indices at random, by piece, in order or by direction |
 | <img src="doc/fork/images/icons/mod_data_channel.png" width="32" height="32" alt="Data Channel"> | [Data Channel](doc/fork/DATA_CHANNEL.md) | Computes a value per point, such as convexity or edge length, remaps it and writes it out |
 | <img src="doc/fork/images/icons/mod_piece_id.png" width="32" height="32" alt="Piece ID"> | [Piece ID](doc/fork/PIECE_ID.md) | Writes which piece each face or point belongs to, from loose parts, edges, materials, face sets, a group, an attribute or the selection |
@@ -655,6 +685,8 @@ Material.
 - [What to know before using it](doc/fork/README.md), with a list of every page
 - [All node inputs and limits](doc/fork/NODES.md)
 - [Material options](doc/fork/VIEWPORT_COLORS.md)
+- [Checker in Solid shading](doc/fork/UV_CHECKER.md)
+- [Island color in Solid shading](doc/fork/ISLAND_COLOR.md)
 - [The classic look](doc/fork/CLASSIC_UI.md)
 - [Building on Windows](doc/fork/BUILD_WINDOWS.md)
 

@@ -7,11 +7,14 @@
  */
 
 #include "BLI_bounds.hh"
+#include "BLI_math_geom.h"
 #include "BLI_listbase.h"
 #include "BLI_math_matrix.h"
 #include "BLI_math_rotation.h"
 #include "BLI_math_vector.h"
 #include "BLI_time.h"
+
+#include "MEM_guardedalloc.h"
 
 #include "DNA_userdef_types.h"
 
@@ -20,6 +23,7 @@
 #include "GPU_state.hh"
 
 #include "BKE_editmesh.hh"
+#include "bmesh.hh"
 #include "BKE_layer.hh"
 #include "BKE_object.hh"
 #include "BKE_scene.hh"
@@ -33,6 +37,7 @@
 #include "ED_node.hh"
 #include "ED_transform_snap_object_context.hh"
 #include "ED_uvedit.hh"
+#include "ED_view3d.hh"
 
 #include "UI_resources.hh"
 #include "UI_view2d.hh"
@@ -56,6 +61,7 @@ namespace blender::ed::transform {
 static void setSnappingCallback(TransInfo *t);
 
 static void snap_target_view3d_fn(TransInfo *t, float *vec);
+static void snap_align_guides_draw(const TransInfo *t, const float target[3]);
 static void snap_target_uv_fn(TransInfo *t, float *vec);
 static void snap_target_sequencer_fn(TransInfo *t, float *vec);
 static void snap_target_nla_fn(TransInfo *t, float *vec);
@@ -278,6 +284,10 @@ void drawSnapping(TransInfo *t)
 
     ED_view3d_cursor_snap_draw_util(
         rv3d, source_loc, target_loc, t->tsnap.source_type, t->tsnap.target_type, col, activeCol);
+
+    if (target_loc && t->tsnap.target_type == SCE_SNAP_TO_ALIGN && t->tsnap.align_num > 0) {
+      snap_align_guides_draw(t, target_loc);
+    }
 
     /* Draw normal if needed. */
     if (target_loc && usingSnappingNormal(t) && validSnappingNormal(t)) {
@@ -555,7 +565,7 @@ static bool transform_snap_mixed_is_active(const TransInfo *t)
   return (t->tsnap.mode &
           (SCE_SNAP_TO_VERTEX | SCE_SNAP_TO_EDGE | SCE_SNAP_TO_FACE | SCE_SNAP_TO_FACE_MIDPOINT |
            SCE_SNAP_TO_VOLUME | SCE_SNAP_TO_EDGE_MIDPOINT | SCE_SNAP_TO_EDGE_PERPENDICULAR |
-           SCE_SNAP_TO_GRID)) != 0;
+           SCE_SNAP_TO_GRID | SCE_SNAP_TO_BOUNDS | SCE_SNAP_TO_ALIGN)) != 0;
 }
 
 void transform_snap_mixed_apply(TransInfo *t, float *vec)
@@ -1040,6 +1050,8 @@ void initSnapping(TransInfo *t, wmOperator *op)
 
 void freeSnapping(TransInfo *t)
 {
+  MEM_delete(t->tsnap.align_points);
+  t->tsnap.align_points = nullptr;
   if ((t->spacetype == SPACE_SEQ) && t->tsnap.seq_context) {
     snap_sequencer_data_free(t->tsnap.seq_context);
     t->tsnap.seq_context = nullptr;
@@ -1294,6 +1306,191 @@ static bool snap_grid_uv(TransInfo *t, float r_val[2])
 /** \name Calc Snap
  * \{ */
 
+/* -------------------------------------------------------------------- */
+/** \name Alignment Guides
+ * \{ */
+
+/**
+ * Points that the moved points can line up with: unselected vertices of the edited meshes, or
+ * the origins of the other visible objects. Gathered once per transform.
+ */
+static Span<float3> snap_align_points(TransInfo *t)
+{
+  if (t->tsnap.align_points) {
+    return *t->tsnap.align_points;
+  }
+  Vector<float3> *points = MEM_new<Vector<float3>>(__func__);
+  t->tsnap.align_points = points;
+  constexpr int max_points = 100000;
+  if (t->flag & T_EDIT) {
+    FOREACH_TRANS_DATA_CONTAINER (t, tc) {
+      Object *obedit = tc->obedit;
+      if (obedit == nullptr || obedit->type != OB_MESH) {
+        continue;
+      }
+      BMEditMesh *em = BKE_editmesh_from_object(obedit);
+      if (em == nullptr) {
+        continue;
+      }
+      const float4x4 &mat = obedit->object_to_world();
+      BMIter iter;
+      BMVert *v;
+      BM_ITER_MESH (v, &iter, em->bm, BM_VERTS_OF_MESH) {
+        if (BM_elem_flag_test(v, BM_ELEM_SELECT | BM_ELEM_HIDDEN)) {
+          continue;
+        }
+        if (points->size() >= max_points) {
+          break;
+        }
+        points->append(math::transform_point(mat, float3(v->co)));
+      }
+    }
+  }
+  else {
+    const View3D *v3d = static_cast<const View3D *>(t->view);
+    BKE_view_layer_synced_ensure(t->scene, t->view_layer);
+    for (Base &base : *BKE_view_layer_object_bases_get(t->view_layer)) {
+      if (!BASE_VISIBLE(v3d, &base) || (base.flag & BASE_SELECTED)) {
+        continue;
+      }
+      points->append(float3(base.object->object_to_world().location()));
+    }
+  }
+  return *points;
+}
+
+/**
+ * Snaps to a line along X, Y or Z through one of the points, when the mouse is near it on screen.
+ * Near two such lines on different axes, snaps to where they meet.
+ */
+static bool snap_align_guides(TransInfo *t, float r_loc[3])
+{
+  t->tsnap.align_num = 0;
+  const Span<float3> points = snap_align_points(t);
+  if (points.is_empty()) {
+    return false;
+  }
+  const ARegion *region = t->region;
+  const RegionView3D *rv3d = static_cast<const RegionView3D *>(region->regiondata);
+  const float2 mval(t->mval);
+  const float threshold = 12.0f * UI_SCALE_FAC;
+
+  struct Guide {
+    int point = -1;
+    int axis = 0;
+    float dist = 0.0f;
+  };
+  Guide best[2];
+  best[0].dist = best[1].dist = threshold;
+
+  for (const int i : points.index_range()) {
+    float2 p2;
+    if (ED_view3d_project_float_global(region, points[i], p2, V3D_PROJ_TEST_CLIP_NEAR) !=
+        V3D_PROJ_RET_OK)
+    {
+      continue;
+    }
+    const float step = ED_view3d_pixel_size(rv3d, points[i]) * 40.0f;
+    for (const int axis : IndexRange(3)) {
+      float3 q = points[i];
+      q[axis] += step;
+      float2 q2;
+      if (ED_view3d_project_float_global(region, q, q2, V3D_PROJ_TEST_CLIP_NEAR) !=
+          V3D_PROJ_RET_OK)
+      {
+        continue;
+      }
+      float2 dir = q2 - p2;
+      const float len = math::length(dir);
+      if (len < 4.0f) {
+        /* The axis points at the viewer. */
+        continue;
+      }
+      dir /= len;
+      const float2 d = mval - p2;
+      const float dist = std::abs(d.x * dir.y - d.y * dir.x);
+      const Guide guide{i, axis, dist};
+      if (dist < best[0].dist) {
+        if (best[0].point >= 0 && best[0].axis != axis) {
+          best[1] = best[0];
+        }
+        else if (best[1].point >= 0 && best[1].axis == axis) {
+          best[1] = Guide();
+          best[1].dist = threshold;
+        }
+        best[0] = guide;
+      }
+      else if (dist < best[1].dist && axis != best[0].axis) {
+        best[1] = guide;
+      }
+    }
+  }
+  if (best[0].point < 0) {
+    return false;
+  }
+
+  const float3 a = points[best[0].point];
+  float3 a_dir(0.0f);
+  a_dir[best[0].axis] = 1.0f;
+  float3 loc, other;
+  bool crossing = false;
+  if (best[1].point >= 0 && best[1].axis != best[0].axis) {
+    const float3 b = points[best[1].point];
+    float3 b_dir(0.0f);
+    b_dir[best[1].axis] = 1.0f;
+    if (isect_line_line_v3(a, a + a_dir, b, b + b_dir, loc, other)) {
+      float2 loc2;
+      if (ED_view3d_project_float_global(region, loc, loc2, V3D_PROJ_TEST_CLIP_NEAR) ==
+              V3D_PROJ_RET_OK &&
+          math::distance(loc2, mval) < threshold * 1.5f)
+      {
+        crossing = true;
+      }
+    }
+  }
+  if (!crossing) {
+    float3 ray_origin, ray_dir;
+    ED_view3d_win_to_origin(region, mval, ray_origin);
+    ED_view3d_win_to_vector(region, mval, ray_dir);
+    if (!isect_line_line_v3(a, a + a_dir, ray_origin, ray_origin + ray_dir, loc, other)) {
+      return false;
+    }
+  }
+
+  t->tsnap.align_num = crossing ? 2 : 1;
+  for (const int k : IndexRange(t->tsnap.align_num)) {
+    copy_v3_v3(t->tsnap.align_from[k], points[best[k].point]);
+    t->tsnap.align_axis[k] = best[k].axis;
+  }
+  copy_v3_v3(r_loc, loc);
+  return true;
+}
+
+/** Dotted lines in the axis colors from the lined up points to the snapped point. */
+static void snap_align_guides_draw(const TransInfo *t, const float target[3])
+{
+  uint pos = GPU_vertformat_attr_add(immVertexFormat(), "pos", gpu::VertAttrType::SFLOAT_32_32_32);
+  immBindBuiltinProgram(GPU_SHADER_3D_LINE_DASHED_UNIFORM_COLOR);
+  float viewport_size[4];
+  GPU_viewport_size_get_f(viewport_size);
+  immUniform2f("viewport_size", viewport_size[2], viewport_size[3]);
+  immUniform1f("dash_width", 6.0f * U.pixelsize);
+  immUniform1f("udash_factor", 0.5f);
+  for (const int k : IndexRange(t->tsnap.align_num)) {
+    uchar color[4];
+    ui::theme::get_color_3ubv(TH_AXIS_X + t->tsnap.align_axis[k], color);
+    color[3] = 230;
+    immUniformColor4ubv(color);
+    immBegin(GPU_PRIM_LINES, 2);
+    immVertex3fv(pos, t->tsnap.align_from[k]);
+    immVertex3fv(pos, target);
+    immEnd();
+  }
+  immUnbindProgram();
+}
+
+/** \} */
+
 static void snap_target_view3d_fn(TransInfo *t, float * /*vec*/)
 {
   BLI_assert(t->spacetype == SPACE_VIEW3D);
@@ -1303,7 +1500,7 @@ static void snap_target_view3d_fn(TransInfo *t, float * /*vec*/)
   eSnapMode snap_elem = SCE_SNAP_TO_NONE;
   float dist_px = SNAP_MIN_DISTANCE; /* Use a user defined value here. */
 
-  if (t->tsnap.mode & (SCE_SNAP_TO_GEOM | SCE_SNAP_TO_GRID)) {
+  if (t->tsnap.mode & (SCE_SNAP_TO_GEOM | SCE_SNAP_TO_GRID | SCE_SNAP_TO_BOUNDS)) {
     zero_v3(no); /* objects won't set this */
     snap_elem = snapObjectsTransform(t, t->mval, &dist_px, loc, no);
     found = (snap_elem != SCE_SNAP_TO_NONE);
@@ -1314,6 +1511,13 @@ static void snap_target_view3d_fn(TransInfo *t, float * /*vec*/)
 
     if (found) {
       snap_elem = SCE_SNAP_TO_VOLUME;
+    }
+  }
+  if ((found == false) && (t->tsnap.mode & SCE_SNAP_TO_ALIGN) && (t->mode == TFM_TRANSLATION)) {
+    zero_v3(no);
+    found = snap_align_guides(t, loc);
+    if (found) {
+      snap_elem = SCE_SNAP_TO_ALIGN;
     }
   }
 

@@ -1884,7 +1884,11 @@ enum eSnapMode {
   SCE_SNAP_INDIVIDUAL_NEAREST = (1 << 9),
   SCE_SNAP_INDIVIDUAL_PROJECT = (1 << 10),
 
-  SCE_SNAP_TO_FACE_MIDPOINT = (1 << 11)
+  SCE_SNAP_TO_FACE_MIDPOINT = (1 << 11),
+  /** Corners, edge and face middles and the middle of the bounding boxes of objects. */
+  SCE_SNAP_TO_BOUNDS = (1 << 12),
+  /** Lines along X, Y and Z through other points. */
+  SCE_SNAP_TO_ALIGN = (1 << 13),
 };
 ENUM_OPERATORS(eSnapMode)
 

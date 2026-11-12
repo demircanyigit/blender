@@ -382,6 +382,9 @@ gpu::VertBufPtr extract_mesh_analysis(const MeshRenderData &mr, const float4x4 &
 gpu::VertBufPtr extract_skin_roots(const MeshRenderData &mr);
 
 gpu::VertBufPtr extract_part_ids(const MeshRenderData &mr);
+gpu::VertBufPtr extract_island_colors(const MeshRenderData &mr);
+gpu::VertBufPtr extract_island_colors_subdiv(const MeshRenderData &mr,
+                                             const DRWSubdivCache &subdiv_cache);
 gpu::VertBufPtr extract_part_ids_subdiv(const MeshRenderData &mr,
                                         const DRWSubdivCache &subdiv_cache);
 gpu::VertBufPtr extract_sculpt_data(const MeshRenderData &mr);

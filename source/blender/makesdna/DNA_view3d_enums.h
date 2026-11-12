@@ -42,6 +42,19 @@ enum eV3DShadingColorType {
   V3D_SHADING_VERTEX_COLOR = 5,
   /** Color of the sculpt face set of each face, meshes only. */
   V3D_SHADING_FACE_SET_COLOR = 6,
+  /** A checker pattern on the active UV map, meshes only. */
+  V3D_SHADING_CHECKER_COLOR = 7,
+  /** A color per loose part, meshes only. */
+  V3D_SHADING_ISLAND_COLOR = 8,
+};
+
+/** #View3DShading.checker_type */
+enum eV3DShadingCheckerType {
+  /** A different color for each square. */
+  V3D_SHADING_CHECKER_COLOR_GRID = 0,
+  V3D_SHADING_CHECKER_GRAY = 1,
+  /** Red across U and green across V. */
+  V3D_SHADING_CHECKER_UV = 2,
 };
 
 /** #View3DShading.background_type */

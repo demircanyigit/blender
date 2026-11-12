@@ -147,7 +147,7 @@ class OBJECT_MT_modifier_add_edit(ModifierAddMenu, Menu):
         if ob_type == 'MESH':
             self.operator_modifier_add(layout, 'UV_PROJECT')
             self.operator_modifier_add(layout, 'UV_WARP')
-            self.operator_modifier_add_new(layout, ('UV_SCALE',))
+            self.operator_modifier_add_new(layout, ('UV_SCALE', 'UV_UNWRAP', 'UV_PACK'))
             self.operator_modifier_add(layout, 'VERTEX_WEIGHT_EDIT')
             self.operator_modifier_add(layout, 'VERTEX_WEIGHT_MIX')
             self.operator_modifier_add(layout, 'VERTEX_WEIGHT_PROXIMITY')
@@ -200,6 +200,7 @@ class OBJECT_MT_modifier_add_generate(ModifierAddMenu, Menu):
                 'SLICE', 'CAP_HOLES', 'RADIAL_ARRAY', 'FACE_EXTRUDE', 'DELETE_MESH', 'QUADRANGULATE',
                 'PANELIZE', 'INSET', 'POKE', 'BEAUTIFY_FACES', 'ROTATE_EDGES', 'SYMMETRIZE',
                 'VORONOI_FRACTURE', 'DICE', 'COLLAPSE', 'DRAPE', 'SHATTER', 'MASONRY', 'STONEWORK', 'DISTRIBUTE', 'PLANKS', 'ROOF', 'EDGE_DAMAGE', 'DIVIDE', 'JOIN', 'BLAST', 'DISSOLVE', 'CLEANUP',
+                'SWEEP', 'TRIM', 'TILE',
             ))
         if ob_type == 'CURVES':
             self.operator_modifier_add_new(layout, ('NORMALIZE_SPLINE', 'CHAMFER_SPLINE', 'SWEEP'))
@@ -266,6 +267,7 @@ class OBJECT_MT_modifier_add_deform(ModifierAddMenu, Menu):
             self.operator_modifier_add(layout, 'SURFACE_DEFORM')
             self.operator_modifier_add_new(layout, (
                 'RELAX', 'SHAPE_KEY_INBETWEEN', 'RANDOMIZE_ELEMENTS', 'EXPLODED_VIEW', 'PUSH', 'CARVE',
+                'CONFORM',
             ))
         if ob_type == 'CURVES':
             self.operator_modifier_add_new(layout, ('RELAX_SPLINE', 'SPLINE_MORPH'))
@@ -296,7 +298,9 @@ class OBJECT_MT_modifier_add_normals(ModifierAddMenu, Menu):
         if ob_type == 'MESH':
             self.operator_modifier_add(layout, 'NORMAL_EDIT')
             self.operator_modifier_add(layout, 'WEIGHTED_NORMAL')
-            self.operator_modifier_add_new(layout, ('MARK_BY_ANGLE',))
+            self.operator_modifier_add_new(layout, (
+                'NORMAL_TRANSFER', 'NORMAL_SMOOTH', 'NORMAL_FACE_SETS', 'NORMAL_SHAPE', 'MARK_BY_ANGLE',
+            ))
         layout.template_modifier_asset_menu_items(catalog_path=self.bl_label)
 
 

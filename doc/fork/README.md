@@ -1,6 +1,6 @@
 # About this fork
 
-An unofficial fork based on the Blender `v5.1.0` tag. It adds 65 modifiers and a list view of the
+An unofficial fork based on the Blender `v5.1.0` tag. It adds 74 modifiers and a list view of the
 modifier stack, new geometry nodes, the Toolbox and Shelf editors, more color attribute options for
 the Solid shading mode, and the classic 2.79 look with colored icons and embossed widgets. It isn't
 made or supported by the Blender Foundation. The [main read-me](../../README.md) lists everything.
@@ -21,6 +21,7 @@ made or supported by the Blender Foundation. The [main read-me](../../README.md)
 - [Rotate Edges](ROTATE_EDGES.md)
 - [Symmetrize](SYMMETRIZE.md)
 - [Sweep](SWEEP.md)
+- [Trim](TRIM.md)
 - [Dice](DICE.md)
 - [Divide](DIVIDE.md)
 - [Join](JOIN.md)
@@ -51,6 +52,7 @@ made or supported by the Blender Foundation. The [main read-me](../../README.md)
 **Modifiers: elements**
 
 - [Radial Array](RADIAL_ARRAY.md)
+- [Tile](TILE.md)
 - [Exploded View](EXPLODED_VIEW.md)
 - [Randomize Elements](RANDOMIZE_ELEMENTS.md)
 - [Element Order](ELEMENT_ORDER.md)
@@ -65,13 +67,20 @@ made or supported by the Blender Foundation. The [main read-me](../../README.md)
 - [Melt](MELT.md)
 - [Relax](RELAX.md)
 - [Shape Key In-between](SHAPE_KEY_INBETWEEN.md)
+- [Conform](CONFORM.md)
 
 **Modifiers: UV, normals and data**
 
 - [UV Scale](UV_SCALE.md)
 - [UVW Map](UVW_MAP.md)
 - [Smart UV Project](SMART_UV_PROJECT.md)
+- [Unwrap](UV_UNWRAP.md)
+- [Pack UVs](UV_PACK.md)
 - [Mark by Angle](MARK_BY_ANGLE.md)
+- [Normal Transfer](NORMAL_TRANSFER.md)
+- [Normal Smooth](NORMAL_SMOOTH.md)
+- [Normals from Face Sets](NORMAL_FACE_SETS.md)
+- [Normal Shape](NORMAL_SHAPE.md)
 - [Material By Element](MATERIAL_BY_ELEMENT.md)
 - [Data Channel](DATA_CHANNEL.md)
 - [Piece ID](PIECE_ID.md)
@@ -95,6 +104,7 @@ made or supported by the Blender Foundation. The [main read-me](../../README.md)
 - [Face sets in Object and Edit Mode](FACE_SETS.md)
 - [All Materials](ALL_MATERIALS.md)
 - [Orthographic view](ORTHOGRAPHIC.md)
+- [Bounds and Align snapping](SNAPPING.md)
 - [Toolbox](TOOLBOX.md)
 - [Shelf and Quick Favorites icons](SHELF.md)
 
@@ -102,7 +112,10 @@ made or supported by the Blender Foundation. The [main read-me](../../README.md)
 
 - [Outlines and edge lines](SOLID_OUTLINES.md)
 - [Toon shading](TOON_SHADING.md)
+- [Studio lights](STUDIO_LIGHTS.md)
 - [Color attributes in Solid shading](VIEWPORT_COLORS.md)
+- [Checker in Solid shading](UV_CHECKER.md)
+- [Island color in Solid shading](ISLAND_COLOR.md)
 - [The classic look](CLASSIC_UI.md)
 
 **Nodes and building**

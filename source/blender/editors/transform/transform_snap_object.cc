@@ -930,9 +930,40 @@ eSnapMode snap_object_center(SnapObjectContext *sctx,
 }
 
 /**
+ * The corners, the middles of the edges and sides, and the middle of the object's bounding box.
+ * Points hidden behind the object can be snapped to as well.
+ */
+static eSnapMode snap_object_bounds(SnapObjectContext *sctx,
+                                    const Object *ob_eval,
+                                    const float4x4 &obmat)
+{
+  if (ob_eval->mode & OB_MODE_EDIT) {
+    /* The edited object's box changes while it's being edited. */
+    return SCE_SNAP_TO_NONE;
+  }
+  const std::optional<Bounds<float3>> bounds = BKE_object_boundbox_get(ob_eval);
+  if (!bounds) {
+    return SCE_SNAP_TO_NONE;
+  }
+  SnapData nearest2d(sctx, obmat);
+  nearest2d.clip_planes_enable(sctx, ob_eval, true);
+  bool found = false;
+  for (int i = 0; i < 27; i++) {
+    const float3 t(float(i % 3) * 0.5f, float((i / 3) % 3) * 0.5f, float(i / 9) * 0.5f);
+    const float3 co = bounds->min + (bounds->max - bounds->min) * t;
+    found |= nearest2d.snap_point(co, i);
+  }
+  if (!found) {
+    return SCE_SNAP_TO_NONE;
+  }
+  nearest2d.register_result(sctx, ob_eval, static_cast<const ID *>(ob_eval->data));
+  return SCE_SNAP_TO_BOUNDS;
+}
+
+/**
  * \note Duplicate args here are documented at #snapObjectsRay.
  */
-static eSnapMode snap_obj_fn(SnapObjectContext *sctx,
+static eSnapMode snap_obj_geometry_fn(SnapObjectContext *sctx,
                              const Object *ob_eval,
                              const ID *ob_data,
                              const float4x4 &obmat,
@@ -991,6 +1022,27 @@ static eSnapMode snap_obj_fn(SnapObjectContext *sctx,
       break;
   }
 
+  return retval;
+}
+
+static eSnapMode snap_obj_fn(SnapObjectContext *sctx,
+                             const Object *ob_eval,
+                             const ID *ob_data,
+                             const float4x4 &obmat,
+                             bool is_object_active,
+                             bool use_hide)
+{
+  eSnapMode retval = SCE_SNAP_TO_NONE;
+  if (sctx->runtime.snap_to_flag & ~(SCE_SNAP_TO_BOUNDS | SCE_SNAP_TO_ALIGN)) {
+    retval = snap_obj_geometry_fn(sctx, ob_eval, ob_data, obmat, is_object_active, use_hide);
+  }
+  /* After the geometry, so a box point only wins when it's closer. */
+  if (sctx->runtime.snap_to_flag & SCE_SNAP_TO_BOUNDS) {
+    const eSnapMode elem = snap_object_bounds(sctx, ob_eval, obmat);
+    if (elem != SCE_SNAP_TO_NONE) {
+      retval = elem;
+    }
+  }
   return retval;
 }
 
@@ -1369,7 +1421,7 @@ eSnapMode snap_object_project_view3d_ex(SnapObjectContext *sctx,
   bool use_occlusion_plane = false;
 
   /* It is required `mval` to calculate the occlusion plane. */
-  if (mval && (snap_to_flag & (SCE_SNAP_TO_GEOM | SCE_SNAP_TO_GRID))) {
+  if (mval && (snap_to_flag & (SCE_SNAP_TO_GEOM | SCE_SNAP_TO_GRID | SCE_SNAP_TO_BOUNDS))) {
     if (params->occlusion_test == SNAP_OCCLUSION_AS_SEEM) {
       use_occlusion_plane = !XRAY_ENABLED(v3d);
     }
@@ -1437,7 +1489,8 @@ eSnapMode snap_object_project_view3d_ex(SnapObjectContext *sctx,
 
   snap_to_flag = sctx->runtime.snap_to_flag;
 
-  BLI_assert(snap_to_flag & (SCE_SNAP_TO_GEOM | SCE_SNAP_TO_GRID | SCE_SNAP_INDIVIDUAL_NEAREST));
+  BLI_assert(snap_to_flag & (SCE_SNAP_TO_GEOM | SCE_SNAP_TO_GRID | SCE_SNAP_INDIVIDUAL_NEAREST |
+                             SCE_SNAP_TO_BOUNDS));
 
   bool has_hit = false;
 
@@ -1465,7 +1518,9 @@ eSnapMode snap_object_project_view3d_ex(SnapObjectContext *sctx,
     }
   }
 
-  if (snap_to_flag & (SCE_SNAP_TO_POINT | SNAP_TO_EDGE_ELEMENTS | SCE_SNAP_TO_FACE_MIDPOINT)) {
+  if (snap_to_flag &
+      (SCE_SNAP_TO_POINT | SNAP_TO_EDGE_ELEMENTS | SCE_SNAP_TO_FACE_MIDPOINT | SCE_SNAP_TO_BOUNDS))
+  {
     eSnapMode elem_test, elem = SCE_SNAP_TO_NONE;
 
     /* Remove what has already been computed. */

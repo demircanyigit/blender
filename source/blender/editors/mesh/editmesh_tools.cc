@@ -4153,6 +4153,7 @@ enum {
   MESH_SEPARATE_SELECTED = 0,
   MESH_SEPARATE_MATERIAL = 1,
   MESH_SEPARATE_LOOSE = 2,
+  MESH_SEPARATE_FACE_SETS = 3,
 };
 
 /** TODO: Use #mesh_separate_arrays since it's more efficient. */
@@ -4419,6 +4420,61 @@ static bool mesh_separate_material(
   return result;
 }
 
+/**
+ * Each face set becomes its own object, like #mesh_separate_material does for materials.
+ * The faces of the last face set stay in the original object.
+ */
+static bool mesh_separate_face_sets(
+    Main *bmain, Scene *scene, ViewLayer *view_layer, Base *base_old, BMesh *bm_old)
+{
+  const int cd_offset = CustomData_get_offset_named(
+      &bm_old->pdata, CD_PROP_INT32, ".sculpt_face_set");
+  if (cd_offset == -1) {
+    return false;
+  }
+
+  BMFace *f_cmp, *f;
+  BMIter iter;
+  bool result = false;
+
+  BM_custom_loop_normals_to_vector_layer(bm_old);
+
+  while ((f_cmp = static_cast<BMFace *>(BM_iter_at_index(bm_old, BM_FACES_OF_MESH, nullptr, 0)))) {
+    const int face_set = BM_ELEM_CD_GET_INT(f_cmp, cd_offset);
+    int tot = 0;
+
+    BM_mesh_elem_hflag_disable_all(bm_old, BM_VERT | BM_EDGE | BM_FACE, BM_ELEM_TAG, false);
+
+    BM_ITER_MESH (f, &iter, bm_old, BM_FACES_OF_MESH) {
+      if (BM_ELEM_CD_GET_INT(f, cd_offset) == face_set) {
+        BMLoop *l_iter;
+        BMLoop *l_first;
+
+        BM_elem_flag_enable(f, BM_ELEM_TAG);
+        l_iter = l_first = BM_FACE_FIRST_LOOP(f);
+        do {
+          BM_elem_flag_enable(l_iter->v, BM_ELEM_TAG);
+          BM_elem_flag_enable(l_iter->e, BM_ELEM_TAG);
+        } while ((l_iter = l_iter->next) != l_first);
+
+        tot++;
+      }
+    }
+
+    /* The last face set stays in the original object. */
+    if (tot == bm_old->totface) {
+      break;
+    }
+
+    Base *base_new = mesh_separate_tagged(bmain, scene, view_layer, base_old, bm_old);
+    result |= (base_new != nullptr);
+  }
+
+  BM_custom_loop_normals_from_vector_layer(bm_old, false);
+
+  return result;
+}
+
 static bool mesh_separate_loose(
     Main *bmain, Scene *scene, ViewLayer *view_layer, Base *base_old, BMesh *bm_old)
 {
@@ -4519,6 +4575,9 @@ static wmOperatorStatus edbm_separate_exec(bContext *C, wmOperator *op)
         case MESH_SEPARATE_LOOSE:
           changed = mesh_separate_loose(bmain, scene, view_layer, base, em->bm);
           break;
+        case MESH_SEPARATE_FACE_SETS:
+          changed = mesh_separate_face_sets(bmain, scene, view_layer, base, em->bm);
+          break;
         default:
           BLI_assert(0);
           break;
@@ -4568,6 +4627,9 @@ static wmOperatorStatus edbm_separate_exec(bContext *C, wmOperator *op)
         case MESH_SEPARATE_LOOSE:
           changed = mesh_separate_loose(bmain, scene, view_layer, base_iter, bm_old);
           break;
+        case MESH_SEPARATE_FACE_SETS:
+          changed = mesh_separate_face_sets(bmain, scene, view_layer, base_iter, bm_old);
+          break;
         default:
           BLI_assert(0);
           break;
@@ -4589,6 +4651,10 @@ static wmOperatorStatus edbm_separate_exec(bContext *C, wmOperator *op)
     CTX_DATA_END;
   }
 
+  if (!changed_multi && type == MESH_SEPARATE_FACE_SETS) {
+    BKE_report(op->reports, RPT_WARNING, "Needs more than one face set");
+  }
+
   if (changed_multi) {
     /* delay depsgraph recalc until all objects are duplicated */
     DEG_relations_tag_update(bmain);
@@ -4607,6 +4673,11 @@ void MESH_OT_separate(wmOperatorType *ot)
       {MESH_SEPARATE_SELECTED, "SELECTED", ICON_OP_SEPARATE_SELECTED, "Selection", ""},
       {MESH_SEPARATE_MATERIAL, "MATERIAL", ICON_OP_SEPARATE_MATERIAL, "By Material", ""},
       {MESH_SEPARATE_LOOSE, "LOOSE", ICON_OP_SEPARATE_LOOSE, "By Loose Parts", ""},
+      {MESH_SEPARATE_FACE_SETS,
+       "FACE_SETS",
+       ICON_OP_SEPARATE_FACE_SETS,
+       "By Face Sets",
+       "Make an object of each face set"},
       {0, nullptr, 0, nullptr, nullptr},
   };
 

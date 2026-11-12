@@ -142,8 +142,9 @@ struct [[host_shared]] OVERLAY_GridData {
   float level;
   /* Per-level line count. */
   uint num_lines;
-  uint _pad0;
-  uint _pad1;
+  /* Packed like `offset`: the place along the X and Y axis lines that their clipping is centered
+   * on, the part of each line nearest the middle of the view. */
+  float2 axis_offset;
 };
 
 #ifdef GPU_SHADER

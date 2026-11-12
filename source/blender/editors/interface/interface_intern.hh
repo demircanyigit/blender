@@ -1605,6 +1605,11 @@ ARegion *screen_region_find_mouse_over(bScreen *screen, const wmEvent *event);
 
 bool popup_context_menu_for_button(bContext *C, Button *but, const wmEvent *event);
 /**
+ * Gives Quick Favorites that have no icon yet (added before icons were saved) the icon of a
+ * matching button of this block, so they get one once the menu they come from has been opened.
+ */
+void block_user_menu_icons_fill(bContext *C, Block *block);
+/**
  * menu to show when right clicking on the panel header
  */
 void popup_context_menu_for_panel(bContext *C, ARegion *region, Panel *panel);

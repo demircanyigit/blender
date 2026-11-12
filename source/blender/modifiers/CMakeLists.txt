@@ -103,6 +103,13 @@ set(SRC
   intern/MOD_uvproject.cc
   intern/MOD_uvwarp.cc
   intern/MOD_uv_scale.cc
+  intern/MOD_uv_unwrap.cc
+  intern/MOD_uv_pack.cc
+  intern/MOD_conform.cc
+  intern/MOD_normal_transfer.cc
+  intern/MOD_normal_smooth.cc
+  intern/MOD_normal_face_sets.cc
+  intern/MOD_normal_shape.cc
   intern/MOD_divide.cc
   intern/MOD_join.cc
   intern/MOD_blast.cc
@@ -150,6 +157,8 @@ set(SRC
   intern/MOD_edge_damage.cc
   intern/MOD_edit_poly.cc
   intern/MOD_sweep.cc
+  intern/MOD_tile.cc
+  intern/MOD_trim.cc
   intern/MOD_symmetrize.cc
   intern/MOD_chamfer_spline.cc
   intern/MOD_data_channel.cc

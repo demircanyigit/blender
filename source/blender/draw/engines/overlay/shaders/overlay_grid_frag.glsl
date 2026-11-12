@@ -14,6 +14,17 @@ FRAGMENT_SHADER_CREATE_INFO(overlay_grid_next)
 
 void main()
 {
+  /* Depth. In perspective, lines that reach past the clip end have their far end moved to the
+   * far plane, which makes the depth between the ends wrong. Work it out for each pixel from its
+   * real position instead, kept at the far plane past the clip end. */
+  if (drw_view_is_perspective() && !flag_test(grid_flag, GRID_SIMA)) {
+    float4 hs = drw_point_world_to_homogenous(vertex_out.pos);
+    gl_FragDepth = min(drw_ndc_to_screen((hs.z + vertex_out_flat.z_bias) / hs.w), 1.0f);
+  }
+  else {
+    gl_FragDepth = gl_FragCoord.z;
+  }
+
   /* Fragment color. */
   if (flag_test(grid_flag, SHOW_GRID)) {
     /* Color is a mix of [grid, grid_emphasis], dependent on the level. */
@@ -49,8 +60,9 @@ void main()
       out_color.a *= 1.0f - pow3f(1.0f - abs(V.z));
     }
 
-    /* Add fade towards camera clip plane. */
-    float far_clip = -drw_view_far();
+    /* Add fade towards camera clip plane. When zoomed far out, fade by the height of the view
+     * above the floor instead, so the grid doesn't vanish. */
+    float far_clip = max(-drw_view_far(), 100.0f * abs(drw_view_position().z));
     out_color.a *= 1.0f - smoothstep(0.0f, 0.5f * far_clip, dist - 0.5f * far_clip);
   }
   else {
@@ -60,10 +72,15 @@ void main()
       out_color.a *= pow2f(length_fade);
     }
 
-    /* Add fade at steep angles for contents of the floor plane. */
+    /* Add fade at steep angles for contents of the floor plane. In orthographic the whole grid
+     * shares one angle, so fade only when looking nearly along the floor, or the grid is gone
+     * at any low angle. */
     if (flag_test(grid_flag, PLANE_XY)) {
       float3 V = -drw_view_forward();
-      out_color.a *= 1.0f - pow3f(1.0f - abs(V.z));
+      float a = 1.0f - abs(V.z);
+      a *= a;
+      a *= a;
+      out_color.a *= 1.0f - a * a;
     }
   }
 

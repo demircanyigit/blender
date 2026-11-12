@@ -6783,11 +6783,17 @@ class VIEW3D_PT_shading_color(Panel):
         shading = VIEW3D_PT_shading.get_shading(context)
 
         grid = layout.grid_flow(row_major=True, columns=3, align=True)
-        # Face Set takes the place of Object, which is still there for scripts and old files.
-        for item in ('MATERIAL', 'FACE_SET', 'RANDOM', 'VERTEX', 'TEXTURE', 'SINGLE'):
+        for item in (
+                'MATERIAL', 'OBJECT', 'RANDOM',
+                'FACE_SET', 'ISLAND', 'VERTEX',
+                'TEXTURE', 'CHECKER', 'SINGLE',
+        ):
             grid.prop_enum(shading, "color_type", item)
         if shading.color_type == 'SINGLE':
             layout.row().prop(shading, "single_color", text="")
+        elif shading.color_type == 'CHECKER':
+            layout.row().prop(shading, "checker_type", expand=True)
+            layout.row().prop(shading, "checker_scale", text="Scale")
 
     def _draw_background_color(self, context):
         layout = self.layout

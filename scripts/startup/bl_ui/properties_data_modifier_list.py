@@ -661,22 +661,24 @@ class OBJECT_MT_modifier_list_color(ModifierListAddMenu, Menu):
 # Mesh modifiers of the list view's menu, in columns. Each column is sorted by label.
 MESH_CATEGORIES_TOP = (
     ("Edit", (
-        'BEVEL', 'BOOLEAN', 'CAP_HOLES', 'CLEANUP', 'COLLAPSE', 'DICE', 'EDGE_DAMAGE', 'FACE_EXTRUDE', 'INSET', 'JOIN',
-        'MIRROR', 'POKE', 'SHATTER', 'SLICE', 'SOLIDIFY', 'SYMMETRIZE', 'VORONOI_FRACTURE', 'WELD',
+        'BEVEL', 'BOOLEAN', 'CAP_HOLES', 'CLEANUP', 'FACE_EXTRUDE', 'INSET', 'JOIN',
+        'MIRROR', 'POKE', 'SLICE', 'SOLIDIFY', 'SYMMETRIZE', 'WELD',
     )),
+    ("Break", ('COLLAPSE', 'DICE', 'EDGE_DAMAGE', 'SHATTER', 'VORONOI_FRACTURE')),
     ("Build", (
-        'DISTRIBUTE', 'DRAPE', 'MASONRY', 'PANELIZE', 'PLANKS', 'ROOF', 'SCREW', 'SKIN', 'STONEWORK', 'VOLUME_TO_MESH', 'WIREFRAME',
+        'DISTRIBUTE', 'DRAPE', 'MASONRY', 'PANELIZE', 'PLANKS', 'ROOF', 'SCREW', 'SKIN', 'STONEWORK',
+        'SWEEP', 'TRIM', 'VOLUME_TO_MESH', 'WIREFRAME',
     )),
     ("Topology", (
         'SUBSURF', 'MULTIRES', 'DECIMATE', 'DIVIDE', 'DISSOLVE', 'REMESH', 'ISOTROPIC_REMESH', 'QUADRIFLOW_REMESH',
         'TRIANGULATE', 'QUADRANGULATE', 'BEAUTIFY_FACES', 'ROTATE_EDGES', 'EDGE_SPLIT',
     )),
     ("Elements", (
-        'ARRAY', 'RADIAL_ARRAY', 'BLAST', 'BUILD', 'MASK', 'DELETE_MESH', 'EXPLODED_VIEW',
+        'ARRAY', 'RADIAL_ARRAY', 'TILE', 'BLAST', 'BUILD', 'MASK', 'DELETE_MESH', 'EXPLODED_VIEW',
         'RANDOMIZE_ELEMENTS', 'ELEMENT_ORDER', 'ELEMENT_PIVOT',
     )),
     ("Deform", (
-        'ARMATURE', 'CURVE', 'HOOK', 'LATTICE', 'MESH_DEFORM', 'SURFACE_DEFORM', 'SHRINKWRAP',
+        'ARMATURE', 'CURVE', 'HOOK', 'LATTICE', 'MESH_DEFORM', 'SURFACE_DEFORM', 'SHRINKWRAP', 'CONFORM',
         'LAPLACIANDEFORM', 'FFD_2', 'FFD_3', 'FFD_4', 'SHAPE_KEY_INBETWEEN',
     )),
     ("Shape", (
@@ -686,8 +688,11 @@ MESH_CATEGORIES_TOP = (
 )
 MESH_CATEGORIES_BOTTOM = (
     ("Smooth", ('SMOOTH', 'CORRECTIVE_SMOOTH', 'LAPLACIANSMOOTH', 'RELAX')),
-    ("Normals", ('NORMAL_EDIT', 'WEIGHTED_NORMAL', 'MARK_BY_ANGLE')),
-    ("UV", ('UV_PROJECT', 'UVW_MAP', 'UV_WARP', 'UV_SCALE', 'SMART_UV_PROJECT')),
+    ("Normals", (
+        'NORMAL_EDIT', 'WEIGHTED_NORMAL', 'NORMAL_TRANSFER', 'NORMAL_SMOOTH', 'NORMAL_FACE_SETS',
+        'NORMAL_SHAPE', 'MARK_BY_ANGLE',
+    )),
+    ("UV", ('UV_PROJECT', 'UVW_MAP', 'UV_WARP', 'UV_SCALE', 'SMART_UV_PROJECT', 'UV_UNWRAP', 'UV_PACK')),
     ("Data", (
         'DATA_TRANSFER', 'DATA_CHANNEL', 'PIECE_ID',
         'MATERIAL_BY_ELEMENT', 'MATERIALIZE', 'TENSION', 'MESH_CACHE', 'MESH_SEQUENCE_CACHE',
@@ -720,10 +725,10 @@ class OBJECT_MT_modifier_list_add(ModifierListAddMenu, Menu):
         """All mesh modifiers at once, one row of columns with short groups stacked."""
         groups = dict(MESH_CATEGORIES_TOP + MESH_CATEGORIES_BOTTOM)
         columns = (
-            ("Edit",),
-            ("Build",),
+            ("Edit", "Break"),
+            ("Build", "Select"),
             ("Topology", "Smooth"),
-            ("Elements", "Select", "Normals"),
+            ("Elements", "Normals"),
             ("Deform",),
             ("Shape",),
             ("UV", "Data"),

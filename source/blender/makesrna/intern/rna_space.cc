@@ -489,6 +489,16 @@ static const EnumPropertyItem rna_enum_shading_color_type_items[] = {
      0,
      "Texture",
      "Show the texture from the active image texture node using the active UV map coordinates"},
+    {V3D_SHADING_CHECKER_COLOR,
+     "CHECKER",
+     0,
+     "Checker",
+     "Show a checker pattern on the active UV map, to check stretching and texel density"},
+    {V3D_SHADING_ISLAND_COLOR,
+     "ISLAND",
+     0,
+     "Island",
+     "Show a different color for each loose part of a mesh"},
     {V3D_SHADING_SINGLE_COLOR, "SINGLE", 0, "Custom", "Show scene in a single custom color"},
     {0, nullptr, 0, nullptr, nullptr},
 };
@@ -5042,6 +5052,36 @@ static void rna_def_space_view3d_shading(BlenderRNA *brna)
   RNA_def_property_float_sdna(prop, nullptr, "toon_rim_width");
   RNA_def_property_range(prop, 0.0f, 1.0f);
   RNA_def_property_ui_text(prop, "Width", "Width of the rim light");
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  static const EnumPropertyItem checker_types[] = {
+      {V3D_SHADING_CHECKER_COLOR_GRID,
+       "COLOR",
+       0,
+       "Color",
+       "A different color for each square, so you can see where each part of the UVs goes"},
+      {V3D_SHADING_CHECKER_GRAY, "GRAY", 0, "Gray", "Light and dark gray squares"},
+      {V3D_SHADING_CHECKER_UV,
+       "UV",
+       0,
+       "UV",
+       "Red across U and green across V, so turned and flipped islands stand out"},
+      {0, nullptr, 0, nullptr, nullptr},
+  };
+  prop = RNA_def_property(srna, "checker_type", PROP_ENUM, PROP_NONE);
+  RNA_def_property_enum_sdna(prop, nullptr, "checker_type");
+  RNA_def_property_enum_items(prop, checker_types);
+  RNA_def_property_ui_text(prop, "Checker", "Pattern of the checker");
+  RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+  RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
+
+  prop = RNA_def_property(srna, "checker_scale", PROP_FLOAT, PROP_NONE);
+  RNA_def_property_float_sdna(prop, nullptr, "checker_scale");
+  RNA_def_property_range(prop, 1.0f, 256.0f);
+  RNA_def_property_ui_range(prop, 1.0f, 64.0f, 100.0, 0);
+  RNA_def_property_ui_text(
+      prop, "Checker Scale", "Number of squares of the checker across one UV unit");
   RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
   RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D | NS_VIEW3D_SHADING, nullptr);
 

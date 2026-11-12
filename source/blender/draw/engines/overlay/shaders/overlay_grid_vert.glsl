@@ -148,7 +148,7 @@ void main()
   }
   else { /* SHOW_AXES */
     /* Clipping is applied to X-axis; line is moved to the correct axis below. */
-    float offset = grid::unpack_xy_to_axis(grid_buf.offset, grid_flag, line.axis);
+    float offset = grid::unpack_xy_to_axis(grid_buf.axis_offset, grid_flag, line.axis);
     float clip_rect = grid::unpack_xy_to_axis(grid_buf.clip_rect, grid_flag, line.axis);
     clip_min = float2(offset - clip_rect, 0.0f);
     clip_max = float2(offset + clip_rect, 0.0f);
@@ -199,6 +199,7 @@ void main()
   }
 
   gl_Position = drw_view().winmat * (drw_view().viewmat * float4(vertex_out.pos, 1.0f));
+  vertex_out_flat.z_bias = 0.0f;
 
   /* Adjust z-component. */
   if (drw_view_is_perspective() || flag_test(grid_flag, GRID_SIMA)) {
@@ -209,7 +210,14 @@ void main()
     constexpr float z_max_offset = 0.00025f;
     float z_factor = float(grid_iter * OVERLAY_GRID_STEPS_DRAW + line.level) /
                      float(OVERLAY_GRID_ITER_LEN * OVERLAY_GRID_STEPS_DRAW);
-    gl_Position.z += mix(z_max_offset, z_min_offset, z_factor);
+    vertex_out_flat.z_bias = mix(z_max_offset, z_min_offset, z_factor);
+    gl_Position.z += vertex_out_flat.z_bias;
+    if (drw_view_is_perspective() && gl_Position.w > 0.0f) {
+      /* Keep the grid past the clip end at the far plane instead of cutting it off, so it stays
+       * when zoomed far out. This only stops the line from being cut: the fragment shader works
+       * out the real depth of each pixel, since the depth between the ends would be wrong. */
+      gl_Position.z = min(gl_Position.z, gl_Position.w);
+    }
   }
   else if (flag_test(grid_flag, GRID_BEHIND_GEOMETRY)) {
     /* Set z to far plane, placing the grid behind all geometry. */

@@ -153,7 +153,9 @@ class Instance : public DrawEngine {
       case V3D_SHADING_VERTEX_COLOR:
         return scene_state_.material_attribute_color;
       case V3D_SHADING_FACE_SET_COLOR:
-        /* The shader reads the face set color from the batch, see #material_data_get. */
+      case V3D_SHADING_ISLAND_COLOR:
+        /* The shader reads the face set or island color from the batch, see
+         * #material_data_get. */
         return Material(float3(-2.0f));
       case V3D_SHADING_TEXTURE_COLOR:
         ATTR_FALLTHROUGH;
@@ -367,11 +369,14 @@ class Instance : public DrawEngine {
     }
     else {
       gpu::Batch *batch;
-      if (object_state.color_type == V3D_SHADING_TEXTURE_COLOR) {
+      if (ELEM(object_state.color_type, V3D_SHADING_TEXTURE_COLOR, V3D_SHADING_CHECKER_COLOR)) {
         batch = DRW_cache_mesh_surface_texpaint_single_get(ob_ref.object);
       }
       else if (object_state.color_type == V3D_SHADING_FACE_SET_COLOR) {
         batch = DRW_cache_mesh_surface_face_sets_get(ob_ref.object);
+      }
+      else if (object_state.color_type == V3D_SHADING_ISLAND_COLOR) {
+        batch = DRW_cache_mesh_surface_islands_get(ob_ref.object);
       }
       else if (object_state.color_type == V3D_SHADING_VERTEX_COLOR) {
         if (ob_ref.object->mode & OB_MODE_VERTEX_PAINT) {
@@ -410,7 +415,8 @@ class Instance : public DrawEngine {
     {
       features = SCULPT_BATCH_VERTEX_COLOR;
     }
-    else if (object_state.color_type == V3D_SHADING_TEXTURE_COLOR) {
+    else if (ELEM(object_state.color_type, V3D_SHADING_TEXTURE_COLOR, V3D_SHADING_CHECKER_COLOR))
+    {
       features = SCULPT_BATCH_UV;
     }
 

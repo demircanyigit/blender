@@ -6,6 +6,7 @@
  * \ingroup modifiers
  *
  * Sweep. The work is done by shared code in the geometry module, which the matching nodes use too.
+ * The path can be curves, or the edges of a mesh, and can be resampled and smoothed first.
  */
 
 #include <algorithm>
@@ -48,6 +49,9 @@
 #include "DNA_curves_types.h"
 #include "MEM_guardedalloc.h"
 #include "GEO_curve_sweep.hh"
+#include "GEO_mesh_to_curve.hh"
+#include "GEO_resample_curves.hh"
+#include "GEO_smooth_curves.hh"
 
 namespace blender {
 
@@ -78,16 +82,60 @@ static void update_depsgraph(ModifierData *md, const ModifierUpdateDepsgraphCont
   }
 }
 
+/** The edges of a mesh as curves: connected edges become one curve, closed loops cyclic. */
+static bke::CurvesGeometry mesh_edges_as_curves(const Mesh &mesh)
+{
+  return geometry::mesh_edges_to_curves_convert(
+      mesh, IndexMask(IndexRange(mesh.edges_num)), bke::AttributeFilter());
+}
+
 static void modify_geometry_set(ModifierData *md,
                                 const ModifierEvalContext *ctx,
                                 bke::GeometrySet *geometry_set)
 {
   const SweepModifierData &smd = *reinterpret_cast<SweepModifierData *>(md);
+  /* The path: curves, or else the edges of a mesh. */
   const Curves *curves_id = geometry_set->get_curves();
-  if (curves_id == nullptr) {
+  const Mesh *path_mesh = curves_id ? nullptr : geometry_set->get_mesh();
+  bke::CurvesGeometry main;
+  if (curves_id != nullptr) {
+    main = curves_id->geometry.wrap();
+  }
+  else if (path_mesh != nullptr && path_mesh->edges_num > 0) {
+    main = mesh_edges_as_curves(*path_mesh);
+  }
+  else {
     return;
   }
-  bke::CurvesGeometry main = curves_id->geometry.wrap();
+  if (main.curves_num() == 0) {
+    return;
+  }
+
+  /* Even points along the path, then smoothing, which rounds the corners. */
+  if (smd.resample == MOD_SWEEP_RESAMPLE_COUNT) {
+    main = geometry::resample_to_count(
+        main,
+        main.curves_range(),
+        VArray<int>::from_single(std::max(smd.resample_count, 2), main.curves_num()));
+  }
+  else if (smd.resample == MOD_SWEEP_RESAMPLE_LENGTH) {
+    main = geometry::resample_to_length(
+        main,
+        main.curves_range(),
+        VArray<float>::from_single(std::max(smd.resample_length, 1e-4f), main.curves_num()),
+        {},
+        true);
+  }
+  if (smd.smooth_iterations > 0 && smd.smooth_factor > 0.0f) {
+    geometry::smooth_curve_positions(main,
+                                     main.curves_range(),
+                                     VArray<bool>::from_single(true, main.points_num()),
+                                     smd.smooth_iterations,
+                                     smd.smooth_factor,
+                                     !(smd.flag & MOD_SWEEP_SMOOTH_KEEP_ENDS),
+                                     false);
+    main.tag_positions_changed();
+  }
 
   bke::CurvesGeometry built_profile;
   const bke::CurvesGeometry *profile = &built_profile;
@@ -98,11 +146,18 @@ static void modify_geometry_set(ModifierData *md,
     }
     profile_set = bke::object_get_evaluated_geometry_set(*smd.profile_object);
     const Curves *profile_curves = profile_set.get_curves();
-    if (profile_curves == nullptr) {
-      BKE_modifier_set_warning(ctx->object, md, "The cross section object has no curves");
+    const Mesh *profile_mesh = profile_set.get_mesh();
+    if (profile_curves != nullptr) {
+      profile = &profile_curves->geometry.wrap();
+    }
+    else if (profile_mesh != nullptr && profile_mesh->edges_num > 0) {
+      built_profile = mesh_edges_as_curves(*profile_mesh);
+    }
+    else {
+      BKE_modifier_set_warning(
+          ctx->object, md, "The cross section object has no curves or edges");
       return;
     }
-    profile = &profile_curves->geometry.wrap();
   }
   else {
     built_profile = geometry::sweep_shape_profile(
@@ -133,8 +188,14 @@ static void modify_geometry_set(ModifierData *md,
                                      outputs,
                                      {});
   if (mesh != nullptr) {
-    mesh->mat = MEM_dupalloc(curves_id->mat);
-    mesh->totcol = curves_id->totcol;
+    if (curves_id != nullptr) {
+      mesh->mat = MEM_dupalloc(curves_id->mat);
+      mesh->totcol = curves_id->totcol;
+    }
+    else if (path_mesh->mat != nullptr) {
+      mesh->mat = MEM_dupalloc(path_mesh->mat);
+      mesh->totcol = path_mesh->totcol;
+    }
     if (outputs.uv_map) {
       mesh->uv_maps_active_set(*outputs.uv_map);
       mesh->uv_maps_default_set(*outputs.uv_map);
@@ -174,6 +235,21 @@ static void panel_draw_Sweep(const bContext * /*C*/, Panel *panel)
   layout.prop(ptr, "use_fill_caps", UI_ITEM_NONE, std::nullopt, ICON_NONE);
   layout.prop(ptr, "uv_map", UI_ITEM_NONE, std::nullopt, ICON_NONE);
   layout.prop(ptr, "use_length_uvs", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+
+  layout.separator();
+  layout.prop(ptr, "resample", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+  const int resample = RNA_enum_get(ptr, "resample");
+  if (resample == MOD_SWEEP_RESAMPLE_COUNT) {
+    layout.prop(ptr, "resample_count", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+  }
+  else if (resample == MOD_SWEEP_RESAMPLE_LENGTH) {
+    layout.prop(ptr, "resample_length", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+  }
+  layout.prop(ptr, "smooth_iterations", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+  ui::Layout &col = layout.column(true);
+  col.active_set(RNA_int_get(ptr, "smooth_iterations") > 0);
+  col.prop(ptr, "smooth_factor", UI_ITEM_NONE, std::nullopt, ICON_NONE);
+  col.prop(ptr, "use_smooth_keep_ends", UI_ITEM_NONE, std::nullopt, ICON_NONE);
   modifier_error_message_draw(layout, ptr);
 }
 
@@ -189,7 +265,8 @@ ModifierTypeInfo modifierType_Sweep = {
     /*struct_size*/ sizeof(SweepModifierData),
     /*srna*/ &RNA_SweepModifier,
     /*type*/ ModifierTypeType::Constructive,
-    /*flags*/ eModifierTypeFlag_AcceptsCurves,
+    /*flags*/ eModifierTypeFlag_AcceptsCurves | eModifierTypeFlag_AcceptsMesh |
+        eModifierTypeFlag_SupportsEditmode,
     /*icon*/ ICON_MOD_SWEEP,
 
     /*copy_data*/ BKE_modifier_copydata_generic,

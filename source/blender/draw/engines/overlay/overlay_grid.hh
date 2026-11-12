@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <cmath>
+
 #include "DEG_depsgraph_query.hh"
 
 #include "DNA_camera_types.h"
@@ -182,6 +184,7 @@ class Grid : Overlay {
 
     /* Determine camera offset to center of v2d. */
     grid_ubo_.offset = float2(v2d->cur.xmax + v2d->cur.xmin, v2d->cur.ymax + v2d->cur.ymin) - 1.0f;
+    grid_ubo_.axis_offset = grid_ubo_.offset;
 
     /* Query grid image zoom level. Then find the lowest relevant grid level + fractional. */
     float dist = ED_space_image_zoom_level(v2d, SI_GRID_STEPS_LEN) * 4.0f;
@@ -352,6 +355,40 @@ class Grid : Overlay {
       grid_ubo_.offset = camera_offs.xy();
     }
 
+    /* The X and Y axis lines are clipped around their part nearest the middle of the view. The
+     * grid offset above can be far from it in an orthographic view that looks almost along the
+     * floor, which cut the axis lines short. */
+    grid_ubo_.axis_offset = grid_ubo_.offset;
+    if (!rv3d->is_persp && rv3d->view != RV3D_VIEW_USER) {
+      /* Front, side and top views: the axis lines read the offset as X and Y, while the grid
+       * offset of a side view holds Y and Z, which clipped the Y axis away from the origin. */
+      grid_ubo_.axis_offset = drw_view_position.xy();
+    }
+    else if (!rv3d->is_persp) {
+      const float along = dot(drw_view_position, drw_view_forward);
+      for (const int axis : {0, 1}) {
+        const float side = 1.0f - drw_view_forward[axis] * drw_view_forward[axis];
+        if (side > 1e-6f) {
+          grid_ubo_.axis_offset[axis] = (drw_view_position[axis] -
+                                         drw_view_forward[axis] * along) /
+                                        side;
+        }
+      }
+    }
+
+    /* Zoomed out past the largest grid step: scale every step up by tens, so the grid keeps
+     * lines of a fitting size instead of turning into a dense mesh and fading away. */
+    {
+      const float largest = std::min(grid_ubo_.steps[SI_GRID_STEPS_LEN - 1].x,
+                                     grid_ubo_.steps[SI_GRID_STEPS_LEN - 1].y);
+      if (largest > 0.0f && dist > largest) {
+        const float mult = powf(10.0f, ceilf(log10f(dist / largest)));
+        for (int i : IndexRange(SI_GRID_STEPS_LEN)) {
+          grid_ubo_.steps[i] *= mult;
+        }
+      }
+    }
+
     /* Find the lowest relevant grid level for the above distance. */
     for (int i : IndexRange(SI_GRID_STEPS_LEN)) {
       float curr = std::min(grid_ubo_.steps[i].x, grid_ubo_.steps[i].y);
@@ -384,8 +421,15 @@ class Grid : Overlay {
       /* WATCH(not_mark): This appears to function in ortho/VR, but I'm not convinced. */
       bool use_clip_end = rv3d->is_persp ||
                           ((v3d->flag & (V3D_XR_SESSION_SURFACE | V3D_XR_SESSION_MIRROR)) != 0);
-      float clip_dist = use_clip_end ? v3d->clip_end :
+      /* In perspective, reach further than the clip end when zoomed far out, so the grid and
+       * the axis lines still reach the horizon. */
+      float clip_dist = use_clip_end ? std::max(v3d->clip_end, dist * 100.0f) :
                                        (4.0f / max(rv3d->winmat[0][0], rv3d->winmat[1][1]));
+      if (!use_clip_end && rv3d->view == RV3D_VIEW_USER) {
+        /* At a low angle the floor seen in orthographic reaches much further away than the view
+         * is wide, so the grid has to reach further too. */
+        clip_dist /= std::max(abs(drw_view_forward.z), 0.05f);
+      }
       grid_ubo_.clip_rect = float2(clip_dist);
     }
 

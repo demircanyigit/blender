@@ -344,6 +344,15 @@ void modifier_type_init(ModifierTypeInfo *types[])
   INIT_TYPE(Stonework);
   INIT_TYPE(Distribute);
   INIT_TYPE(PieceId);
+  INIT_TYPE(UVUnwrap);
+  INIT_TYPE(UVPack);
+  INIT_TYPE(Conform);
+  INIT_TYPE(NormalTransfer);
+  INIT_TYPE(NormalSmooth);
+  INIT_TYPE(NormalFaceSets);
+  INIT_TYPE(NormalShape);
+  INIT_TYPE(Trim);
+  INIT_TYPE(Tile);
   INIT_TYPE(UVWMap);
   INIT_TYPE(Bend);
   INIT_TYPE(Twist);

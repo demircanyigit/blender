@@ -280,6 +280,12 @@ struct SceneResources {
   Texture missing_tx = "missing_tx";
   MaterialTexture missing_texture;
 
+  /* The Checker color type. */
+  Texture checker_tx = "wb_checker_tx";
+  MaterialTexture checker_texture;
+  int checker_squares = 0;
+  int checker_type = -1;
+
   Texture dummy_texture_tx = {"dummy_texture"};
   Texture dummy_tile_data_tx = {"dummy_tile_data"};
   Texture dummy_tile_array_tx = {"dummy_tile_array"};
@@ -294,6 +300,7 @@ struct SceneResources {
 
   void init(const SceneState &scene_state, const DRWContext *ctx);
   void load_jitter_tx(int total_samples);
+  void load_checker_tx(int squares, int type);
 };
 
 class MeshPass : public PassMain {

@@ -190,6 +190,15 @@ enum ModifierType {
   eModifierType_Stonework = 149,
   eModifierType_Distribute = 150,
   eModifierType_PieceId = 151,
+  eModifierType_UVUnwrap = 152,
+  eModifierType_UVPack = 153,
+  eModifierType_Conform = 154,
+  eModifierType_NormalTransfer = 155,
+  eModifierType_NormalSmooth = 156,
+  eModifierType_NormalFaceSets = 157,
+  eModifierType_NormalShape = 158,
+  eModifierType_Trim = 159,
+  eModifierType_Tile = 160,
   NUM_MODIFIER_TYPES,
 };
 
@@ -2462,6 +2471,8 @@ enum SweepModifierFlag {
   MOD_SWEEP_FILL_CAPS = (1 << 0),
   MOD_SWEEP_LENGTH_UVS = (1 << 1),
   MOD_SWEEP_USE_RADIUS = (1 << 2),
+  /** Keep the ends of open paths in place when smoothing. */
+  MOD_SWEEP_SMOOTH_KEEP_ENDS = (1 << 3),
 };
 
 /** Sweep modifier. */
@@ -2472,8 +2483,10 @@ struct SweepModifierData {
   /** #geometry::SweepShape. */
   char shape = 0;
   /** #SweepModifierFlag. */
-  char flag = MOD_SWEEP_LENGTH_UVS | MOD_SWEEP_USE_RADIUS;
-  char _pad[2] = {};
+  char flag = MOD_SWEEP_LENGTH_UVS | MOD_SWEEP_USE_RADIUS | MOD_SWEEP_SMOOTH_KEEP_ENDS;
+  /** #SweepModifierResample. */
+  char resample = 0;
+  char _pad[1] = {};
   int columns = 12;
   float radius = 0.1f;
   float width = 0.2f;
@@ -2482,6 +2495,20 @@ struct SweepModifierData {
   float twist = 0.0f;
   /** MAX_CUSTOMDATA_LAYER_NAME. */
   char uv_map[68] = "UVMap";
+  /** Points per path with #MOD_SWEEP_RESAMPLE_COUNT. */
+  int resample_count = 32;
+  /** Distance between points with #MOD_SWEEP_RESAMPLE_LENGTH. */
+  float resample_length = 0.1f;
+  /** Smoothing steps of the path, 0 for none. */
+  int smooth_iterations = 0;
+  float smooth_factor = 0.5f;
+};
+
+/** #SweepModifierData.resample */
+enum SweepModifierResample {
+  MOD_SWEEP_RESAMPLE_NONE = 0,
+  MOD_SWEEP_RESAMPLE_COUNT = 1,
+  MOD_SWEEP_RESAMPLE_LENGTH = 2,
 };
 
 /** #SmartUVProjectModifierData.flag */
@@ -3289,6 +3316,262 @@ struct UVScaleModifierData {
   float center[2] = {0.5f, 0.5f};
   float density = 1024.0f;
   int resolution[2] = {1024, 1024};
+  char _pad[4] = {};
+};
+
+/** #UVUnwrapModifierData.method */
+enum UVUnwrapModifierMethod {
+  MOD_UV_UNWRAP_ANGLE_BASED = 0,
+  MOD_UV_UNWRAP_CONFORMAL = 1,
+  MOD_UV_UNWRAP_MINIMUM_STRETCH = 2,
+};
+
+/** #UVUnwrapModifierData.flag */
+enum UVUnwrapModifierFlag {
+  MOD_UV_UNWRAP_FILL_HOLES = (1 << 0),
+  MOD_UV_UNWRAP_NO_FLIP = (1 << 1),
+};
+
+struct UVUnwrapModifierData {
+  ModifierData modifier;
+  /** UV map to write, added when missing. Empty uses the active map, or "UVMap". */
+  char uv_map[68] = "";
+  int method = MOD_UV_UNWRAP_ANGLE_BASED;
+  int flag = MOD_UV_UNWRAP_FILL_HOLES;
+  /** Minimum Stretch solver iterations. */
+  int iterations = 10;
+  float margin = 0.001f;
+  char _pad[4] = {};
+};
+
+/** #UVPackModifierData.shape */
+enum UVPackModifierShape {
+  MOD_UV_PACK_SHAPE_BOX = 0,
+  MOD_UV_PACK_SHAPE_CONVEX = 1,
+  MOD_UV_PACK_SHAPE_EXACT = 2,
+};
+
+/** #UVPackModifierData.flag */
+enum UVPackModifierFlag {
+  MOD_UV_PACK_ROTATE = (1 << 0),
+};
+
+struct UVPackModifierData {
+  ModifierData modifier;
+  /** Existing UV map. Empty uses the active map. */
+  char uv_map[68] = "";
+  int shape = MOD_UV_PACK_SHAPE_CONVEX;
+  int flag = MOD_UV_PACK_ROTATE;
+  float margin = 0.001f;
+};
+
+/** #ConformModifierData.mode */
+enum ConformModifierMode {
+  /** Move points along an axis of the object onto the target. */
+  MOD_CONFORM_MODE_AXIS = 0,
+  /** Move points to the closest place on the target. */
+  MOD_CONFORM_MODE_NEAREST = 1,
+};
+
+/** #ConformModifierData.flag */
+enum ConformModifierFlag {
+  MOD_CONFORM_KEEP_THICKNESS = (1 << 0),
+  MOD_CONFORM_INVERT_VGROUP = (1 << 1),
+};
+
+struct ConformModifierData {
+  ModifierData modifier;
+  struct Object *target = nullptr;
+  char vertex_group[/*MAX_VGROUP_NAME*/ 64] = "";
+  int mode = MOD_CONFORM_MODE_AXIS;
+  /** Direction to move in: 0-2 are +X, +Y, +Z and 3-5 are -X, -Y, -Z of the object. */
+  int axis = 5;
+  int flag = MOD_CONFORM_KEEP_THICKNESS;
+  /** Distance kept from the target surface. */
+  float offset = 0.0f;
+};
+
+/** #NormalTransferModifierData.mapping */
+enum NormalTransferModifierMapping {
+  /** Closest point on the target's faces, blended across the face. */
+  MOD_NORMAL_TRANSFER_NEAREST_SURFACE = 0,
+  /** Closest vertex of the target. */
+  MOD_NORMAL_TRANSFER_NEAREST_POINT = 1,
+  /** Cast along the point's own normal. */
+  MOD_NORMAL_TRANSFER_ALONG_NORMAL = 2,
+  /** Cast along an axis of the object. */
+  MOD_NORMAL_TRANSFER_PROJECTED = 3,
+};
+
+/** #NormalTransferModifierData.flag */
+enum NormalTransferModifierFlag {
+  MOD_NORMAL_TRANSFER_USE_DISTANCE = (1 << 0),
+  MOD_NORMAL_TRANSFER_INVERT_VGROUP = (1 << 1),
+  MOD_NORMAL_TRANSFER_EDGES_ONLY = (1 << 2),
+};
+
+struct NormalTransferModifierData {
+  ModifierData modifier;
+  struct Object *target = nullptr;
+  char vertex_group[/*MAX_VGROUP_NAME*/ 64] = "";
+  int mapping = MOD_NORMAL_TRANSFER_NEAREST_SURFACE;
+  /** For #MOD_NORMAL_TRANSFER_PROJECTED: 0-2 are +X, +Y, +Z and 3-5 are -X, -Y, -Z. */
+  int axis = 5;
+  int flag = 0;
+  float factor = 1.0f;
+  /** Points closer than this take the target's normals fully. */
+  float distance = 0.1f;
+  /** Past the distance, the effect fades out over this length. */
+  float falloff = 0.1f;
+  /** With #MOD_NORMAL_TRANSFER_EDGES_ONLY: the effect fades out over this distance from open
+   * edges. */
+  float edge_distance = 0.1f;
+  char _pad[4] = {};
+};
+
+/** #NormalSmoothModifierData.flag */
+enum NormalSmoothModifierFlag {
+  MOD_NORMAL_SMOOTH_KEEP_SHARP = (1 << 0),
+  MOD_NORMAL_SMOOTH_INVERT_VGROUP = (1 << 1),
+};
+
+struct NormalSmoothModifierData {
+  ModifierData modifier;
+  char vertex_group[/*MAX_VGROUP_NAME*/ 64] = "";
+  int iterations = 5;
+  int flag = MOD_NORMAL_SMOOTH_KEEP_SHARP;
+  float factor = 0.5f;
+  char _pad[4] = {};
+};
+
+/** #NormalFaceSetsModifierData.flag */
+enum NormalFaceSetsModifierFlag {
+  /** Keep the sharp edges the mesh already has. */
+  MOD_NORMAL_FACE_SETS_KEEP_SHARP = (1 << 0),
+  /** Inside each face set, weight the normals by face area. */
+  MOD_NORMAL_FACE_SETS_WEIGHTED = (1 << 1),
+};
+
+struct NormalFaceSetsModifierData {
+  ModifierData modifier;
+  int flag = MOD_NORMAL_FACE_SETS_KEEP_SHARP | MOD_NORMAL_FACE_SETS_WEIGHTED;
+  char _pad[4] = {};
+};
+
+/** #NormalShapeModifierData.shape */
+enum NormalShapeModifierShape {
+  MOD_NORMAL_SHAPE_SPHERE = 0,
+  MOD_NORMAL_SHAPE_CYLINDER = 1,
+  MOD_NORMAL_SHAPE_BOX = 2,
+};
+
+/** #NormalShapeModifierData.flag */
+enum NormalShapeModifierFlag {
+  MOD_NORMAL_SHAPE_INVERT_VGROUP = (1 << 0),
+};
+
+struct NormalShapeModifierData {
+  ModifierData modifier;
+  /** Optional object whose location is the middle of the shape. */
+  struct Object *center = nullptr;
+  char vertex_group[/*MAX_VGROUP_NAME*/ 64] = "";
+  int shape = MOD_NORMAL_SHAPE_SPHERE;
+  /** Axis of the cylinder: 0-2 are X, Y, Z. */
+  int axis = 2;
+  int flag = 0;
+  float factor = 1.0f;
+};
+
+/** #TrimModifierData.fit */
+enum TrimModifierFit {
+  MOD_TRIM_FIT_REPEAT = 0,
+  MOD_TRIM_FIT_EDGE = 1,
+};
+
+/** #TrimModifierData.deform */
+enum TrimModifierDeform {
+  MOD_TRIM_DEFORM_BEND = 0,
+  MOD_TRIM_DEFORM_RIGID = 1,
+};
+
+/** #TrimModifierData.up_mode */
+enum TrimModifierUp {
+  MOD_TRIM_UP_OBJECT = 0,
+  MOD_TRIM_UP_FACES = 1,
+};
+
+/** #TrimModifierData.order */
+enum TrimModifierOrder {
+  MOD_TRIM_ORDER_SEQUENCE = 0,
+  MOD_TRIM_ORDER_RANDOM = 1,
+};
+
+/** #TrimModifierData.flag */
+enum TrimModifierFlag {
+  MOD_TRIM_MERGE = (1 << 0),
+  MOD_TRIM_KEEP_EDGES = (1 << 1),
+};
+
+/** Trim modifier: copies of a pattern object laid along the edges of the mesh. */
+struct TrimModifierData {
+  ModifierData modifier;
+
+  /** The pattern. */
+  struct Object *object = nullptr;
+  /** Several patterns, used instead of #object when set. */
+  struct Collection *collection = nullptr;
+  /** Placed at the start and the end of open paths. */
+  struct Object *start_object = nullptr;
+  struct Object *end_object = nullptr;
+  /** #TrimModifierFit. */
+  int fit = MOD_TRIM_FIT_REPEAT;
+  /** #TrimModifierDeform. */
+  int deform = MOD_TRIM_DEFORM_BEND;
+  /** Axes of the pattern, 0-2 are X, Y, Z. */
+  int length_axis = 0;
+  int up_axis = 2;
+  /** #TrimModifierUp. */
+  int up_mode = MOD_TRIM_UP_OBJECT;
+  /** #TrimModifierOrder. */
+  int order = MOD_TRIM_ORDER_SEQUENCE;
+  int seed = 0;
+  /** #TrimModifierFlag. */
+  int flag = MOD_TRIM_MERGE;
+  float scale = 1.0f;
+  float height = 1.0f;
+  float roll = 0.0f;
+  /** Space between copies. */
+  float gap = 0.0f;
+  /** Sideways shift from the edges. */
+  float offset = 0.0f;
+  float merge_distance = 0.001f;
+};
+
+/** #TileModifierData.axes */
+enum TileModifierAxes {
+  MOD_TILE_AXES_XY = 0,
+  MOD_TILE_AXES_X = 1,
+  MOD_TILE_AXES_Y = 2,
+};
+
+/** #TileModifierData.flag */
+enum TileModifierFlag {
+  MOD_TILE_PREVIEW = (1 << 0),
+  MOD_TILE_MERGE = (1 << 1),
+};
+
+/** Tile modifier: wraps the mesh into one tile so it repeats without seams. */
+struct TileModifierData {
+  ModifierData modifier;
+
+  /** Optional object whose location is the middle of the tile. */
+  struct Object *center = nullptr;
+  float size[2] = {2.0f, 2.0f};
+  /** #TileModifierAxes. */
+  int axes = MOD_TILE_AXES_XY;
+  /** #TileModifierFlag. */
+  int flag = MOD_TILE_PREVIEW | MOD_TILE_MERGE;
+  float merge_distance = 0.001f;
   char _pad[4] = {};
 };
 

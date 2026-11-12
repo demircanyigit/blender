@@ -8,7 +8,14 @@
 
 #include "DNA_scene_types.h"
 
+#include <algorithm>
+#include <cmath>
+
+#include "BLI_array.hh"
 #include "BLI_math_matrix.h"
+#include "BLI_task.hh"
+#include "GPU_texture.hh"
+#include "BLI_math_color.h"
 #include "BLI_math_rotation.h"
 #include "BLI_math_vector.h"
 
@@ -107,6 +114,86 @@ void SceneResources::load_jitter_tx(int total_samples)
                       int2(jitter_tx_size),
                       GPU_TEXTURE_USAGE_SHADER_READ,
                       jitter[0][0]);
+}
+
+static float3 to_linear(const float3 &c)
+{
+  return float3(powf(c.x, 2.2f), powf(c.y, 2.2f), powf(c.z, 2.2f));
+}
+
+/** Color for the square at (sx, sy) of the Color checker. */
+static float4 checker_grid_color(const int sx, const int sy, const int squares)
+{
+  const float hue = float(sx) / float(squares);
+  /* Rows go from darker to lighter, and every other square is darker still. */
+  const float row = squares > 1 ? float(sy) / float(squares - 1) : 0.5f;
+  const bool odd = (sx + sy) & 1;
+  const float saturation = odd ? 0.75f : 0.55f;
+  const float value = (odd ? 0.45f : 0.75f) + 0.25f * row;
+  float3 rgb;
+  hsv_to_rgb(hue, saturation, std::min(value, 1.0f), &rgb.x, &rgb.y, &rgb.z);
+  /* The texture is read as linear. */
+  return float4(to_linear(rgb), 1.0f);
+}
+
+void SceneResources::load_checker_tx(const int squares, const int type)
+{
+  if (squares == checker_squares && type == checker_type && checker_tx.is_valid()) {
+    return;
+  }
+  checker_squares = squares;
+  checker_type = type;
+  constexpr int size = 1024;
+  constexpr int mips = 11;
+  const float4 light(0.62f, 0.62f, 0.62f, 1.0f);
+  const float4 dark(0.24f, 0.24f, 0.24f, 1.0f);
+  Array<float4> pixels(size * size);
+  threading::parallel_for(IndexRange(size), 32, [&](const IndexRange rows) {
+    for (const int y : rows) {
+      const int sy = y * squares / size;
+      for (const int x : IndexRange(size)) {
+        const int sx = x * squares / size;
+        const bool odd = (sx + sy) & 1;
+        float4 color;
+        if (type == V3D_SHADING_CHECKER_COLOR_GRID) {
+          color = checker_grid_color(sx, sy, squares);
+          /* A thin dark line around each square. */
+          const int px = x * squares % size;
+          const int py = y * squares % size;
+          const int line = squares * 2;
+          if (px < line || py < line) {
+            color = float4(color.xyz() * 0.35f, 1.0f);
+          }
+        }
+        else if (type == V3D_SHADING_CHECKER_UV) {
+          const float u = (float(x) + 0.5f) / float(size);
+          const float v = (float(y) + 0.5f) / float(size);
+          const float3 rgb = float3(u, v, 0.15f) * (odd ? 0.55f : 1.0f);
+          color = float4(to_linear(rgb), 1.0f);
+        }
+        else {
+          color = odd ? dark : light;
+        }
+        pixels[y * size + x] = color;
+      }
+    }
+  });
+  checker_tx.free();
+  checker_tx.ensure_2d(gpu::TextureFormat::UNORM_8_8_8_8,
+                       int2(size),
+                       GPU_TEXTURE_USAGE_SHADER_READ | GPU_TEXTURE_USAGE_ATTACHMENT,
+                       reinterpret_cast<const float *>(pixels.data()),
+                       mips);
+  GPU_texture_update_mipmap_chain(checker_tx);
+
+  checker_texture = {};
+  checker_texture.gpu.texture = &checker_tx;
+  checker_texture.name = "Checker";
+  checker_texture.sampler_state.extend_x = GPU_SAMPLER_EXTEND_MODE_REPEAT;
+  checker_texture.sampler_state.extend_yz = GPU_SAMPLER_EXTEND_MODE_REPEAT;
+  checker_texture.sampler_state.enable_filtering_flag(GPU_SAMPLER_FILTERING_LINEAR |
+                                                      GPU_SAMPLER_FILTERING_MIPMAP |
+                                                      GPU_SAMPLER_FILTERING_ANISOTROPIC);
 }
 
 void SceneResources::init(const SceneState &scene_state, const DRWContext *ctx)
@@ -224,6 +311,11 @@ void SceneResources::init(const SceneState &scene_state, const DRWContext *ctx)
                        float4(1.0f, 0.0f, 1.0f, 1.0f));
   missing_texture.gpu.texture = &missing_tx;
   missing_texture.name = "Missing Texture";
+
+  if (shading.color_type == V3D_SHADING_CHECKER_COLOR) {
+    load_checker_tx(std::clamp(int(std::round(shading.checker_scale)), 1, 256),
+                    shading.checker_type);
+  }
 
   dummy_texture_tx.ensure_2d(gpu::TextureFormat::UNORM_8_8_8_8,
                              int2(1),

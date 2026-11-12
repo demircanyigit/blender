@@ -1037,6 +1037,38 @@ void blo_do_versions_510(FileData *fd, Library * /*lib*/, Main *bmain)
     }
   }
 
+  /* Resample and smooth settings of the Sweep modifier, missing from older files. */
+  if (!DNA_struct_member_exists(fd->filesdna, "SweepModifierData", "int", "resample_count")) {
+    const SweepModifierData defaults{};
+    for (Object &ob : bmain->objects) {
+      for (ModifierData &md : ob.modifiers) {
+        if (md.type == eModifierType_Sweep) {
+          SweepModifierData &smd = reinterpret_cast<SweepModifierData &>(md);
+          smd.resample_count = defaults.resample_count;
+          smd.resample_length = defaults.resample_length;
+          smd.smooth_factor = defaults.smooth_factor;
+        }
+      }
+    }
+  }
+
+  /* Checker scale of Solid shading, missing from older files. */
+  if (!DNA_struct_member_exists(fd->filesdna, "View3DShading", "float", "checker_scale")) {
+    const View3DShading defaults{};
+    for (Scene &scene : bmain->scenes) {
+      scene.display.shading.checker_scale = defaults.checker_scale;
+    }
+    for (bScreen &screen : bmain->screens) {
+      for (ScrArea &area : screen.areabase) {
+        for (SpaceLink &sl : area.spacedata) {
+          if (sl.spacetype == SPACE_VIEW3D) {
+            reinterpret_cast<View3D &>(sl).shading.checker_scale = defaults.checker_scale;
+          }
+        }
+      }
+    }
+  }
+
   /* Toon lighting settings of Solid shading, missing from files of official builds. */
   if (!DNA_struct_member_exists(fd->filesdna, "View3DShading", "float", "toon_softness")) {
     const View3DShading defaults{};

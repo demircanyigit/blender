@@ -11,6 +11,7 @@
 #include "BLI_enum_flags.hh"
 #include "BLI_function_ref.hh"
 #include "BLI_math_vector_types.hh"
+#include "BLI_vector.hh"
 
 #include "ED_numinput.hh"
 #include "ED_transform.hh"
@@ -561,6 +562,13 @@ struct TransSnap {
   double last;
   void (*snap_target_fn)(TransInfo *, float *);
   void (*snap_source_fn)(TransInfo *);
+
+  /** Points to line up with for #SCE_SNAP_TO_ALIGN, gathered on first use. */
+  Vector<float3> *align_points;
+  /** The guides of the last #SCE_SNAP_TO_ALIGN snap: where they start, and their axes. */
+  float align_from[2][3];
+  int align_axis[2];
+  int align_num;
 
   /**
    * Re-usable snap context data.
