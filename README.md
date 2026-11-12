@@ -4,20 +4,96 @@ linking to external resources instead of including content in-line.
 See 'release/text/readme.html' for the end user read-me.
 -->
 
-About this fork
-===============
+<p align="center">
+  <img src="doc/fork/images/brand/weld3d_banner.png" alt="Weld 3D, based on Blender 5.1" width="100%">
+</p>
 
-An unofficial fork of Blender 5.1.0 that adds new modifiers, new Geometry Nodes, two new editors and the classic
-2.79 look. It isn't made or supported by the Blender Foundation, so please don't report its bugs to the Blender
-project.
+<p align="center">
+  <b>A modeling-first 3D suite with 74 new modifiers, 77 new nodes and the classic look.</b><br>
+  Based on Blender 5.1.
+</p>
 
-**[Download for Windows](https://github.com/demircanyigit/blender/releases/latest)**: unzip it and open
-`blender.exe`. No installer is needed, and your official Blender keeps working next to it.
+<p align="center">
+  <a href="https://github.com/demircanyigit/Weld-3D/releases/latest"><img src="https://img.shields.io/badge/Download-Windows%20x64-ffba48?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows"></a>
+  <a href="doc/fork/README.md"><img src="https://img.shields.io/badge/Docs-Read%20first-3a4250?style=for-the-badge" alt="Docs"></a>
+  <a href="doc/fork/BUILD_WINDOWS.md"><img src="https://img.shields.io/badge/Build-From%20source-3a4250?style=for-the-badge" alt="Build from source"></a>
+</p>
 
-Files that use these additions won't work properly in official Blender. See
-[what to know before using it](doc/fork/README.md).
+<p align="center">
+  <img src="https://img.shields.io/badge/based%20on-Blender%205.1-ff6814?style=flat-square" alt="Based on Blender 5.1">
+  <img src="https://img.shields.io/badge/modifiers-%2B74-6f8cd6?style=flat-square" alt="74 new modifiers">
+  <img src="https://img.shields.io/badge/geometry%20nodes-%2B77-4fa35b?style=flat-square" alt="77 new nodes">
+  <img src="https://img.shields.io/badge/icons-1000%2B%20classic-a0a8b4?style=flat-square" alt="Over 1,000 classic icons">
+  <img src="https://img.shields.io/badge/license-GPL--3.0-a0a8b4?style=flat-square" alt="GPL-3.0">
+</p>
+
+Weld 3D is an unofficial build of Blender 5.1.0 for modelers. It adds procedural modeling modifiers, nodes for
+them, new editors for your own buttons and the colored 2.79 look. Unzip it and open `blender.exe`: no installer,
+and your official Blender keeps working next to it.
+
+> [!NOTE]
+> Weld 3D isn't made or supported by the Blender Foundation, so please don't report its bugs to the Blender
+> project. Files that use its additions won't work properly in official Blender. See
+> [what to know before using it](doc/fork/README.md).
 
 ## At a glance
+
+<table>
+<tr>
+<td width="33%" valign="top">
+
+### <img src="doc/fork/images/icons/mod_trim.png" width="32" height="32" alt=""> Build
+
+[Trim](doc/fork/TRIM.md), [Sweep](doc/fork/SWEEP.md), [Planks](doc/fork/PLANKS.md), [Roof](doc/fork/ROOF.md),
+[Stonework](doc/fork/STONEWORK.md), [Masonry](doc/fork/MASONRY.md) and [Distribute](doc/fork/DISTRIBUTE.md) make
+whole parts from a few faces or edges.
+
+</td>
+<td width="33%" valign="top">
+
+### <img src="doc/fork/images/icons/mod_poly_edit.png" width="32" height="32" alt=""> Edit in the stack
+
+[Poly Select](doc/fork/POLY_SELECT.md), [Poly Edit](doc/fork/POLY_EDIT.md) and [Edit Poly](doc/fork/EDIT_POLY.md)
+keep every modeling step editable, and the [Modifier List](doc/fork/MODIFIER_LIST.md) keeps long stacks short.
+
+</td>
+<td width="33%" valign="top">
+
+### <img src="doc/fork/images/icons/mod_voronoi_fracture.png" width="32" height="32" alt=""> Break
+
+[Voronoi Fracture](doc/fork/VORONOI_FRACTURE.md), [Shatter](doc/fork/SHATTER.md), [Dice](doc/fork/DICE.md),
+[Edge Damage](doc/fork/EDGE_DAMAGE.md) and [Collapse](doc/fork/COLLAPSE.md) break, chip and drop meshes.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### <img src="doc/fork/images/icons/mod_uv_unwrap.png" width="32" height="32" alt=""> UVs and normals
+
+[Unwrap](doc/fork/UV_UNWRAP.md), [Pack UVs](doc/fork/UV_PACK.md), [UV Scale](doc/fork/UV_SCALE.md) and the
+[normal modifiers](#modifiers) follow the stack, with a [UV checker](doc/fork/UV_CHECKER.md) in Solid shading.
+
+</td>
+<td valign="top">
+
+### <img src="doc/fork/images/icons/snap_align.png" width="32" height="32" alt=""> Tools and snapping
+
+[Multi-Cut](doc/fork/MULTI_CUT.md), [face set tools](doc/fork/FACE_SETS.md), [Bounds and Align
+snapping](doc/fork/SNAPPING.md), [viewport gizmos](doc/fork/MODIFIER_GIZMOS.md) and an
+[orthographic view](doc/fork/ORTHOGRAPHIC.md) that stays orthographic.
+
+</td>
+<td valign="top">
+
+### <img src="doc/fork/images/icons/shelf.png" width="32" height="32" alt=""> Your own buttons
+
+The [Toolbox](doc/fork/TOOLBOX.md) and the [Shelf](doc/fork/SHELF.md) hold any button you right-click, and Quick
+Favorites show their icons.
+
+</td>
+</tr>
+</table>
 
 | Area | What's new |
 |---|---|
@@ -29,124 +105,55 @@ Files that use these additions won't work properly in official Blender. See
 | [Solid shading](#color-attributes-in-solid-shading) | Color attributes mixed into the material color, [outlines around parts and edge lines](doc/fork/SOLID_OUTLINES.md), [toon lighting](doc/fork/TOON_SHADING.md), a [UV checker](doc/fork/UV_CHECKER.md), an [Island](doc/fork/ISLAND_COLOR.md) color, [eight more studio lights](doc/fork/STUDIO_LIGHTS.md) |
 | [Materials](doc/fork/ALL_MATERIALS.md) | An All Materials tab for every material in the file, and giving a material to all selected objects |
 
-## Latest additions
+## What's new
 
-**Snapping**: [Bounds](doc/fork/SNAPPING.md) snaps to the corners and middles of other objects' bounding boxes,
-and [Align](doc/fork/SNAPPING.md#align) lines up what you move with other points along X, Y and Z, with dotted guides.
-Solid shading has [eight more studio lights](doc/fork/STUDIO_LIGHTS.md).
+- **[Trim](doc/fork/TRIM.md)** lays copies of a pattern object along drawn edges, for scalloped bands, moldings and
+  borders. **[Tile](doc/fork/TILE.md)** wraps the mesh into one tile so it repeats without seams.
+  **[Sweep](doc/fork/SWEEP.md)** now also follows the edges of a mesh.
+- **[Bounds and Align snapping](doc/fork/SNAPPING.md)**: snap to the corners and middles of bounding boxes, and line
+  up with other points along X, Y and Z, with dotted guides.
+- **Normals**: [Normal Transfer](doc/fork/NORMAL_TRANSFER.md), [Normal Smooth](doc/fork/NORMAL_SMOOTH.md),
+  [Normals from Face Sets](doc/fork/NORMAL_FACE_SETS.md) and [Normal Shape](doc/fork/NORMAL_SHAPE.md), which shades a
+  bush like one soft ball.
+- **UVs that follow the stack**: [Unwrap](doc/fork/UV_UNWRAP.md) and [Pack UVs](doc/fork/UV_PACK.md) modifiers, a
+  [Checker](doc/fork/UV_CHECKER.md) and an [Island](doc/fork/ISLAND_COLOR.md) color in Solid shading.
+- **[Conform](doc/fork/CONFORM.md)** lays a mesh onto another surface, keeping its thickness, for roads over
+  terrain, straps and decals.
+- **[Eight more studio lights](doc/fork/STUDIO_LIGHTS.md)**, from soft and clay to neon and moonlight.
 
-**Trim and Tile**: [Trim](doc/fork/TRIM.md) lays copies of a pattern object along drawn edges, for scalloped bands,
-moldings and borders, and [Tile](doc/fork/TILE.md) wraps the mesh into one tile so it repeats without seams.
-[Sweep](doc/fork/SWEEP.md) now also follows the edges of a mesh, with resampling and smoothing.
+The Windows download may be an earlier build than the source.
 
-**Normals**: [Normal Transfer](doc/fork/NORMAL_TRANSFER.md) copies the shading normals of another object and fades
-out with distance, [Normal Smooth](doc/fork/NORMAL_SMOOTH.md) smooths them, [Normals from Face Sets](doc/fork/NORMAL_FACE_SETS.md)
-makes the shading hard where face sets meet, and [Normal Shape](doc/fork/NORMAL_SHAPE.md) shades a bush like one soft ball.
+<details>
+<summary><b>Earlier additions</b></summary>
 
-**UVs that follow the stack**: the [Unwrap](doc/fork/UV_UNWRAP.md) modifier unwraps from the seams, for example
-seams made by Mark by Angle, and [Pack UVs](doc/fork/UV_PACK.md) packs the islands. A **[Checker](doc/fork/UV_CHECKER.md)**
-color in Solid shading, with Color, Gray and UV patterns, shows the UVs without a material, to check
-stretching and texel density with UV Scale. An **[Island](doc/fork/ISLAND_COLOR.md)** color gives each loose part its
-own color.
+- **[Toon shading](doc/fork/TOON_SHADING.md)**: a Toon lighting choice in Solid mode with bands, softness, a shadow
+  color, a hard highlight and a rim light.
+- **[Outlines and edge lines](doc/fork/SOLID_OUTLINES.md)** around loose parts, materials or face sets, in any
+  width, and lines where the surface jumps in depth, bends sharply or has hard edges.
+- **[Face sets outside Sculpt Mode](doc/fork/FACE_SETS.md)**: a Face Set color in Solid shading, and Face ▸ Face
+  Sets in Edit Mode to make, assign, merge, select, hide and clear them, or turn them into vertex groups or
+  materials.
+- **[Orthographic stays orthographic](doc/fork/ORTHOGRAPHIC.md)** when you rotate out of a front, side or top view.
+- **[All Materials](doc/fork/ALL_MATERIALS.md)**: a Properties tab with every material in the file.
+- **[Blast](doc/fork/BLAST.md)** filters small islands, **[Join](doc/fork/JOIN.md)** combines meshes from objects
+  and collections, and **[Divide](doc/fork/DIVIDE.md)** adds grid cuts.
+- **[Edge Damage](doc/fork/EDGE_DAMAGE.md)** wears and chips edges.
+- **[Planks](doc/fork/PLANKS.md)** lays floors, walls, crates and barrels of boards. **[Roof](doc/fork/ROOF.md)**
+  builds and dresses roofs.
+- **[Carve](doc/fork/CARVE.md)** displaces with two layers of textures, patterns or attributes.
+  **[Materialize](doc/fork/MATERIALIZE.md)** gives faces materials by a list of rules.
+- **[Cleanup](doc/fork/CLEANUP.md)** runs the Clean Up menu in one go.
+- **[Stonework](doc/fork/STONEWORK.md)** fills a mesh with whole stones, and **[Distribute](doc/fork/DISTRIBUTE.md)**
+  packs objects on faces so none of them touch.
+- **[Piece ID](doc/fork/PIECE_ID.md)** writes which piece each face or point belongs to.
+- **[Decimate algorithms](doc/fork/DECIMATE.md)**: PMP, Meshoptimizer, CGAL and Wild QEM in the Decimate modifier.
+- **[UV Scale and Texel Density](doc/fork/UV_SCALE.md)** as a modifier and a node.
+- **[Dice](doc/fork/DICE.md), [Edit Poly](doc/fork/EDIT_POLY.md), [Collapse](doc/fork/COLLAPSE.md),
+  [Drape](doc/fork/DRAPE.md), [Shatter](doc/fork/SHATTER.md), [Masonry](doc/fork/MASONRY.md) and
+  [Dissolve](doc/fork/DISSOLVE.md)**, with Collapse Islands, Drape, Shatter and Masonry nodes.
+- **[Multi-Cut](doc/fork/MULTI_CUT.md)**, an interactive cutting tool in Edit Mode.
 
-**[Conform](doc/fork/CONFORM.md)**: lays a mesh onto the surface of another object, keeping its thickness. For roads
-over terrain, straps and decals.
-
-**[Toon shading](doc/fork/TOON_SHADING.md)**: Solid mode has a Toon lighting choice with bands,
-softness, a shadow color, and switches for a hard highlight and a rim light. The light is fixed
-in the scene or turns with the view.
-
-**[Outlines and edge lines](doc/fork/SOLID_OUTLINES.md)** in Solid shading: the outline can go
-around loose parts, materials or face sets, not only objects, in any width. Edge Lines draws lines
-where the surface jumps in depth, bends sharply or has hard edges.
-
-**[Face sets outside Sculpt Mode](doc/fork/FACE_SETS.md)**: a **Face Set** color in Solid shading
-shows them in Object and Edit Mode, and Face > Face Sets in Edit Mode (also in the right-click
-menu) makes, assigns, merges, selects, hides and clears them, makes them from loose parts,
-materials, seams, sharp edges or angles, and turns them into vertex groups or materials. Select
-Similar has Face Set too. The Piece ID modifier has the main buttons when it makes pieces from
-face sets.
-
-**[Orthographic stays orthographic](doc/fork/ORTHOGRAPHIC.md)**: with Auto Perspective on, a view you switched to
-orthographic yourself (Numpad 5) no longer goes back to perspective when you rotate or Alt-drag
-it out of a front, side or top view. Numpad 5 again goes back to perspective.
-
-**[All Materials](doc/fork/ALL_MATERIALS.md)** is a new Properties tab that lists every material
-in the file, with its users, to add, copy, delete and edit any of them. The Material tab can now
-give the active material to all selected objects, in their active slot or a new one.
-
-
-**[Blast](doc/fork/BLAST.md)** filters small disconnected mesh islands by polygon count, area,
-volume or bounding-box size, and can retain just the N largest islands.
-
-
-**[Join](doc/fork/JOIN.md)** combines evaluated meshes from multiple objects or collections in
-one modifier, with live transforms and source modifiers, without Boolean operations.
-
-
-**[Divide](doc/fork/DIVIDE.md)** adds connected grid cuts to polygon surfaces, with adjustable
-XYZ grid size, offset and rotation.
-
-
-**[Edge Damage](doc/fork/EDGE_DAMAGE.md)** wears and chips edges by intersecting the mesh with a
-smoothed, pushed and noised copy of itself, per island, with a choice of remesh and boolean solver.
-
-
-**[Planks](doc/fork/PLANKS.md)** lays floors and walls of boards on faces (straight, herringbone,
-chevron, basket, lap and board and batten, with joists or studs) and builds crates and barrels.
-
-
-**[Roof](doc/fork/ROOF.md)** builds gable, hip, shed, flat, pyramid, gambrel and mansard roofs on
-outlines, or dresses modeled roofs with overhangs, tiles, shingles, metal, caps, valleys and gutters.
-
-
-**[Carve](doc/fork/CARVE.md)** displaces with two layers of textures, patterns (nine stone walls,
-bricks, voronoi, noise, waves) or attributes, combined and masked by noise, curvature and facing,
-and can set materials by layer and mask.
-
-
-**[Materialize](doc/fork/MATERIALIZE.md)** gives faces materials by a list of rules: curvature, direction,
-height, slope, noise, random, attribute, proximity, ambient occlusion, thickness and texture.
-
-
-**[Cleanup](doc/fork/CLEANUP.md)** runs the Clean Up menu in one go: delete loose, duplicate and
-interior parts, dissolve, delete small pieces, fill holes, flatten and split faces, and fix normals.
-
-**[Stonework](doc/fork/STONEWORK.md)** fills a mesh with whole stones, stacked one at a time from
-the bottom up: built-in round, angular, block, slab and wedge stones, or your own.
-
-**[Distribute](doc/fork/DISTRIBUTE.md)** packs objects from a collection on the faces, by their
-measured sides, so none of them touch. It fills the gaps with smaller objects and can turn the
-surface into bumpy mortar.
-
-**[Piece ID](doc/fork/PIECE_ID.md)** writes which piece each face or point belongs to, from loose
-parts, split edges, materials, face sets, a vertex group, another attribute or the selection.
-Collapse can drop those pieces instead of loose parts, and Join writes an ID per object and per
-parent.
-
-
-**[Decimate algorithms](doc/fork/DECIMATE.md)** adds PMP, Meshoptimizer, Meshoptimizer Aggressive,
-CGAL and experimental Wild QEM alongside the original Blender algorithm in the existing modifier.
-
-
-**[Masonry Continuous Walls](doc/fork/MASONRY.md)** keeps rigid bricks continuous across vertical
-bevel segments. Smooth, Corrective Smooth and Laplacian Smooth now have distinct icons.
-
-**[UV Scale and Texel Density](doc/fork/UV_SCALE.md)** adds a modifier and matching Geometry Node
-for global or per-island UV scaling, or a target in pixels per meter. Both account for object
-scale and scene units when matching density, and use the new checker-tile icons.
-
-
-The source branch now includes seven more modifiers: **[Dice](doc/fork/DICE.md), [Edit Poly](doc/fork/EDIT_POLY.md), [Collapse](doc/fork/COLLAPSE.md), [Drape](doc/fork/DRAPE.md), [Shatter](doc/fork/SHATTER.md),
-[Masonry](doc/fork/MASONRY.md) and [Dissolve](doc/fork/DISSOLVE.md)**, plus **Collapse Islands, Drape, Shatter and Masonry** Geometry Nodes.
-Dice and Dissolve now share their geometry algorithms with their modifier versions.
-
-- **[Edit Poly](doc/fork/EDIT_POLY.md)** lets you edit a stored mesh in the stack and optionally follow upstream point movement.
-- **[Multi-Cut](doc/fork/MULTI_CUT.md)** adds an interactive mesh cutting tool to Edit Mode.
-- **[Modifier List](doc/fork/MODIFIER_LIST.md) favorites** can be reordered and shown in one, two or three columns.
-- The new modifiers and nodes have their own colored icons, included with the source.
-
-These additions are in the source branch; the Windows download may be an earlier build.
+</details>
 
 ## Modifiers
 
@@ -426,7 +433,7 @@ edges you choose, like the eye and mouth rims here.
 - **Attributes:** point, face and corner attributes such as UVs are sampled from the nearest surface. Edge
   attributes are lost because every edge is new.
 
-![Suzanne as the original, remeshed, and remeshed with Hard Edges](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/isotropic_remesh.png)
+![Suzanne as the original, remeshed, and remeshed with Hard Edges](https://github.com/demircanyigit/Weld-3D/releases/download/v5.1-custom-2/isotropic_remesh.png)
 
 #### Decimate Mesh
 
@@ -439,7 +446,7 @@ result is triangles.
 - **What to keep:** Selection picks which vertices may be removed. Preserve Boundary and the Hard Edges field
   protect open edges and the edges you choose.
 
-![Suzanne before and after Decimate Mesh](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/decimate_mesh.png)
+![Suzanne before and after Decimate Mesh](https://github.com/demircanyigit/Weld-3D/releases/download/v5.1-custom-2/decimate_mesh.png)
 
 #### Voronoi Fracture
 
@@ -453,7 +460,7 @@ in an area make smaller pieces there.
 - **Good to know:** the mesh has to be closed. The pieces stay in place until you move them, as in the picture
   on the right.
 
-![A sphere, the same sphere cut into pieces, and the pieces moved apart showing orange inside faces](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/voronoi_fracture.png)
+![A sphere, the same sphere cut into pieces, and the pieces moved apart showing orange inside faces](https://github.com/demircanyigit/Weld-3D/releases/download/v5.1-custom-2/voronoi_fracture.png)
 
 #### Bevel
 
@@ -468,9 +475,9 @@ compared. Unlike the modifier, Amount and Weight can differ per edge or vertex, 
 - **Good to know:** only edges with exactly two faces get beveled. There's no custom profile or Face Strength
   yet. Segments, Shape and Spread are one value for the whole mesh.
 
-![A cube, a beveled cube and a cube with a random bevel on each edge](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/bevel.png)
+![A cube, a beveled cube and a cube with a random bevel on each edge](https://github.com/demircanyigit/Weld-3D/releases/download/v5.1-custom-2/bevel.png)
 
-![Random Value connected to the Amount input of the Bevel node](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/node_editor.png)
+![Random Value connected to the Amount input of the Bevel node](https://github.com/demircanyigit/Weld-3D/releases/download/v5.1-custom-2/node_editor.png)
 
 #### Sweep
 
@@ -486,7 +493,7 @@ overlap, but needs no extra nodes for the shape and also makes UVs.
 - **Good to know:** caps are flat. Every cross section is swept along every curve. Twist needs enough curve
   points to show, so put Resample Curve in front of a two-point line.
 
-![Three spirals swept with a round tube, a twisted square tube and a star](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/sweep.png)
+![Three spirals swept with a round tube, a twisted square tube and a star](https://github.com/demircanyigit/Weld-3D/releases/download/v5.1-custom-2/sweep.png)
 
 #### Resample Mesh
 
@@ -500,7 +507,7 @@ Adds points along edges without changing the shape or the number of faces, inspi
 - **Good to know:** edges stay straight, so curved surfaces don't get smoother. Faces become n-gons with extra
   points, so add Triangulate if you need triangles.
 
-![A cube before and after Resample Mesh, with its points shown in orange](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/resample_mesh.png)
+![A cube before and after Resample Mesh, with its points shown in orange](https://github.com/demircanyigit/Weld-3D/releases/download/v5.1-custom-2/resample_mesh.png)
 
 #### Clip
 
@@ -514,7 +521,7 @@ their hole.
   the cut, for example to bevel them.
 - **Good to know:** only closed loops can be filled, so cutting an open mesh may leave parts of the cut open.
 
-![A sphere, a cube and a torus cut at an angle with orange fill faces](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/clip.png)
+![A sphere, a cube and a torus cut at an angle with orange fill faces](https://github.com/demircanyigit/Weld-3D/releases/download/v5.1-custom-2/clip.png)
 
 #### Dice
 
@@ -530,7 +537,7 @@ done. It doesn't need points like Voronoi Fracture, and it also works on open me
 - **Good to know:** each mesh uses its own bounding box, so add Realize Instances in front to dice instances
   together. Pieces at the edge of a curved shape can be very small.
 
-![A sphere cut into 2 x 2 x 2 and 4 x 4 x 4 pieces, and a torus cut into 6 x 6 x 1 pieces](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/dice.png)
+![A sphere cut into 2 x 2 x 2 and 4 x 4 x 4 pieces, and a torus cut into 6 x 6 x 1 pieces](https://github.com/demircanyigit/Weld-3D/releases/download/v5.1-custom-2/dice.png)
 
 #### Dissolve
 
@@ -544,7 +551,7 @@ Dissolve in Edit Mode.
 - **Output:** Merged Faces selects the faces that were made, except in Vertices mode.
 - **Good to know:** merged faces can be n-gons that aren't flat, which can shade unevenly.
 
-![A cube going from 96 faces to 6 with Limited, and a sphere with random edges dissolved](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/dissolve.png)
+![A cube going from 96 faces to 6 with Limited, and a sphere with random edges dissolved](https://github.com/demircanyigit/Weld-3D/releases/download/v5.1-custom-2/dissolve.png)
 
 #### Smooth
 
@@ -555,7 +562,7 @@ Smooths a surface by moving points toward their neighbors. Topology and attribut
 - **Control:** Factor and Selection are fields, so strength can differ per point. Preserve Boundary and the Hard
   Edges field keep those points in place.
 
-![A lumpy sphere, smoothed with Average and with Keep Volume](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/smooth.png)
+![A lumpy sphere, smoothed with Average and with Keep Volume](https://github.com/demircanyigit/Weld-3D/releases/download/v5.1-custom-2/smooth.png)
 
 #### Relax
 
@@ -567,7 +574,7 @@ Evens out the distances between points by sliding them along the surface, so the
 - **Good to know:** it doesn't change how points are connected, so uneven topology like the poles of a UV sphere
   stays uneven. Isotropic Remesh does that.
 
-![A sphere with uneven points, and the same sphere with even points after Relax](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/relax.png)
+![A sphere with uneven points, and the same sphere with even points after Relax](https://github.com/demircanyigit/Weld-3D/releases/download/v5.1-custom-2/relax.png)
 
 #### QuadriFlow Remesh
 
@@ -582,7 +589,7 @@ the Remesh operator, but as a node you can keep changing.
   than the quads get crumpled or lost. It's slow and runs again when anything before it changes, so bake it or use a
   low target while working.
 
-![Suzanne as the original and remeshed with QuadriFlow at two sizes](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/quadriflow_remesh.png)
+![Suzanne as the original and remeshed with QuadriFlow at two sizes](https://github.com/demircanyigit/Weld-3D/releases/download/v5.1-custom-2/quadriflow_remesh.png)
 
 #### Displace
 
@@ -596,7 +603,7 @@ Without a texture it gives the same result as the modifier.
 - **Good to know:** the mesh needs enough points to show detail, so subdivide it first if needed. Direction and
   Vector are relative to the object.
 
-![A sphere displaced along its normals and a plane displaced along a direction](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/displace.png)
+![A sphere displaced along its normals and a plane displaced along a direction](https://github.com/demircanyigit/Weld-3D/releases/download/v5.1-custom-2/displace.png)
 
 ## Tools
 
@@ -655,7 +662,7 @@ Items in Quick Favorites (**Q**) show their icons. The icon is picked automatica
 
 ## Classic look
 
-The fork brings back the Blender 2.79 look:
+Weld 3D brings back the Blender 2.79 look:
 
 - **Colored icons:** more than 1,000 new icons drawn in the 2.79 style. Every Geometry Node and every new modifier
   has one, and so do the tools and many operators, such as the Merge, Parent, Select Similar and import and
@@ -678,7 +685,7 @@ Material.
 - **Settings:** Factor sets the strength. Two Colors and Color Ramp can read Brightness, Red, Green, Blue or Alpha.
 - **Good to know:** it only changes the viewport, not renders, and only applies to meshes.
 
-![Suzanne with the None, Multiply, Two Colors and Color Ramp options](https://github.com/demircanyigit/blender/releases/download/v5.1-custom-2/solid_colors.png)
+![Suzanne with the None, Multiply, Two Colors and Color Ramp options](https://github.com/demircanyigit/Weld-3D/releases/download/v5.1-custom-2/solid_colors.png)
 
 ## More
 

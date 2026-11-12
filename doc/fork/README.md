@@ -1,6 +1,6 @@
-# About this fork
+# About Weld 3D
 
-An unofficial fork based on the Blender `v5.1.0` tag. It adds 74 modifiers and a list view of the
+Weld 3D is an unofficial build based on the Blender `v5.1.0` tag. It adds 74 modifiers and a list view of the
 modifier stack, new geometry nodes, the Toolbox and Shelf editors, more color attribute options for
 the Solid shading mode, and the classic 2.79 look with colored icons and embossed widgets. It isn't
 made or supported by the Blender Foundation. The [main read-me](../../README.md) lists everything.
@@ -123,12 +123,12 @@ made or supported by the Blender Foundation. The [main read-me](../../README.md)
 - [What each node does, its inputs and its limits](NODES.md)
 - [Building on Windows](BUILD_WINDOWS.md)
 
-Windows builds are on the [Releases page](https://github.com/demircanyigit/blender/releases). For
+Windows builds are on the [Releases page](https://github.com/demircanyigit/Weld-3D/releases). For
 other systems you need to compile it yourself, and only Windows has been tried.
 
 ## Using files in official Blender
 
-Files made with this fork are meant for this fork.
+Files made with Weld 3D are meant for Weld 3D.
 
 - Node trees that use the new nodes won't work in official Blender, because it doesn't have them.
   Apply the modifier or bake the result first if a file has to open there.
@@ -138,7 +138,7 @@ Files made with this fork are meant for this fork.
   assign to its own nodes later.
 - The material color options are ignored by official Blender. They are lost if that Blender saves
   the file.
-- Official files open normally in this fork, with the color options turned off.
+- Official files open normally in Weld 3D, with the color options turned off.
 
 ## Testing
 
@@ -193,4 +193,4 @@ PMP.
 ## Contributing to Blender
 
 Blender takes contributions on [projects.blender.org](https://projects.blender.org), not GitHub.
-Nothing from this fork has been proposed there.
+Nothing from Weld 3D has been proposed there.
